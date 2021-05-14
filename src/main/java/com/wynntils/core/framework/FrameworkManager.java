@@ -154,7 +154,7 @@ public class FrameworkManager {
                 return;
             }
 
-            Minecraft.getInstance().getProfiler().push("preRenOverlay");
+            Minecraft.getMinecraft().getProfiler().push("preRenOverlay");
             for (List<Overlay> overlays : registeredOverlays.values()) {
                 for (Overlay overlay : overlays) {
                     if (!overlay.active) continue;
@@ -173,39 +173,39 @@ public class FrameworkManager {
                             continue;
                     }
                     if ((overlay.module == null || overlay.module.getModule().isActive()) && overlay.visible && overlay.active) {
-                        Minecraft.getInstance().getProfiler().push(overlay.displayName);
+                        Minecraft.getMinecraft().getProfiler().push(overlay.displayName);
                         ScreenRenderer.beginGL(overlay.position.getDrawingX(), overlay.position.getDrawingY());
                         overlay.render(e);
                         ScreenRenderer.endGL();
-                        Minecraft.getInstance().getProfiler().pop();
+                        Minecraft.getMinecraft().getProfiler().pop();
                     }
                 }
             }
-            Minecraft.getInstance().getProfiler().pop();
+            Minecraft.getMinecraft().getProfiler().pop();
 
-            Minecraft.getInstance().getTextureManager().bind(GUI_ICONS_LOCATION);
+            Minecraft.getMinecraft().getTextureManager().bind(GUI_ICONS_LOCATION);
         }
     }
 
     public static void triggerPostHud(RenderGameOverlayEvent.Post e) {
         if (Reference.onServer && !ModCore.mc().gameMode.isAlwaysFlying()) {
-            Minecraft.getInstance().getProfiler().push("posRenOverlay");
+            Minecraft.getMinecraft().getProfiler().push("posRenOverlay");
             for (List<Overlay> overlays : registeredOverlays.values()) {
                 for (Overlay overlay : overlays) {
                     if (!overlay.active) continue;
 
                     if ((overlay.module == null || overlay.module.getModule().isActive()) && overlay.visible && overlay.active) {
-                        Minecraft.getInstance().getProfiler().push(overlay.displayName);
+                        Minecraft.getMinecraft().getProfiler().push(overlay.displayName);
 
                         ScreenRenderer.beginGL(overlay.position.getDrawingX(), overlay.position.getDrawingY());
                         overlay.render(e);
                         ScreenRenderer.endGL();
 
-                        Minecraft.getInstance().getProfiler().pop();
+                        Minecraft.getMinecraft().getProfiler().pop();
                     }
                 }
             }
-            Minecraft.getInstance().getProfiler().pop();
+            Minecraft.getMinecraft().getProfiler().pop();
         }
     }
 
@@ -228,7 +228,7 @@ public class FrameworkManager {
         Random r = Utils.getRandom();
         if (r.nextBoolean()) return; // reduce spawn chances by half
 
-        ClientPlayerEntity player = Minecraft.getInstance().player;
+        ClientPlayerEntity player = Minecraft.getMinecraft().player;
         for (double x = -10; x < 10; x++) {
             for (double y = -1; y < 6; y++) {
                 for (double z = -10; z < 10; z++) {

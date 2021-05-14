@@ -50,7 +50,7 @@ public class MainMenuButtons {
 
             // little pling when finished loading
             if (!alreadyLoaded) {
-                Minecraft.getInstance().getSoundManager().play(SimpleSound.forUI(SoundEvents.BLOCK_NOTE_PLING, 1f));
+                Minecraft.getMinecraft().getSoundManager().play(SimpleSound.forUI(SoundEvents.BLOCK_NOTE_PLING, 1f));
                 alreadyLoaded = true;
             }
             return;
@@ -141,7 +141,7 @@ public class MainMenuButtons {
         }
 
         private static void doAction() {
-            clickedWynncraftButton(Minecraft.getInstance(), getWynncraftServerData(Minecraft.getInstance()), null);
+            clickedWynncraftButton(Minecraft.getMinecraft(), getWynncraftServerData(Minecraft.getInstance()), null);
         }
     }
 

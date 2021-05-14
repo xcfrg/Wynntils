@@ -96,13 +96,13 @@ public class MenuButtonsOverlay implements Listener {
         int id = e.getButton().id;
         switch (id) {
             case 753:
-                Minecraft.getInstance().player.chat("/class");
+                Minecraft.getMinecraft().player.chat("/class");
                 break;
             case 754:
-                Minecraft.getInstance().player.chat("/hub");
+                Minecraft.getMinecraft().player.chat("/hub");
                 break;
             case 755:
-                Minecraft.getInstance().displayGuiScreen(SettingsUI.getInstance(Minecraft.getInstance().screen));
+                Minecraft.getMinecraft().displayGuiScreen(SettingsUI.getInstance(Minecraft.getMinecraft().screen));
                 break;
             case 756:
                 QuestBookPages.MAIN.getPage().open(true);

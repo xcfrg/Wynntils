@@ -30,7 +30,7 @@ public class WynnSocialEvent extends Event {
     }
 
     public boolean isYou() {
-        return member.equalsIgnoreCase(Minecraft.getInstance().player.getName().getString());
+        return member.equalsIgnoreCase(Minecraft.getMinecraft().player.getName().getString());
     }
 
     public static class Party extends WynnSocialEvent {

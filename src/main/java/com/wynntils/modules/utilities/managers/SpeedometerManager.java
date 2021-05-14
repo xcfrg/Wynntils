@@ -11,7 +11,7 @@ import net.minecraft.util.math.MathHelper;
 public class SpeedometerManager {
 
     public static double getCurrentSpeed() {
-        ClientPlayerEntity player = Minecraft.getInstance().player;
+        ClientPlayerEntity player = Minecraft.getMinecraft().player;
 
         double distX = player.getX() - player.prevPosX;
         double distZ = player.getZ() - player.prevPosZ;

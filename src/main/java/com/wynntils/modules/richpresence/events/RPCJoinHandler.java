@@ -58,7 +58,7 @@ public class RPCJoinHandler implements IDiscordActivityEvents.on_activity_join_c
 
         RichPresenceModule.getModule().getRichPresence().setJoinSecret(lastSecret);
 
-        Minecraft mc = Minecraft.getInstance();
+        Minecraft mc = Minecraft.getMinecraft();
 
         if (!Reference.onServer) {
             ServerData serverData = ServerUtils.getWynncraftServerData(true);
@@ -96,7 +96,7 @@ public class RPCJoinHandler implements IDiscordActivityEvents.on_activity_join_c
         if (!waitingInvite) return;
         sentInvite = true;
         waitingInvite = false;
-        Minecraft.getInstance().player.chat("/msg " + lastSecret.getOwner() + " " + lastSecret.getRandomHash());
+        Minecraft.getMinecraft().player.chat("/msg " + lastSecret.getOwner() + " " + lastSecret.getRandomHash());
     }
 
     @SubscribeEvent
@@ -105,14 +105,14 @@ public class RPCJoinHandler implements IDiscordActivityEvents.on_activity_join_c
 
         // handles the invitation
         if (lastSecret != null && e.getMessage().getUnformattedText().startsWith("You have been invited to join " + lastSecret.getOwner())) {
-            Minecraft.getInstance().player.chat("/party join " + lastSecret.getOwner());
+            Minecraft.getMinecraft().player.chat("/party join " + lastSecret.getOwner());
 
             lastSecret = null;
             return;
         }
 
         // handles the user join
-        if (sentInvite && e.getMessage().getUnformattedText().startsWith("[" + Minecraft.getInstance().player.getName())) {
+        if (sentInvite && e.getMessage().getUnformattedText().startsWith("[" + Minecraft.getMinecraft().player.getName())) {
             sentInvite = false;
             e.setCanceled(true);
             return;
@@ -132,7 +132,7 @@ public class RPCJoinHandler implements IDiscordActivityEvents.on_activity_join_c
                 return;
 
             e.setCanceled(true);
-            Minecraft.getInstance().player.chat("/party invite " + user);
+            Minecraft.getMinecraft().player.chat("/party invite " + user);
         }
     }
 

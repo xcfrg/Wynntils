@@ -46,7 +46,7 @@ public class EntityManager {
     public static void tickEntities() {
         if (entityList.isEmpty() && toSpawn.isEmpty()) return;
 
-        Minecraft.getInstance().getProfiler().push("fakeEntities");
+        Minecraft.getMinecraft().getProfiler().push("fakeEntities");
         {
             // adds all new entities to the set
             Iterator<FakeEntity> it = toSpawn.iterator();
@@ -55,10 +55,10 @@ public class EntityManager {
                 it.remove();
             }
 
-            RenderManager renderManager = Minecraft.getInstance().getRenderManager();
+            RenderManager renderManager = Minecraft.getMinecraft().getRenderManager();
             if (renderManager == null || renderManager.options == null) return;
 
-            ClientPlayerEntity player = Minecraft.getInstance().player;
+            ClientPlayerEntity player = Minecraft.getMinecraft().player;
             // ticks each entity
             it = entityList.iterator();
             while (it.hasNext()) {
@@ -70,15 +70,15 @@ public class EntityManager {
                     continue;
                 }
 
-                Minecraft.getInstance().getProfiler().push(next.getName());
+                Minecraft.getMinecraft().getProfiler().push(next.getName());
                 { // render
                     next.livingTicks += 1;
                     next.tick(Utils.getRandom(), player);
                 }
-                Minecraft.getInstance().getProfiler().pop();
+                Minecraft.getMinecraft().getProfiler().pop();
             }
         }
-        Minecraft.getInstance().getProfiler().pop();
+        Minecraft.getMinecraft().getProfiler().pop();
     }
 
     /**
@@ -90,7 +90,7 @@ public class EntityManager {
     public static void renderEntities(float partialTicks, WorldRenderer context) {
         if (entityList.isEmpty() && toSpawn.isEmpty()) return;
 
-        Minecraft.getInstance().getProfiler().push("fakeEntities");
+        Minecraft.getMinecraft().getProfiler().push("fakeEntities");
         {
             // adds all new entities to the set
             Iterator<FakeEntity> it = toSpawn.iterator();
@@ -99,16 +99,16 @@ public class EntityManager {
                 it.remove();
             }
 
-            RenderManager renderManager = Minecraft.getInstance().getRenderManager();
+            RenderManager renderManager = Minecraft.getMinecraft().getRenderManager();
             if (renderManager == null || renderManager.options == null) return;
 
-            ClientPlayerEntity player = Minecraft.getInstance().player;
+            ClientPlayerEntity player = Minecraft.getMinecraft().player;
             // ticks each entity
             it = entityList.iterator();
             while (it.hasNext()) {
                 FakeEntity next = it.next();
 
-                Minecraft.getInstance().getProfiler().push(next.getName());
+                Minecraft.getMinecraft().getProfiler().push(next.getName());
                 {
                     _pushMatrix();
                     {
@@ -124,10 +124,10 @@ public class EntityManager {
                     }
                     _popMatrix();
                 }
-                Minecraft.getInstance().getProfiler().pop();
+                Minecraft.getMinecraft().getProfiler().pop();
             }
         }
-        Minecraft.getInstance().getProfiler().pop();
+        Minecraft.getMinecraft().getProfiler().pop();
     }
 
 }

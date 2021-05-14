@@ -46,7 +46,7 @@ public class HeldItemChatManager {
     }
 
     private static ITextComponent getMessage() {
-        Minecraft mc = Minecraft.getInstance();
+        Minecraft mc = Minecraft.getMinecraft();
         if (
             !ChatConfig.INSTANCE.heldItemChat ||
             mc.player == null || mc.world == null ||
@@ -124,8 +124,8 @@ public class HeldItemChatManager {
 
         double compassX = compass.getX();
         double compassZ = compass.getZ();
-        double playerX = Minecraft.getInstance().player.getX();
-        double playerZ = Minecraft.getInstance().player.getZ();
+        double playerX = Minecraft.getMinecraft().player.getX();
+        double playerZ = Minecraft.getMinecraft().player.getZ();
 
         int distance = MathHelper.floor(MathHelper.sqrt((compassX - playerX) * (compassX - playerX) + (compassZ - playerZ) * (compassZ - playerZ)));
 
@@ -193,7 +193,7 @@ public class HeldItemChatManager {
             ChatConfig.INSTANCE.saveSettings(ChatModule.getModule());
 
             ITextComponent message = new StringTextComponent("Enable §bMod options > Chat > Held Item Chat Messages§r to undo (or click this)");
-            Minecraft.getInstance().player.sendMessage(TextAction.withStaticEvent(message, OnUnhideClick.class));
+            Minecraft.getMinecraft().player.sendMessage(TextAction.withStaticEvent(message, OnUnhideClick.class));
         }
     }
 

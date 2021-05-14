@@ -118,7 +118,7 @@ public class ClientEvents implements Listener {
     public void recordLootRun(TickEvent.ClientTickEvent e) {
         if (!Reference.onWorld || e.phase != TickEvent.Phase.END || !LootRunManager.isRecording()) return;
 
-        ClientPlayerEntity player = Minecraft.getInstance().player;
+        ClientPlayerEntity player = Minecraft.getMinecraft().player;
         if (player == null) return;
 
         Entity lowestEntity = player.getLowestRidingEntity();

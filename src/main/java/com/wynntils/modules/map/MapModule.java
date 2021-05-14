@@ -63,7 +63,7 @@ public class MapModule extends Module {
 
         registerKeyBinding("New Waypoint", GLFW.GLFW_KEY_B, "Wynntils", KeyConflictContext.IN_GAME, true, () -> {
             if (Reference.onWorld)
-                Minecraft.getInstance().displayGuiScreen(new WaypointCreationMenu(null));
+                Minecraft.getMinecraft().displayGuiScreen(new WaypointCreationMenu(null));
         });
 
         mapKey = registerKeyBinding("Open Map", GLFW.GLFW_KEY_M, "Wynntils", KeyConflictContext.IN_GAME, true, () -> {

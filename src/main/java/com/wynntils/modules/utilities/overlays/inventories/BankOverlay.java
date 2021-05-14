@@ -97,8 +97,8 @@ public class BankOverlay implements Listener {
         if (destinationPage == page) destinationPage = 0; // if we've already arrived, reset destination
 
         if (searchField == null && UtilitiesConfig.Bank.INSTANCE.showBankSearchBar) {
-            int nameWidth = Minecraft.getInstance().font.width(e.getGui().getUpperInv().getDisplayName().getUnformattedText());
-            searchField = new GuiTextFieldWynn(201, Minecraft.getInstance().font, nameWidth + 13, 128, 157 - nameWidth, 10);
+            int nameWidth = Minecraft.getMinecraft().font.width(e.getGui().getUpperInv().getDisplayName().getUnformattedText());
+            searchField = new GuiTextFieldWynn(201, Minecraft.getMinecraft().font, nameWidth + 13, 128, 157 - nameWidth, 10);
             searchField.setText("Search...");
         }
 
@@ -268,7 +268,7 @@ public class BankOverlay implements Listener {
             }
 
             ((InventoryBasic) e.getGui().getLowerInv()).setCustomName("");
-            nameField = new GuiTextFieldWynn(200, Minecraft.getInstance().font, 8, 5, 120, 10);
+            nameField = new GuiTextFieldWynn(200, Minecraft.getMinecraft().font, 8, 5, 120, 10);
             nameField.setFocused(true);
 
             if (UtilitiesConfig.Bank.INSTANCE.pageNames.containsKey(page))

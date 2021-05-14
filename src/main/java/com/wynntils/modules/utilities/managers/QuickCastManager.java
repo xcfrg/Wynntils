@@ -89,7 +89,7 @@ public class QuickCastManager {
         }
 
         if (PlayerInfo.get(CharacterData.class).getLevel() < spellUnlock[spell - 1]) {
-            Minecraft.getInstance().player.sendMessage(new StringTextComponent(
+            Minecraft.getMinecraft().player.sendMessage(new StringTextComponent(
                     TextFormatting.GRAY + "You have not yet unlocked this spell! You need to be level " + spellUnlock[spell - 1]
             ));
             return false;

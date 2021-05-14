@@ -73,8 +73,8 @@ public class MapProfile {
 
     private void setReadyToUse() {
         // make sure this is being called from the main thread
-        if (!Minecraft.getInstance().isCallingFromMinecraftThread()) {
-            Minecraft.getInstance().submit(this::setReadyToUse);
+        if (!Minecraft.getMinecraft().isCallingFromMinecraftThread()) {
+            Minecraft.getMinecraft().submit(this::setReadyToUse);
             return;
         }
         readyToUse = true;

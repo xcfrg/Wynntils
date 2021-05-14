@@ -104,7 +104,7 @@ public class ServerEvents implements Listener {
         if (!RichPresenceConfig.INSTANCE.enableRichPresence || !Reference.onWorld
                 || !PlayerInfo.get(CharacterData.class).isLoaded()) return;
 
-        if (e.getPacket().getExperienceLevel() != Minecraft.getInstance().player.experienceLevel) {
+        if (e.getPacket().getExperienceLevel() != Minecraft.getMinecraft().player.experienceLevel) {
             forceUpdate = true;
         }
     }
@@ -166,7 +166,7 @@ public class ServerEvents implements Listener {
      * @return RichPresence largeImageText
      */
     public static String getPlayerInfo() {
-        Minecraft mc = Minecraft.getInstance();
+        Minecraft mc = Minecraft.getMinecraft();
         return RichPresenceConfig.INSTANCE.showUserInformation ? mc.player.getName() + " | Level " + mc.player.experienceLevel + " " + PlayerInfo.get(CharacterData.class).getCurrentClass().toString() : null;
     }
 

@@ -59,7 +59,7 @@ public class FakeInventory {
     private boolean expectingResponse = false;
     private long limitTime = 10000;
 
-    private Minecraft mc = Minecraft.getInstance();
+    private Minecraft mc = Minecraft.getMinecraft();
 
     public FakeInventory(Pattern expectedWindowTitle, IInventoryOpenAction openAction) {
         this.expectedWindowTitle = expectedWindowTitle;

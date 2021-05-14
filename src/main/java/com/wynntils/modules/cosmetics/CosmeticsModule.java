@@ -22,9 +22,9 @@ public class CosmeticsModule extends Module {
     }
 
     public void postEnable() {
-        Minecraft.getInstance().options.setModelPart(PlayerModelPart.CAPE, true);
+        Minecraft.getMinecraft().options.setModelPart(PlayerModelPart.CAPE, true);
 
-        for (PlayerRenderer render : Minecraft.getInstance().getEntityRenderDispatcher().getSkinMap().values()) {
+        for (PlayerRenderer render : Minecraft.getMinecraft().getEntityRenderDispatcher().getSkinMap().values()) {
             render.addLayer(new LayerCape(render));
             render.addLayer(new LayerElytra(render));
             render.addLayer(new LayerFoxEars(render));

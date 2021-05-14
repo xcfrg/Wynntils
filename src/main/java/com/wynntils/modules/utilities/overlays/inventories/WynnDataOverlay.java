@@ -90,7 +90,7 @@ public class WynnDataOverlay implements Listener {
 
     private int locateWeaponSlot() {
         for (int i = 0; i < 9; i++) {
-            String lore = ItemUtils.getStringLore(Minecraft.getInstance().player.inventory.items.get(i));
+            String lore = ItemUtils.getStringLore(Minecraft.getMinecraft().player.inventory.items.get(i));
             // Assume that only weapons have class requirements
             if (lore.contains("Class Req: " + PlayerInfo.get(CharacterData.class).getCurrentClass().getDisplayName())) {
                 return i;
@@ -104,17 +104,17 @@ public class WynnDataOverlay implements Listener {
         e.getButtonList().forEach(gb -> {
             if (gb.id != 12 || !gb.isMouseOver() || e.getMouseButton() != 0) return;
 
-            Minecraft.getInstance().getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1f));
+            Minecraft.getMinecraft().getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1f));
 
             Map<String, String> urlData = new HashMap<>();
 
-            NonNullList<ItemStack> armorInventory = Minecraft.getInstance().player.inventory.armorInventory;
+            NonNullList<ItemStack> armorInventory = Minecraft.getMinecraft().player.inventory.armorInventory;
             getItemNameFromInventory(urlData, "helmet", armorInventory, 3);
             getItemNameFromInventory(urlData, "chestplate", armorInventory, 2);
             getItemNameFromInventory(urlData, "leggings", armorInventory, 1);
             getItemNameFromInventory(urlData, "boots", armorInventory, 0);
 
-            NonNullList<ItemStack> items = Minecraft.getInstance().player.inventory.items;
+            NonNullList<ItemStack> items = Minecraft.getMinecraft().player.inventory.items;
             getItemNameFromInventory(urlData, "ring1", items, 9);
             getItemNameFromInventory(urlData, "ring2", items, 10);
             getItemNameFromInventory(urlData, "bracelet", items, 11);

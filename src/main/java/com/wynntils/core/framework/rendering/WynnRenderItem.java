@@ -21,7 +21,7 @@ public class WynnRenderItem extends ItemRenderer {
 
     public static void inject() {
         if (instance != null) throw new IllegalStateException("Wynntils item renderer has already been installed!");
-        Minecraft mc = Minecraft.getInstance();
+        Minecraft mc = Minecraft.getMinecraft();
         instance = new WynnRenderItem(mc.getItemRenderer(), mc.renderEngine, mc.getItemColors());
         // the resource manager reload listener for the item renderer merely invalidates the cache of the held item model mesher
         // since we're inheriting the one from the original item renderer and also not unregistering it as a reload listener, we don't need to register our own renderer as a listener

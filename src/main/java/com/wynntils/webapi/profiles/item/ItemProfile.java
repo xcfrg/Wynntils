@@ -269,7 +269,7 @@ public class ItemProfile {
 
             // item lore
             if (lore != null && !lore.isEmpty()) {
-                itemLore.addAll(Minecraft.getInstance().font.getSplitter().splitLines(DARK_GRAY + this.getLore(), 150, Style.EMPTY));
+                itemLore.addAll(Minecraft.getMinecraft().font.getSplitter().splitLines(DARK_GRAY + this.getLore(), 150, Style.EMPTY));
             }
         }
 

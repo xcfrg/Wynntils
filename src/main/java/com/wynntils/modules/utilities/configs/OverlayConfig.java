@@ -504,19 +504,19 @@ public class OverlayConfig extends SettingsClass {
             backgroundColor.setA(opacity / 100f);
 
             if (name.contentEquals("preset")) {
-                if (!(Minecraft.getInstance().screen instanceof SettingsUI)) {
+                if (!(Minecraft.getMinecraft().screen instanceof SettingsUI)) {
                     preset = Presets.CLICK_ME;
                 } else if (preset.value != null) {
                     Utils.copyToClipboard(preset.value);
                 }
             } else if (name.contentEquals("variables")) {
-                if (!(Minecraft.getInstance().screen instanceof SettingsUI)) {
+                if (!(Minecraft.getMinecraft().screen instanceof SettingsUI)) {
                     variables = Variables.CLICK_ME;
                 } else if (variables.value != null) {
                     Utils.copyToClipboard(variables.value);
                 }
             } else if (name.contentEquals("escapedChars")) {
-                if (!(Minecraft.getInstance().screen instanceof SettingsUI)) {
+                if (!(Minecraft.getMinecraft().screen instanceof SettingsUI)) {
                     escapedChars = Escaped.CLICK_ME;
                 } else if (escapedChars.value != null) {
                     Utils.copyToClipboard(escapedChars.value);

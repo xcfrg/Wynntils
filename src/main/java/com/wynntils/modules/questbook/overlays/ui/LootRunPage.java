@@ -319,11 +319,11 @@ public class LootRunPage extends QuestBookPage {
     }
 
     public String getFriendlyName(String str, int width) {
-        if (!(Minecraft.getInstance().font.width(str) > width)) return str;
+        if (!(Minecraft.getMinecraft().font.width(str) > width)) return str;
 
         str += "...";
 
-        while (Minecraft.getInstance().font.width(str) > width) {
+        while (Minecraft.getMinecraft().font.width(str) > width) {
             str = str.substring(0, str.length() - 4).trim() + "...";
         }
 
@@ -363,11 +363,11 @@ public class LootRunPage extends QuestBookPage {
                             Location start = LootRunManager.getActivePath().getPoints().get(0);
                             String startingPointMsg = "Loot run " + LootRunManager.getActivePathName() + " starts at [" + (int) start.getX() + ", " + (int) start.getZ() + "]";
 
-                            Minecraft.getInstance().submit(() ->
+                            Minecraft.getMinecraft().submit(() ->
                                     ChatOverlay.getChat().printChatMessageWithOptionalDeletion(new StringTextComponent(startingPointMsg), MESSAGE_ID)
                             );
 
-                            Minecraft.getInstance().getSoundManager().play(SimpleSound.forUI(SoundEvents.BLOCK_ANVIL_PLACE, 1f));
+                            Minecraft.getMinecraft().getSoundManager().play(SimpleSound.forUI(SoundEvents.BLOCK_ANVIL_PLACE, 1f));
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -380,7 +380,7 @@ public class LootRunPage extends QuestBookPage {
                 if (result) {
                     names.remove(selected);
                     updateSelected();
-                    Minecraft.getInstance().getSoundManager().play(SimpleSound.forUI(SoundEvents.ENTITY_IRONGOLEM_HURT, 1f));
+                    Minecraft.getMinecraft().getSoundManager().play(SimpleSound.forUI(SoundEvents.ENTITY_IRONGOLEM_HURT, 1f));
                 }
 
                 return;

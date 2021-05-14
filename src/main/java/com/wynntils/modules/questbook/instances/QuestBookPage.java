@@ -100,7 +100,7 @@ public class QuestBookPage extends Screen {
         lastTick = Minecraft.getSystemTime();
 
         if (showSearchBar) {
-            textField = new GuiTextField(0, Minecraft.getInstance().font, width / 2 + 32, height / 2 - 97, 113, 23);
+            textField = new GuiTextField(0, Minecraft.getMinecraft().font, width / 2 + 32, height / 2 - 97, 113, 23);
             textField.setFocused(!QuestBookConfig.INSTANCE.searchBoxClickRequired);
             textField.setMaxStringLength(50);
             textField.setEnableBackgroundDrawing(false);
@@ -273,7 +273,7 @@ public class QuestBookPage extends Screen {
         this.showAnimation = showAnimation;
 
         if (showAnimation) WynntilsSound.QUESTBOOK_OPENING.play(); // sfx
-        Minecraft.getInstance().displayGuiScreen(this);
+        Minecraft.getMinecraft().displayGuiScreen(this);
     }
 
     public void updateSearch() {

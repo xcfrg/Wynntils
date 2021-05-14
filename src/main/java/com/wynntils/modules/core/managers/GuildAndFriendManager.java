@@ -25,7 +25,7 @@ public class GuildAndFriendManager {
 
     public static void tryResolveNames() {
         // Try to resolve names from the connection map
-        ClientPlayerEntity player = Minecraft.getInstance().player;
+        ClientPlayerEntity player = Minecraft.getMinecraft().player;
         if (player == null) return;
         ClientPlayNetHandler conn = player.connection;
         if (conn == null) return;

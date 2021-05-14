@@ -167,10 +167,10 @@ public class Utils {
      * @return the Scoreboard Team
      */
     public static ScorePlayerTeam createFakeScoreboard(String name, Team.CollisionRule rule) {
-        Scoreboard mc = Minecraft.getInstance().level.getScoreboard();
+        Scoreboard mc = Minecraft.getMinecraft().level.getScoreboard();
         if (mc.getTeam(name) != null) return mc.getTeam(name);
 
-        String player = Minecraft.getInstance().player.getName();
+        String player = Minecraft.getMinecraft().player.getName();
         if (mc.getPlayersTeam(player) != null) previousTeam = mc.getPlayersTeam(player).getName();
 
         ScorePlayerTeam team = mc.createTeam(name);
@@ -186,11 +186,11 @@ public class Utils {
      * @param name the scoreboard name
      */
     public static void removeFakeScoreboard(String name) {
-        Scoreboard mc = Minecraft.getInstance().level.getScoreboard();
+        Scoreboard mc = Minecraft.getMinecraft().level.getScoreboard();
         if (mc.getTeam(name) == null) return;
 
         mc.removeTeam(mc.getTeam(name));
-        if (previousTeam != null) mc.addPlayerToTeam(Minecraft.getInstance().player.getName(), previousTeam);
+        if (previousTeam != null) mc.addPlayerToTeam(Minecraft.getMinecraft().player.getName(), previousTeam);
     }
 
     /**
@@ -199,7 +199,7 @@ public class Utils {
      * @param screen the provided screen
      */
     public static void displayGuiScreen(Screen screen) {
-        Minecraft mc = Minecraft.getInstance();
+        Minecraft mc = Minecraft.getMinecraft();
 
         Screen oldScreen = mc.screen;
 
@@ -215,7 +215,7 @@ public class Utils {
         mc.screen = screen;
 
         if (screen != null) {
-            Minecraft.getInstance().setIngameNotInFocus();
+            Minecraft.getMinecraft().setIngameNotInFocus();
 
             MainWindow scaledresolution = new MainWindow(mc);
             int i = scaledresolution.getGuiScaledWidth();

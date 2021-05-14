@@ -65,7 +65,7 @@ public class MapButton {
     }
 
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
-        Minecraft.getInstance().getSoundManager().play(
+        Minecraft.getMinecraft().getSoundManager().play(
                 SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1f)
         );
 

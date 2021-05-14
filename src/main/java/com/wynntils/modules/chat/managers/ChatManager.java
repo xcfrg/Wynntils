@@ -484,7 +484,7 @@ public class ChatManager {
             } catch (InterruptedException e) {
                 // ignore
             }
-            Minecraft.getInstance().submit(() ->
+            Minecraft.getMinecraft().submit(() ->
                     ChatOverlay.getChat().printChatMessage(new StringTextComponent(TranslationManager.TRANSLATED_PREFIX + prefix + translatedMsg + suffix)));
         });
     }
@@ -494,7 +494,7 @@ public class ChatManager {
     }
 
     public static boolean processUserMention(ITextComponent in, ITextComponent original) {
-        if (ChatConfig.INSTANCE.allowChatMentions && in != null && Minecraft.getInstance().player != null) {
+        if (ChatConfig.INSTANCE.allowChatMentions && in != null && Minecraft.getMinecraft().player != null) {
             String match = "\\b(" + ModCore.mc().player.getName() + (ChatConfig.INSTANCE.mentionNames.length() > 0 ? "|" + ChatConfig.INSTANCE.mentionNames.replace(",", "|") : "") + ")\\b";
             Pattern pattern = Pattern.compile(match, Pattern.CASE_INSENSITIVE);
 
@@ -886,7 +886,7 @@ public class ChatManager {
 
         @Override
         public void run() {
-            Minecraft.getInstance().player.sendMessage(chapterText, null);
+            Minecraft.getMinecraft().player.sendMessage(chapterText, null);
         }
 
     }

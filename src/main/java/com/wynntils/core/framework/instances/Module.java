@@ -140,7 +140,7 @@ public abstract class Module {
     }
 
     public Minecraft getMinecraft() {
-        return Minecraft.getInstance();
+        return Minecraft.getMinecraft();
     }
 
     public Logger getLogger() {

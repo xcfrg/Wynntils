@@ -18,7 +18,7 @@ public enum WynntilsConflictContext implements IKeyConflictContext {
     ALLOW_MOVEMENTS {
         @Override
         public boolean isActive() {
-            return Minecraft.getInstance().screen == null || Minecraft.getInstance().screen instanceof GuiMovementScreen;
+            return Minecraft.getMinecraft().screen == null || Minecraft.getMinecraft().screen instanceof GuiMovementScreen;
         }
 
         @Override

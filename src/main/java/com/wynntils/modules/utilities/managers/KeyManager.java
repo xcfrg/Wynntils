@@ -70,13 +70,13 @@ public class KeyManager {
         CoreModule.getModule().registerKeyBinding("Mob Totem Menu", GLFW.GLFW_KEY_J, "Wynntils", KeyConflictContext.IN_GAME, true, () -> {
             if (!Reference.onWorld) return;
 
-            Minecraft.getInstance().player.chat("/totem");
+            Minecraft.getMinecraft().player.chat("/totem");
         });
 
         CoreModule.getModule().registerKeyBinding("Open Ingredient Pouch", GLFW.GLFW_KEY_O, "Wynntils", KeyConflictContext.IN_GAME, true, () -> {
             if (!Reference.onWorld) return;
 
-            ClientPlayerEntity player = Minecraft.getInstance().player;
+            ClientPlayerEntity player = Minecraft.getMinecraft().player;
             player.connection.send(new CClickWindowPacket(
                     player.inventoryContainer.windowId,
                     13, 0, ClickType.PICKUP, player.inventory.getItem(13),

@@ -55,7 +55,7 @@ public class ScreenRenderer {
      * except {@link com.wynntils.core.events.ClientEvents#onTick(TickEvent.ClientTickEvent)} !
      */
     public static void refresh() {
-        mc = Minecraft.getInstance();
+        mc = Minecraft.getMinecraft();
         screen = new MainWindow(mc);
         if (font == null) {
             font = new SmartFontRenderer();
@@ -63,7 +63,7 @@ public class ScreenRenderer {
         }
         font.setUnicodeFlag(CoreDBConfig.INSTANCE.useUnicode);
         if (itemRenderer == null)
-            itemRenderer = Minecraft.getInstance().getItemRenderer();
+            itemRenderer = Minecraft.getMinecraft().getItemRenderer();
     }
 
     /** void beginGL

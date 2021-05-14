@@ -78,7 +78,7 @@ public class OtherPlayerProfile {
     }
 
     public NetworkPlayerInfo getPlayerInfo() {
-        ClientPlayNetHandler conn = Minecraft.getInstance().getConnection();
+        ClientPlayNetHandler conn = Minecraft.getMinecraft().getConnection();
         return conn == null ? null : conn.getPlayerInfo(uuid);
     }
 
@@ -108,7 +108,7 @@ public class OtherPlayerProfile {
 
         hasHat = e.isModelPartShown(PlayerModelPart.HAT);
 
-        if (!e.isAlive() || e.distanceTo(Minecraft.getInstance().player) >= 30) return false;
+        if (!e.isAlive() || e.distanceTo(Minecraft.getMinecraft().player) >= 30) return false;
         x = (int) e.getX();
         y = (int) e.getY();
         z = (int) e.getZ();

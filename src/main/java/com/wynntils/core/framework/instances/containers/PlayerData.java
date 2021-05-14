@@ -13,7 +13,7 @@ public class PlayerData {
     public PlayerData() { }
 
     public Minecraft getMinecraft() {
-        return Minecraft.getInstance();
+        return Minecraft.getMinecraft();
     }
 
     public ClientPlayerEntity getPlayer() {

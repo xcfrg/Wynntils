@@ -44,7 +44,7 @@ public class LayerElytra extends ModelBase implements LayerRenderer<AbstractClie
     @Override
     public void doRenderLayer(AbstractClientPlayer player, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
         if (!CosmeticsConfig.INSTANCE.forceCapes
-                && !Minecraft.getInstance().options.getModelParts().toString().contains("CAPE")
+                && !Minecraft.getMinecraft().options.getModelParts().toString().contains("CAPE")
                 && player.getUUID() == ModCore.mc().player.getUUID()) return;
 
         WynntilsUser info = UserManager.getUser(player.getUUID());

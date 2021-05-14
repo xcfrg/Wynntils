@@ -73,7 +73,7 @@ public class PacketResponse {
         if (skipping || !shouldSend()) return;
 
         Utils.runAsync(() -> {
-            ClientPlayNetHandler conn = Minecraft.getInstance().getConnection();
+            ClientPlayNetHandler conn = Minecraft.getMinecraft().getConnection();
             if (this.sender != null) {
                 this.sender.accept(conn, input);
             } else {

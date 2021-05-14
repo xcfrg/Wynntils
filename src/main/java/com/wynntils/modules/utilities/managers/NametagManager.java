@@ -114,7 +114,7 @@ public class NametagManager {
         if (entity.isBeingRidden()) return false;
         if (!(entity instanceof PlayerEntity)) return entity.getAlwaysRenderNameTagForRender() && entity.hasCustomName();
 
-        ClientPlayerEntity player = Minecraft.getInstance().player;
+        ClientPlayerEntity player = Minecraft.getMinecraft().player;
         boolean isVisible = !entity.isInvisibleToPlayer(player);
 
         // we also need to consider the teams
@@ -226,7 +226,7 @@ public class NametagManager {
      * Draws the nametag, don't call this, use checkForNametags to add more nametags
      */
     private static void drawNametag(String input, CustomColor color, float x, float y, float z, int verticalShift, float viewerYaw, float viewerPitch, boolean isThirdPersonFrontal, boolean isSneaking, float scale) {
-        FontRenderer font = Minecraft.getInstance().font;  // since our fontrender ignores bold or italic texts we need to use the mc one
+        FontRenderer font = Minecraft.getMinecraft().font;  // since our fontrender ignores bold or italic texts we need to use the mc one
 
         _pushMatrix();
         {
@@ -315,7 +315,7 @@ public class NametagManager {
         List<NametagLabel> labels = new ArrayList<>();
 
         // detects if the user is looking into the player
-        if (Minecraft.getInstance().objectMouseOver == null || Minecraft.getInstance().objectMouseOver.entityHit == null || Minecraft.getInstance().objectMouseOver.entityHit != player) return labels;
+        if (Minecraft.getMinecraft().objectMouseOver == null || Minecraft.getMinecraft().objectMouseOver.entityHit == null || Minecraft.getMinecraft().objectMouseOver.entityHit != player) return labels;
 
         for (ItemStack is : player.getEquipmentAndArmor()) {
             if (!is.hasCustomHoverName()) continue;

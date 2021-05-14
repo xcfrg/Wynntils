@@ -18,10 +18,10 @@ public class CoreManager {
     public static void preModules() {
         MinecraftForge.EVENT_BUS.register(new ClientEvents());
 
-        Minecraft.getInstance().options.keyUp.setKeyConflictContext(WynntilsConflictContext.ALLOW_MOVEMENTS);
-        Minecraft.getInstance().options.keyDown.setKeyConflictContext(WynntilsConflictContext.ALLOW_MOVEMENTS);
-        Minecraft.getInstance().options.keyRight.setKeyConflictContext(WynntilsConflictContext.ALLOW_MOVEMENTS);
-        Minecraft.getInstance().options.keyLeft.setKeyConflictContext(WynntilsConflictContext.ALLOW_MOVEMENTS);
+        Minecraft.getMinecraft().options.keyUp.setKeyConflictContext(WynntilsConflictContext.ALLOW_MOVEMENTS);
+        Minecraft.getMinecraft().options.keyDown.setKeyConflictContext(WynntilsConflictContext.ALLOW_MOVEMENTS);
+        Minecraft.getMinecraft().options.keyRight.setKeyConflictContext(WynntilsConflictContext.ALLOW_MOVEMENTS);
+        Minecraft.getMinecraft().options.keyLeft.setKeyConflictContext(WynntilsConflictContext.ALLOW_MOVEMENTS);
     }
 
     /**

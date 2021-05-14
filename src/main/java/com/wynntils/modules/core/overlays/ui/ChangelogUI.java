@@ -75,7 +75,7 @@ public class ChangelogUI extends Screen {
      * @param forceLatest {@link WebManager#getChangelog(boolean, boolean)}'s second argument (Latest or current changelog?)
      */
     public static void loadChangelogAndShow(Screen previousGui, boolean major, boolean forceLatest) {
-        Minecraft mc = Minecraft.getInstance();
+        Minecraft mc = Minecraft.getMinecraft();
 
         Screen loadingScreen = new ChangelogUI(previousGui, Collections.singletonList("Loading..."), major);
         mc.displayGuiScreen(loadingScreen);
@@ -129,7 +129,7 @@ public class ChangelogUI extends Screen {
 
         float scrollPositionOffset = scrollbarSize == 118 ? 0 : (((changelogContent.size() / 15.0f) * 159) * scrollPercent);
         for (String changelogLine : changelogContent) {
-            renderer.drawString(changelogLine.replace("%user%", Minecraft.getInstance().getSession().getUsername()), textX, baseY - scrollPositionOffset, CommonColors.BROWN, SmartFontRenderer.TextAlignment.LEFT_RIGHT, SmartFontRenderer.TextShadow.NONE);
+            renderer.drawString(changelogLine.replace("%user%", Minecraft.getMinecraft().getSession().getUsername()), textX, baseY - scrollPositionOffset, CommonColors.BROWN, SmartFontRenderer.TextAlignment.LEFT_RIGHT, SmartFontRenderer.TextShadow.NONE);
 
             baseY += 10;
         }
@@ -166,8 +166,8 @@ public class ChangelogUI extends Screen {
     @Override
     protected void keyTyped(char charType, int keyCode) throws IOException {
         if (keyCode == 1) {  // ESC
-            Minecraft.getInstance().displayGuiScreen(previousGui);
-            if (Minecraft.getInstance().screen == null) mc.setIngameFocus();
+            Minecraft.getMinecraft().displayGuiScreen(previousGui);
+            if (Minecraft.getMinecraft().screen == null) mc.setIngameFocus();
         }
     }
 

@@ -157,7 +157,7 @@ public class UIEColorWheel extends UIEClickZone {
                 color = toChange;
 
                 mc.displayGuiScreen(backGui);
-                Minecraft.getInstance().getSoundManager().play(SimpleSound.forUI(clickSound, 1f));
+                Minecraft.getMinecraft().getSoundManager().play(SimpleSound.forUI(clickSound, 1f));
                 onAccept.accept(color);
                 if (colorText == null) {
                     textBox.setText(formatColourName(color));
@@ -166,7 +166,7 @@ public class UIEColorWheel extends UIEClickZone {
                 }
             } else if (button == cancelButton) {
                 mc.displayGuiScreen(backGui);
-                Minecraft.getInstance().getSoundManager().play(SimpleSound.forUI(clickSound, 1f));
+                Minecraft.getMinecraft().getSoundManager().play(SimpleSound.forUI(clickSound, 1f));
             }
         }
 

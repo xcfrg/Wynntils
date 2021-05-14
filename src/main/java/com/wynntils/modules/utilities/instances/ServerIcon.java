@@ -49,7 +49,7 @@ public class ServerIcon {
         this.allowStale = allowStale;
 
         serverIcon = new ResourceLocation("servers/" + server.ip + "/icon");
-        icon = (DynamicTexture) Minecraft.getInstance().getTextureManager().getTexture(serverIcon);
+        icon = (DynamicTexture) Minecraft.getMinecraft().getTextureManager().getTexture(serverIcon);
 
         synchronized (ServerIcon.class) {
             instances.add(new WeakReference<>(this));
@@ -140,7 +140,7 @@ public class ServerIcon {
         lastIcon = currentIcon;
 
         if (currentIcon == null) {
-            Minecraft.getInstance().getTextureManager().release(serverIcon);
+            Minecraft.getMinecraft().getTextureManager().release(serverIcon);
             icon = null;
             onDone();
             return null;
@@ -158,7 +158,7 @@ public class ServerIcon {
 
         if (icon == null) {
             icon = new DynamicTexture(bufferedimage.getWidth(), bufferedimage.getHeight());
-            Minecraft.getInstance().getTextureManager().loadTexture(serverIcon, icon);
+            Minecraft.getMinecraft().getTextureManager().loadTexture(serverIcon, icon);
         }
 
         bufferedimage.getRGB(0, 0, bufferedimage.getWidth(), bufferedimage.getHeight(), icon.getTextureData(), 0, bufferedimage.getWidth());

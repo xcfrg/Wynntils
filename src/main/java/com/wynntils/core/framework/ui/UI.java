@@ -151,7 +151,7 @@ public abstract class UI extends Screen {
 
     public void show() {
         setupUI(this);
-        Minecraft.getInstance().displayGuiScreen(this);
+        Minecraft.getMinecraft().displayGuiScreen(this);
     }
 
     public static abstract class CommonUIFeatures {

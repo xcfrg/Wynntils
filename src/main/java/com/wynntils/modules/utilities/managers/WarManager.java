@@ -39,7 +39,7 @@ public class WarManager {
     public static boolean allowClick(PacketEvent<CUseEntityPacket> e) {
         if (!UtilitiesConfig.Wars.INSTANCE.blockWorkstations || !Reference.onWars) return false;
 
-        Entity in = e.getPacket().getEntityFromWorld(Minecraft.getInstance().level);
+        Entity in = e.getPacket().getEntityFromWorld(Minecraft.getMinecraft().level);
         return in instanceof ArmorStandEntity || in instanceof EntitySlime;
     }
 

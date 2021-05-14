@@ -90,10 +90,10 @@ public class GuiButtonImageBetter extends GuiButtonImage {
     public static void setColour(boolean hovering, boolean enabled) {
         if (hovering) {
             highlightFixHovering.enabled = enabled;
-            highlightFixHovering.drawButton(Minecraft.getInstance(), Integer.MIN_VALUE, Integer.MIN_VALUE, 0);
+            highlightFixHovering.drawButton(Minecraft.getMinecraft(), Integer.MIN_VALUE, Integer.MIN_VALUE, 0);
         } else {
             highlightFixNoHovering.enabled = enabled;
-            highlightFixNoHovering.drawButton(Minecraft.getInstance(), 0, 0, 0);
+            highlightFixNoHovering.drawButton(Minecraft.getMinecraft(), 0, 0, 0);
         }
     }
 }
