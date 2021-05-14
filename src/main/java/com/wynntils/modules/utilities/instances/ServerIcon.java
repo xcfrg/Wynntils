@@ -48,8 +48,8 @@ public class ServerIcon {
         this.server = server;
         this.allowStale = allowStale;
 
-        serverIcon = new ResourceLocation("servers/" + server.serverIP + "/icon");
-        icon = (DynamicTexture) Minecraft.getMinecraft().getTextureManager().getTexture(serverIcon);
+        serverIcon = new ResourceLocation("servers/" + server.ip + "/icon");
+        icon = (DynamicTexture) Minecraft.getInstance().getTextureManager().getTexture(serverIcon);
 
         synchronized (ServerIcon.class) {
             instances.add(new WeakReference<>(this));
@@ -140,7 +140,7 @@ public class ServerIcon {
         lastIcon = currentIcon;
 
         if (currentIcon == null) {
-            Minecraft.getMinecraft().getTextureManager().deleteTexture(serverIcon);
+            Minecraft.getInstance().getTextureManager().release(serverIcon);
             icon = null;
             onDone();
             return null;
@@ -150,7 +150,7 @@ public class ServerIcon {
         try {
             bufferedimage = parseServerIcon(lastIcon);
         } catch (Throwable throwable) {
-            Reference.LOGGER.error("Invalid icon for server " + server.serverName + " (" + server.serverIP + ")", throwable);
+            Reference.LOGGER.error("Invalid icon for server " + server.serverName + " (" + server.ip + ")", throwable);
             server.setBase64EncodedIconData(null);
             onDone();
             return null;
@@ -158,7 +158,7 @@ public class ServerIcon {
 
         if (icon == null) {
             icon = new DynamicTexture(bufferedimage.getWidth(), bufferedimage.getHeight());
-            Minecraft.getMinecraft().getTextureManager().loadTexture(serverIcon, icon);
+            Minecraft.getInstance().getTextureManager().loadTexture(serverIcon, icon);
         }
 
         bufferedimage.getRGB(0, 0, bufferedimage.getWidth(), bufferedimage.getHeight(), icon.getTextureData(), 0, bufferedimage.getWidth());

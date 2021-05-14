@@ -8,12 +8,12 @@ import com.wynntils.core.framework.enums.ClassType;
 import com.wynntils.core.framework.instances.containers.PlayerData;
 import com.wynntils.core.framework.instances.containers.UnprocessedAmount;
 import com.wynntils.core.utils.ItemUtils;
-import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
+import net.minecraft.block.Blocks;
+import net.minecraft.item.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextFormatting;
@@ -35,11 +35,11 @@ public class InventoryData extends PlayerData {
      * -1 if unable to determine
      */
     public int getFreeInventorySlots() {
-        EntityPlayerSP player = getPlayer();
+        ClientPlayerEntity player = getPlayer();
         ClassType currentClass = get(CharacterData.class).getCurrentClass();
 
         if (currentClass == ClassType.NONE || player == null) return -1;
-        return (int) player.inventory.mainInventory.stream().filter(ItemStack::isEmpty).count();
+        return (int) player.inventory.items.stream().filter(ItemStack::isEmpty).count();
     }
 
     /**
@@ -49,11 +49,11 @@ public class InventoryData extends PlayerData {
      * -1 if unable to determine
      */
     public int getIngredientPouchCount(boolean countSlotsOnly) {
-        EntityPlayerSP player = getPlayer();
+        ClientPlayerEntity player = getPlayer();
         ClassType currentClass = get(CharacterData.class).getCurrentClass();
 
         if (currentClass == ClassType.NONE || player == null) return -1;
-        ItemStack pouch = player.inventory.mainInventory.get(13);
+        ItemStack pouch = player.inventory.items.get(13);
         int count = 0;
 
         List<String> lore = ItemUtils.getLore(pouch);
@@ -82,23 +82,23 @@ public class InventoryData extends PlayerData {
      * If there are no unprocessed materials, maximum will be -1.
      */
     public UnprocessedAmount getUnprocessedAmount() {
-        EntityPlayerSP player = getPlayer();
+        ClientPlayerEntity player = getPlayer();
         if (player == null) return new UnprocessedAmount(0, 0);
 
         int maximum = -1;
         int amount = 0;
 
-        for (int i = 0, len = player.inventory.getSizeInventory(); i < len; i++) {
-            ItemStack it = player.inventory.getStackInSlot(i);
+        for (int i = 0, len = player.inventory.getContainerSize(); i < len; i++) {
+            ItemStack it = player.inventory.getItem(i);
             if (it.isEmpty()) continue;
 
             Matcher nameMatcher = UNPROCESSED_NAME_REGEX.matcher(it.getDisplayName());
             if (!nameMatcher.matches()) continue;
 
-            NBTTagList lore = ItemUtils.getLoreTag(it);
-            if (lore == null || lore.tagCount() == 0) continue;
+            ListNBT lore = ItemUtils.getLoreTag(it);
+            if (lore == null || lore.size() == 0) continue;
 
-            Matcher loreMatcher = UNPROCESSED_LORE_REGEX.matcher(lore.getStringTagAt(0));
+            Matcher loreMatcher = UNPROCESSED_LORE_REGEX.matcher(lore.getString(0));
             if (!loreMatcher.matches()) continue;
 
             // Found an unprocessed item
@@ -116,15 +116,15 @@ public class InventoryData extends PlayerData {
      * @return Total number of health potions in inventory
      */
     public int getHealthPotions() {
-        EntityPlayerSP player = getPlayer();
+        ClientPlayerEntity player = getPlayer();
         if (player == null) return 0;
 
-        NonNullList<ItemStack> contents = player.inventory.mainInventory;
+        NonNullList<ItemStack> contents = player.inventory.items;
 
         int count = 0;
 
         for (ItemStack item : contents) {
-            if (!item.isEmpty() && item.hasDisplayName() && item.getDisplayName().contains("Potion of Healing")) {
+            if (!item.isEmpty() && item.hasCustomHoverName() && item.getDisplayName().contains("Potion of Healing")) {
                 count++;
             }
         }
@@ -136,15 +136,15 @@ public class InventoryData extends PlayerData {
      * @return Total number of mana potions in inventory
      */
     public int getManaPotions() {
-        EntityPlayerSP player = getPlayer();
+        ClientPlayerEntity player = getPlayer();
         if (player == null) return 0;
 
-        NonNullList<ItemStack> contents = player.inventory.mainInventory;
+        NonNullList<ItemStack> contents = player.inventory.items;
 
         int count = 0;
 
         for (ItemStack item : contents) {
-            if (!item.isEmpty() && item.hasDisplayName() && item.getDisplayName().contains("Potion of Mana")) {
+            if (!item.isEmpty() && item.hasCustomHoverName() && item.getDisplayName().contains("Potion of Mana")) {
                 count++;
             }
         }
@@ -156,7 +156,7 @@ public class InventoryData extends PlayerData {
      * @return Total number of emeralds in inventory (Including blocks and LE)
      */
     public int getMoney() {
-        EntityPlayerSP player = getPlayer();
+        ClientPlayerEntity player = getPlayer();
         if (player == null) return 0;
 
         return ItemUtils.countMoney(player.inventory);
@@ -181,12 +181,12 @@ public class InventoryData extends PlayerData {
      * -1 if unable to determine
      */
     public int getSoulPoints() {
-        EntityPlayerSP player = getPlayer();
+        ClientPlayerEntity player = getPlayer();
         ClassType currentClass = get(CharacterData.class).getCurrentClass();
         if (currentClass == ClassType.NONE || player == null) return -1;
 
-        ItemStack soulPoints = player.inventory.mainInventory.get(8);
-        if (soulPoints.getItem() != Items.NETHER_STAR && soulPoints.getItem() != Item.getItemFromBlock(Blocks.SNOW_LAYER)) {
+        ItemStack soulPoints = player.inventory.items.get(8);
+        if (soulPoints.getItem() != Items.NETHER_STAR && soulPoints.getItem() != Item.byBlock(Blocks.SNOW)) {
             return -1;
         }
 
@@ -202,11 +202,11 @@ public class InventoryData extends PlayerData {
      * in which case soul points are already full
      */
     public int getTicksToNextSoulPoint() {
-        EntityPlayerSP player = getPlayer();
+        ClientPlayerEntity player = getPlayer();
         ClassType currentClass = get(CharacterData.class).getCurrentClass();
 
-        if (currentClass == ClassType.NONE || player.world == null) return -1;
-        int ticks = ((int) (player.world.getWorldTime() % 24000) + 24000) % 24000;
+        if (currentClass == ClassType.NONE || player.level == null) return -1;
+        int ticks = ((int) (player.level.getWorldTime() % 24000) + 24000) % 24000;
 
         return ((24000 - ticks) % 24000);
     }

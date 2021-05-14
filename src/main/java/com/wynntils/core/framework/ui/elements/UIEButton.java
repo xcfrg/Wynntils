@@ -31,7 +31,7 @@ public class UIEButton extends UIEClickZone {
 
     public UIEButton(String text, Texture texture, float anchorX, float anchorY, int offsetX, int offsetY, int setWidth, boolean active, BiConsumer<UI, MouseButton> onClick, int tx1, int ty1, int tx2, int ty2) {
         super(anchorX, anchorY, offsetX, offsetY, setWidth, texture == null ? 1 : (ty2 - ty1) / 3, active, onClick);
-        this.clickSound = net.minecraft.init.SoundEvents.UI_BUTTON_CLICK;
+        this.clickSound = net.minecraft.util.SoundEvents.UI_BUTTON_CLICK;
         this.text = text;
         this.texture = texture;
         this.setWidth = setWidth;
@@ -52,7 +52,7 @@ public class UIEButton extends UIEClickZone {
         super.render(mouseX, mouseY);
         if (!visible) return;
 
-        width = (int) Math.max(this.setWidth < 0 ? (int) getStringWidth(text) - this.setWidth : this.setWidth, texture == null ? 0 : tx2 - tx1);
+        width = (int) Math.max(this.setWidth < 0 ? (int) width(text) - this.setWidth : this.setWidth, texture == null ? 0 : tx2 - tx1);
 
         if (!active) {
             if (texture != null) {

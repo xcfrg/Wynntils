@@ -27,12 +27,12 @@ import com.wynntils.webapi.profiles.item.enums.MajorIdentification;
 import com.wynntils.webapi.profiles.item.objects.IdentificationContainer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTBase;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import org.lwjgl.input.Keyboard;
+import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.StringNBT;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import org.lwjgl.glfw.GLFW;
 
 import java.text.DecimalFormat;
 import java.util.*;
@@ -54,62 +54,62 @@ public class ItemIdentificationOverlay implements Listener {
     public void onChest(GuiOverlapEvent.ChestOverlap.DrawScreen.Post e) {
         if (e.getGui().getSlotUnderMouse() == null || !e.getGui().getSlotUnderMouse().getHasStack()) return;
 
-        replaceLore(e.getGui().getSlotUnderMouse().getStack());
+        replaceLore(e.getGui().getSlotUnderMouse().getItem());
     }
 
     @SubscribeEvent
     public void onInventory(GuiOverlapEvent.InventoryOverlap.DrawScreen e) {
         if (e.getGui().getSlotUnderMouse() == null || !e.getGui().getSlotUnderMouse().getHasStack()) return;
 
-        replaceLore(e.getGui().getSlotUnderMouse().getStack());
+        replaceLore(e.getGui().getSlotUnderMouse().getItem());
     }
 
     @SubscribeEvent
     public void onHorse(GuiOverlapEvent.HorseOverlap.DrawScreen e) {
         if (e.getGui().getSlotUnderMouse() == null || !e.getGui().getSlotUnderMouse().getHasStack()) return;
 
-        replaceLore(e.getGui().getSlotUnderMouse().getStack());
+        replaceLore(e.getGui().getSlotUnderMouse().getItem());
     }
 
     public static void replaceLore(ItemStack stack)  {
-        if (!UtilitiesConfig.Identifications.INSTANCE.enabled || !stack.hasDisplayName() || !stack.hasTagCompound()) return;
-        NBTTagCompound nbt = stack.getTagCompound();
-        if (nbt.hasKey("wynntilsIgnore")) return;
+        if (!UtilitiesConfig.Identifications.INSTANCE.enabled || !stack.hasCustomHoverName() || !stack.hasTagCompound()) return;
+        CompoundNBT nbt = stack.getTag();
+        if (nbt.contains("wynntilsIgnore")) return;
 
         String itemName = StringUtils.normalizeBadString(getTextWithoutFormattingCodes(stack.getDisplayName()));
 
         // Check if unidentified item.
         if (itemName.contains("Unidentified") && UtilitiesConfig.Identifications.INSTANCE.showItemGuesses) {
             // Add possible identifications
-            nbt.setBoolean("wynntilsIgnore", true);
+            nbt.putBoolean("wynntilsIgnore", true);
             addItemGuesses(stack);
             return;
         }
 
         // Check if item is a valid item if not ignore it
-        if (!nbt.hasKey("wynntils") && WebManager.getItems().get(itemName) == null) {
-            nbt.setBoolean("wynntilsIgnore", true);
+        if (!nbt.contains("wynntils") && WebManager.getItems().get(itemName) == null) {
+            nbt.putBoolean("wynntilsIgnore", true);
             return;
         }
 
-        NBTTagCompound wynntils = generateData(stack);
+        CompoundNBT wynntils = generateData(stack);
         ItemProfile item = WebManager.getItems().get(wynntils.getString("originName"));
 
         // Block if the item is not the real item
-        if (!wynntils.hasKey("isPerfect") && !stack.getDisplayName().startsWith(item.getTier().getTextColor())) {
-            nbt.setBoolean("wynntilsIgnore", true);
+        if (!wynntils.contains("isPerfect") && !stack.getDisplayName().startsWith(item.getTier().getTextColor())) {
+            nbt.putBoolean("wynntilsIgnore", true);
             nbt.removeTag("wynntils");
             return;
         }
 
         // Perfect name
-        if (wynntils.hasKey("isPerfect")) {
+        if (wynntils.contains("isPerfect")) {
             stack.setStackDisplayName(RainbowText.makeRainbow("Perfect " + wynntils.getString("originName"), true));
         }
 
         // Update only if should update, this is decided on generateDate
         if (!wynntils.getBoolean("shouldUpdate")) return;
-        wynntils.setBoolean("shouldUpdate", false);
+        wynntils.putBoolean("shouldUpdate", false);
 
         // Objects
         IdentificationType idType = IdentificationType.valueOf(wynntils.getString("currentType"));
@@ -122,8 +122,8 @@ public class ItemIdentificationOverlay implements Listener {
         int idAmount = 0;
         boolean hasNewId = false;
 
-        if (wynntils.hasKey("ids")) {
-            NBTTagCompound ids = wynntils.getCompoundTag("ids");
+        if (wynntils.contains("ids")) {
+            CompoundNBT ids = wynntils.getCompound("ids");
             for (String idName : ids.getKeySet()) {
                 if (idName.contains("*")) continue; // star data, ignore
 
@@ -154,7 +154,7 @@ public class ItemIdentificationOverlay implements Listener {
                     lore = (currentValue < 0 ? RED.toString() : currentValue > 0 ? GREEN + "+" : GRAY.toString())
                             + currentValue + type.getInGame();
 
-                if (UtilitiesConfig.Identifications.INSTANCE.addStars && ids.hasKey(idName + "*")) {
+                if (UtilitiesConfig.Identifications.INSTANCE.addStars && ids.contains(idName + "*")) {
                     lore += DARK_GREEN + "***".substring(0, ids.getInteger(idName + "*"));
                 }
                 lore += " " + GRAY + longName;
@@ -201,11 +201,11 @@ public class ItemIdentificationOverlay implements Listener {
             if (rawLore.contains("Price:")) {
                 ignoreNext = true;
 
-                NBTTagCompound market = wynntils.getCompoundTag("marketInfo");
+                CompoundNBT market = wynntils.getCompound("marketInfo");
 
                 newLore.add(GOLD + "Price:");
                 String mLore = GOLD + " - " + GRAY;
-                if (market.hasKey("quantity")) {
+                if (market.contains("quantity")) {
                     mLore += market.getInteger("quantity") + " x ";
                 }
 
@@ -234,7 +234,7 @@ public class ItemIdentificationOverlay implements Listener {
             }
 
             // Stop on powders if the item has powders
-            if (wynntils.hasKey("powderSlots") && oldLore.contains("] Powder Slots")) {
+            if (wynntils.contains("powderSlots") && oldLore.contains("] Powder Slots")) {
                 break;
             }
 
@@ -263,14 +263,14 @@ public class ItemIdentificationOverlay implements Listener {
         }
 
         // Powder lore
-        if (wynntils.hasKey("powderSlots")) newLore.add(wynntils.getString("powderSlots"));
+        if (wynntils.contains("powderSlots")) newLore.add(wynntils.getString("powderSlots"));
 
         // Set Bonus
-        if (wynntils.hasKey("setBonus")) {
-            if (wynntils.hasKey("powderSlots")) newLore.add(" ");
+        if (wynntils.contains("setBonus")) {
+            if (wynntils.contains("powderSlots")) newLore.add(" ");
 
             newLore.add(GREEN + "Set Bonus:");
-            NBTTagCompound ids = wynntils.getCompoundTag("setBonus");
+            CompoundNBT ids = wynntils.getCompound("setBonus");
 
             Map<String, String> bonusOrder = new HashMap<>();
             for (String idName : ids.getKeySet()) {
@@ -283,7 +283,7 @@ public class ItemIdentificationOverlay implements Listener {
 
         // Quality lore
         String quality = item.getTier().asLore();
-        int rollAmount = (wynntils.hasKey("rerollAmount") ? wynntils.getInteger("rerollAmount") : 0);
+        int rollAmount = (wynntils.contains("rerollAmount") ? wynntils.getInteger("rerollAmount") : 0);
         if (rollAmount != 0) quality += " [" + rollAmount + "]";
 
         // adds reroll price if the item
@@ -297,21 +297,21 @@ public class ItemIdentificationOverlay implements Listener {
         if (item.getRestriction() != null) newLore.add(RED + "Untradable Item");
 
         // Merchant & dungeon purchase offers
-        if (wynntils.hasKey("purchaseInfo")) {
+        if (wynntils.contains("purchaseInfo")) {
             newLore.add(" ");
             newLore.add(GOLD + "Price:");
 
-            NBTTagList purchaseInfo = wynntils.getTagList("purchaseInfo", 8 /* means NBTTagString */);
-            for (NBTBase nbtBase : purchaseInfo) {
-                newLore.add(((NBTTagString) nbtBase).getString());
+            ListNBT purchaseInfo = wynntils.getTagList("purchaseInfo", 8 /* means StringNBT */);
+            for (INBT nbtBase : purchaseInfo) {
+                newLore.add(((StringNBT) nbtBase).getString());
             }
         }
 
         // Item lore
         if (item.getLore() != null && !item.getLore().isEmpty()) {
-            if (wynntils.hasKey("purchaseInfo")) newLore.add(" ");
+            if (wynntils.contains("purchaseInfo")) newLore.add(" ");
 
-            newLore.addAll(Minecraft.getMinecraft().fontRenderer.listFormattedStringToWidth(DARK_GRAY + item.getLore(), 150));
+            newLore.addAll(Minecraft.getInstance().font.listFormattedStringToWidth(DARK_GRAY + item.getLore(), 150));
         }
 
         // Special displayname
@@ -324,21 +324,21 @@ public class ItemIdentificationOverlay implements Listener {
 
         // check for item perfection
         if (relativeTotal/idAmount >= 1d && idType == IdentificationType.PERCENTAGES && !hasNewId && UtilitiesConfig.Identifications.INSTANCE.rainbowPerfect) {
-            wynntils.setBoolean("isPerfect", true);
+            wynntils.putBoolean("isPerfect", true);
         }
 
         stack.setStackDisplayName(item.getTier().getTextColor() + item.getDisplayName() + specialDisplay);
 
         // Applying lore
-        NBTTagCompound compound = nbt.getCompoundTag("display");
-        NBTTagList list = new NBTTagList();
+        CompoundNBT compound = nbt.getCompound("display");
+        ListNBT list = new ListNBT();
 
-        newLore.forEach(c -> list.appendTag(new NBTTagString(c)));
+        newLore.forEach(c -> list.add(StringNBT.valueOf(c)));
 
-        compound.setTag("Lore", list);
+        compound.put("Lore", list);
 
-        nbt.setTag("wynntils", wynntils);
-        nbt.setTag("display", compound);
+        nbt.put("wynntils", wynntils);
+        nbt.put("display", compound);
     }
 
     private static void addItemGuesses(ItemStack stack) {
@@ -386,40 +386,40 @@ public class ItemIdentificationOverlay implements Listener {
             itemNamesAndCosts += itemDescription;
         }
 
-        ItemUtils.getLoreTag(stack).appendTag(new NBTTagString(GREEN + "- " + GRAY + "Possibilities: " + itemNamesAndCosts));
+        ItemUtils.getLoreTag(stack).add(StringNBT.valueOf(GREEN + "- " + GRAY + "Possibilities: " + itemNamesAndCosts));
     }
 
-    private static NBTTagCompound generateData(ItemStack stack) {
+    private static CompoundNBT generateData(ItemStack stack) {
         IdentificationType idType;
-        if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) idType = IdentificationType.MIN_MAX;
-        else if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) idType = IdentificationType.UPGRADE_CHANCES;
+        if (Utils.isKeyDown(GLFW.GLFW_KEY_LSHIFT)) idType = IdentificationType.MIN_MAX;
+        else if (Utils.isKeyDown(GLFW.GLFW_KEY_LCONTROL)) idType = IdentificationType.UPGRADE_CHANCES;
         else idType = IdentificationType.PERCENTAGES;
 
-        if (stack.hasTagCompound() && stack.getTagCompound().hasKey("wynntils")) {
-            NBTTagCompound compound = stack.getTagCompound().getCompoundTag("wynntils");
+        if (stack.hasTagCompound() && stack.getTag().contains("wynntils")) {
+            CompoundNBT compound = stack.getTag().getCompound("wynntils");
 
             // check for updates
             if (!compound.getString("currentType").equals(idType.toString())) {
-                compound.setBoolean("shouldUpdate", true);
-                compound.setString("currentType", idType.toString());
+                compound.putBoolean("shouldUpdate", true);
+                compound.putString("currentType", idType.toString());
 
-                stack.getTagCompound().setTag("wynntils", compound);
+                stack.getTag().put("wynntils", compound);
             }
 
             return compound;
         }
 
-        NBTTagCompound mainTag = new NBTTagCompound();
+        CompoundNBT mainTag = new CompoundNBT();
 
         {  // main data
-            mainTag.setString("originName", StringUtils.normalizeBadString(getTextWithoutFormattingCodes(stack.getDisplayName())));  // this replace allow market items to be scanned
-            mainTag.setString("currentType", idType.toString());
-            mainTag.setBoolean("shouldUpdate", true);
+            mainTag.putString("originName", StringUtils.normalizeBadString(getTextWithoutFormattingCodes(stack.getDisplayName())));  // this replace allow market items to be scanned
+            mainTag.putString("currentType", idType.toString());
+            mainTag.putBoolean("shouldUpdate", true);
         }
 
-        NBTTagCompound idTag = new NBTTagCompound();
-        NBTTagCompound setBonus = new NBTTagCompound();
-        NBTTagList purchaseInfo = new NBTTagList();
+        CompoundNBT idTag = new CompoundNBT();
+        CompoundNBT setBonus = new CompoundNBT();
+        ListNBT purchaseInfo = new ListNBT();
         {  // lore data
             boolean isBonus = false;
             for (String loreLine : ItemUtils.getLore(stack)) {
@@ -447,14 +447,14 @@ public class ItemIdentificationOverlay implements Listener {
 
                         String shortIdName = toShortIdName(idName, isRaw);
                         if (stars != 0) {
-                            idTag.setInteger(shortIdName + "*", stars);
+                            idTag.putInt(shortIdName + "*", stars);
                         }
 
                         if (isBonus) {
-                            setBonus.setString(shortIdName, loreLine);
+                            setBonus.putString(shortIdName, loreLine);
                             continue;
                         }
-                        idTag.setInteger(shortIdName, Integer.parseInt(idMatcher.group("Value")));
+                        idTag.putInt(shortIdName, Integer.parseInt(idMatcher.group("Value")));
                         continue;
                     }
                 }
@@ -464,17 +464,17 @@ public class ItemIdentificationOverlay implements Listener {
                     if (rerollMatcher.find()) {
                         if (rerollMatcher.group("Rolls") == null) continue;
 
-                        mainTag.setInteger("rerollAmount", Integer.parseInt(rerollMatcher.group("Rolls")));
+                        mainTag.putInt("rerollAmount", Integer.parseInt(rerollMatcher.group("Rolls")));
                         continue;
                     }
                 }
 
                 // powders
-                if (lColor.contains("] Powder Slots")) mainTag.setString("powderSlots", loreLine);
+                if (lColor.contains("] Powder Slots")) mainTag.putString("powderSlots", loreLine);
 
                 // dungeon and merchant prices
                 if (lColor.startsWith(" - ✔") || lColor.startsWith(" - ✖")) {
-                    purchaseInfo.appendTag(new NBTTagString(loreLine));
+                    purchaseInfo.add(StringNBT.valueOf(loreLine));
                     continue;
                 }
 
@@ -482,30 +482,30 @@ public class ItemIdentificationOverlay implements Listener {
                 { Matcher market = MARKET_PRICE.matcher(lColor);
                     if (!market.find()) continue;
 
-                    NBTTagCompound marketTag = new NBTTagCompound();
+                    CompoundNBT marketTag = new CompoundNBT();
 
                     if (market.group("Quantity") != null)
-                        marketTag.setInteger("quantity", Integer.parseInt(
+                        marketTag.putInt("quantity", Integer.parseInt(
                                 market.group("Quantity").replace(",", "").replace(" x ", "")
                         ));
 
-                    marketTag.setInteger("price", Integer.parseInt(market.group("Value").replace(",", "")));
+                    marketTag.putInt("price", Integer.parseInt(market.group("Value").replace(",", "")));
 
-                    mainTag.setTag("marketInfo", marketTag);
+                    mainTag.put("marketInfo", marketTag);
                 }
 
             }
 
-            if (idTag.getSize() > 0) mainTag.setTag("ids", idTag);
-            if (setBonus.getSize() > 0) mainTag.setTag("setBonus", setBonus);
-            if (purchaseInfo.tagCount() > 0) mainTag.setTag("purchaseInfo", purchaseInfo);
+            if (idTag.getSize() > 0) mainTag.put("ids", idTag);
+            if (setBonus.getSize() > 0) mainTag.put("setBonus", setBonus);
+            if (purchaseInfo.size() > 0) mainTag.put("purchaseInfo", purchaseInfo);
         }
 
         // update compound
-        NBTTagCompound stackCompound = stack.getTagCompound();
-        stackCompound.setTag("wynntils", mainTag);
+        CompoundNBT stackCompound = stack.getTag();
+        stackCompound.put("wynntils", mainTag);
 
-        stack.setTagCompound(stackCompound);
+        stack.setTag(stackCompound);
 
         return mainTag;
     }

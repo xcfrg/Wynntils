@@ -17,8 +17,8 @@ import com.wynntils.core.framework.settings.SettingsContainer;
 import com.wynntils.core.framework.ui.UI;
 import com.wynntils.core.framework.ui.elements.UIEButton;
 import com.wynntils.core.framework.ui.elements.UIEClickZone;
-import net.minecraft.client.gui.GuiScreen;
-import org.lwjgl.input.Keyboard;
+import net.minecraft.client.gui.screen.Screen;
+import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ import java.util.List;
 
 public class OverlayPositionsUI extends UI {
 
-    private GuiScreen parentScreen;
+    private Screen parentScreen;
 
     private List<OverlayButton> registeredOverlaySettings = new ArrayList<>();
 
@@ -83,7 +83,7 @@ public class OverlayPositionsUI extends UI {
         }
     }, 0, 0, 17, 45);
 
-    public OverlayPositionsUI(GuiScreen parentScreen) {
+    public OverlayPositionsUI(Screen parentScreen) {
         this.parentScreen = parentScreen;
     }
 
@@ -103,13 +103,13 @@ public class OverlayPositionsUI extends UI {
 
         reloadButtons = false;
         shiftDown = false;
-        GRID_SIZE_VERTICAL = ScreenRenderer.screen.getScaledHeight() / 50;
-        GRID_SIZE_HORIZONTAL = ScreenRenderer.screen.getScaledWidth() / 50;
+        GRID_SIZE_VERTICAL = ScreenRenderer.screen.getGuiScaledHeight() / 50;
+        GRID_SIZE_HORIZONTAL = ScreenRenderer.screen.getGuiScaledWidth() / 50;
     }
 
     @Override
     public void onClose() {
-        mc.currentScreen = null;
+        mc.screen = null;
         mc.displayGuiScreen(parentScreen);
     }
 
@@ -126,17 +126,17 @@ public class OverlayPositionsUI extends UI {
             zone.render(mouseX, mouseY);
         }
         if (stringToDrawOnTop != null) {
-            if (stringToDrawOnTop.y > ScreenRenderer.screen.getScaledHeight()) {
-                stringToDrawOnTop.y = ScreenRenderer.screen.getScaledHeight() - 12;
+            if (stringToDrawOnTop.y > ScreenRenderer.screen.getGuiScaledHeight()) {
+                stringToDrawOnTop.y = ScreenRenderer.screen.getGuiScaledHeight() - 12;
             } else if (stringToDrawOnTop.y < 0) {
                 stringToDrawOnTop.y = 1;
             }
-            int widthOfString = ScreenRenderer.fontRenderer.getStringWidth(stringToDrawOnTop.string);
+            int widthOfString = ScreenRenderer.font.width(stringToDrawOnTop.string);
             if (stringToDrawOnTop.x - widthOfString / 2 < 0) {
                 stringToDrawOnTop.x = 1;
                 stringToDrawOnTop.alignment = SmartFontRenderer.TextAlignment.LEFT_RIGHT;
-            } else if (stringToDrawOnTop.x + (widthOfString / 2) > ScreenRenderer.screen.getScaledWidth()) {
-                stringToDrawOnTop.x = ScreenRenderer.screen.getScaledWidth() - 1;
+            } else if (stringToDrawOnTop.x + (widthOfString / 2) > ScreenRenderer.screen.getGuiScaledWidth()) {
+                stringToDrawOnTop.x = ScreenRenderer.screen.getGuiScaledWidth() - 1;
                 stringToDrawOnTop.alignment = SmartFontRenderer.TextAlignment.RIGHT_LEFT;
             }
             render.drawString(stringToDrawOnTop.string, stringToDrawOnTop.x, stringToDrawOnTop.y, stringToDrawOnTop.color, stringToDrawOnTop.alignment, stringToDrawOnTop.textShadow);
@@ -145,7 +145,7 @@ public class OverlayPositionsUI extends UI {
 
     @Override
     public void onRenderPostUIE(ScreenRenderer render) {
-        if (reloadButtons || (shiftDown && !Keyboard.isKeyDown(42)))
+        if (reloadButtons || (shiftDown && !Utils.isKeyDown(42)))
             onInit();
     }
 
@@ -333,7 +333,7 @@ public class OverlayPositionsUI extends UI {
             mouseXPrevious = mouseX;
             mouseYPrevious = mouseY;
             Overlay overlay = (Overlay) overlaySettings.getHolder();
-            if (!Keyboard.isKeyDown(42)) {
+            if (!Utils.isKeyDown(42)) {
                 if (overlay.growth == Overlay.OverlayGrowFrom.TOP_LEFT) {
                     overlay.position.offsetX = position.offsetX;
                     overlay.position.offsetY = position.offsetY;

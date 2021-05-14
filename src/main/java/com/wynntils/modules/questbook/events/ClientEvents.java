@@ -20,13 +20,13 @@ import com.wynntils.modules.questbook.events.custom.QuestBookUpdateEvent;
 import com.wynntils.modules.questbook.instances.QuestBookPage;
 import com.wynntils.modules.questbook.managers.QuestManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.init.Items;
-import net.minecraft.network.play.client.CPacketPlayerTryUseItem;
-import net.minecraft.network.play.client.CPacketPlayerTryUseItemOnBlock;
-import net.minecraft.network.play.client.CPacketUseEntity;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraft.item.Items;
+import net.minecraft.network.play.client.CPlayerTryUseItemPacket;
+import net.minecraft.network.play.client.CPlayerTryUseItemOnBlockPacket;
+import net.minecraft.network.play.client.CUseEntityPacket;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.event.TickEvent;
 
 import java.util.Arrays;
 
@@ -103,30 +103,30 @@ public class ClientEvents implements Listener {
     boolean openQuestBook = false;
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
-    public void clickOnQuestBookItem(PacketEvent<CPacketPlayerTryUseItem> e) {
+    public void clickOnQuestBookItem(PacketEvent<CPlayerTryUseItemPacket> e) {
         if (!QuestBookConfig.INSTANCE.allowCustomQuestbook
                 || !Reference.onWorld || Reference.onNether || Reference.onWars
-                || Minecraft.getMinecraft().player.inventory.currentItem != 7) return;
+                || Minecraft.getInstance().player.inventory.selected != 7) return;
 
         openQuestBook = true;
         e.setCanceled(true);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
-    public void clickOnQuestBookItemOnBlock(PacketEvent<CPacketPlayerTryUseItemOnBlock> e) {
+    public void clickOnQuestBookItemOnBlock(PacketEvent<CPlayerTryUseItemOnBlockPacket> e) {
         if (!QuestBookConfig.INSTANCE.allowCustomQuestbook
                 || !Reference.onWorld || Reference.onNether || Reference.onWars
-                || Minecraft.getMinecraft().player.inventory.currentItem != 7) return;
+                || Minecraft.getInstance().player.inventory.selected != 7) return;
 
         openQuestBook = true;
         e.setCanceled(true);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
-    public void clickOnQuestBookEntity(PacketEvent<CPacketUseEntity> e) {
+    public void clickOnQuestBookEntity(PacketEvent<CUseEntityPacket> e) {
         if (!QuestBookConfig.INSTANCE.allowCustomQuestbook
                 || !Reference.onWorld || Reference.onNether || Reference.onWars
-                || Minecraft.getMinecraft().player.inventory.currentItem != 7) return;
+                || Minecraft.getInstance().player.inventory.selected != 7) return;
 
         openQuestBook = true;
         e.setCanceled(true);
@@ -134,8 +134,8 @@ public class ClientEvents implements Listener {
 
     @SubscribeEvent
     public void updateQuestBook(TickEvent.ClientTickEvent e) {
-        if (e.phase == TickEvent.Phase.START || !Reference.onWorld || Reference.onNether || Reference.onWars || Minecraft.getMinecraft().player.inventory == null) return;
-        if (Minecraft.getMinecraft().player.inventory.getStackInSlot(7).isEmpty() || Minecraft.getMinecraft().player.inventory.getStackInSlot(7).getItem() != Items.WRITTEN_BOOK) return;
+        if (e.phase == TickEvent.Phase.START || !Reference.onWorld || Reference.onNether || Reference.onWars || Minecraft.getInstance().player.inventory == null) return;
+        if (Minecraft.getInstance().player.inventory.getItem(7).isEmpty() || Minecraft.getInstance().player.inventory.getItem(7).getItem() != Items.WRITTEN_BOOK) return;
 
         if (!openQuestBook) return;
         openQuestBook = false;

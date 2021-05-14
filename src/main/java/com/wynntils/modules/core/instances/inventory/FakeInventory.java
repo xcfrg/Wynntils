@@ -10,20 +10,20 @@ import com.wynntils.core.utils.objects.Pair;
 import com.wynntils.modules.core.enums.InventoryResult;
 import com.wynntils.modules.core.interfaces.IInventoryOpenAction;
 import net.minecraft.client.Minecraft;
-import net.minecraft.inventory.ClickType;
+import net.minecraft.inventory.container.ClickType;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.play.client.CPacketClickWindow;
-import net.minecraft.network.play.client.CPacketCloseWindow;
-import net.minecraft.network.play.client.CPacketConfirmTransaction;
-import net.minecraft.network.play.server.SPacketConfirmTransaction;
-import net.minecraft.network.play.server.SPacketOpenWindow;
-import net.minecraft.network.play.server.SPacketWindowItems;
+import net.minecraft.network.play.client.CClickWindowPacket;
+import net.minecraft.network.play.client.CCloseWindowPacket;
+import net.minecraft.network.play.client.CConfirmTransactionPacket;
+import net.minecraft.network.play.server.SConfirmTransactionPacket;
+import net.minecraft.network.play.server.SOpenWindowPacket;
+import net.minecraft.network.play.server.SWindowItemsPacket;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.event.TickEvent;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -59,7 +59,7 @@ public class FakeInventory {
     private boolean expectingResponse = false;
     private long limitTime = 10000;
 
-    private Minecraft mc = Minecraft.getMinecraft();
+    private Minecraft mc = Minecraft.getInstance();
 
     public FakeInventory(Pattern expectedWindowTitle, IInventoryOpenAction openAction) {
         this.expectedWindowTitle = expectedWindowTitle;
@@ -109,10 +109,10 @@ public class FakeInventory {
         FrameworkManager.getEventBus().unregister(this);
         isOpen = false;
 
-        if (windowId != -1) mc.getConnection().sendPacket(new CPacketCloseWindow(windowId));
+        if (windowId != -1) mc.getConnection().send(new CCloseWindowPacket(windowId));
         windowId = -1;
 
-        if(onClose != null) mc.addScheduledTask(() -> onClose.accept(this, result));
+        if(onClose != null) mc.submit(() -> onClose.accept(this, result));
     }
 
     public void clickItem(int slot, int mouseButton, ClickType type) {
@@ -122,7 +122,7 @@ public class FakeInventory {
         expectingResponse = true;
 
         transaction++;
-        mc.getConnection().sendPacket(new CPacketClickWindow(windowId, slot, mouseButton, type, inventory.get(slot), transaction));
+        mc.getConnection().send(new CClickWindowPacket(windowId, slot, mouseButton, type, inventory.get(slot), transaction));
     }
 
     public Pair<Integer, ItemStack> findItem(String name, BiPredicate<String, String> filterType) {
@@ -130,7 +130,7 @@ public class FakeInventory {
 
         for(int slot = 0; slot < inventory.size(); slot++) {
             ItemStack stack = inventory.get(slot);
-            if (stack.isEmpty() || !stack.hasDisplayName()) continue;
+            if (stack.isEmpty() || !stack.hasCustomHoverName()) continue;
 
             String displayName = TextFormatting.getTextWithoutFormattingCodes(stack.getDisplayName());
             if (filterType.test(displayName, name)) {
@@ -153,7 +153,7 @@ public class FakeInventory {
 
         for (int slot = 0, len = inventory.size(); slot < len && found != names.size(); ++slot) {
             ItemStack stack = inventory.get(slot);
-            if (stack.isEmpty() || !stack.hasDisplayName()) continue;
+            if (stack.isEmpty() || !stack.hasCustomHoverName()) continue;
 
             String displayName = TextFormatting.getTextWithoutFormattingCodes(stack.getDisplayName());
             for (int i = 0; i < names.size(); ++i) {
@@ -197,7 +197,7 @@ public class FakeInventory {
 
     // detects the GUI open, and gatters information
     @SubscribeEvent
-    public void onInventoryReceive(PacketEvent<SPacketOpenWindow> e) {
+    public void onInventoryReceive(PacketEvent<SOpenWindowPacket> e) {
         if (!e.getPacket().getGuiId().equalsIgnoreCase("minecraft:container") || !e.getPacket().hasSlots()) {
             close(InventoryResult.CLOSED_OVERLAP);
             return;
@@ -221,32 +221,32 @@ public class FakeInventory {
 
     // detects item receiving
     @SubscribeEvent
-    public void onItemsReceive(PacketEvent<SPacketWindowItems> e) {
+    public void onItemsReceive(PacketEvent<SWindowItemsPacket> e) {
         if (windowId != e.getPacket().getWindowId()) {
             close(InventoryResult.CLOSED_OVERLAP);
             return;
         }
 
         inventory.clear();
-        inventory.addAll(e.getPacket().getItemStacks());
+        inventory.addAll(e.getPacket().getItems());
 
         expectingResponse = false;
         lastAction = Minecraft.getSystemTime();
 
-        if (onReceiveItems != null) mc.addScheduledTask(() -> onReceiveItems.accept(this));
+        if (onReceiveItems != null) mc.submit(() -> onReceiveItems.accept(this));
 
         e.setCanceled(true);
     }
 
     // confirm all server transactions
     @SubscribeEvent
-    public void confirmAllTransactions(PacketEvent.Incoming<SPacketConfirmTransaction> e) {
+    public void confirmAllTransactions(PacketEvent.Incoming<SConfirmTransactionPacket> e) {
         if (windowId != e.getPacket().getWindowId()) {
             close(InventoryResult.CLOSED_OVERLAP);
             return;
         }
 
-        mc.getConnection().sendPacket(new CPacketConfirmTransaction(windowId, e.getPacket().getActionNumber(), true));
+        mc.getConnection().send(new CConfirmTransactionPacket(windowId, e.getPacket().getActionNumber(), true));
         e.setCanceled(true);
     }
 

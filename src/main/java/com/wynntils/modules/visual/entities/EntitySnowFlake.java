@@ -8,9 +8,9 @@ import com.wynntils.core.framework.entities.instances.FakeEntity;
 import com.wynntils.core.framework.rendering.textures.Textures;
 import com.wynntils.core.utils.objects.Location;
 import com.wynntils.modules.visual.configs.VisualConfig;
-import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.RenderGlobal;
+import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -19,7 +19,7 @@ import org.lwjgl.opengl.GL11;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static net.minecraft.client.renderer.GlStateManager.*;
+import static com.mojang.blaze3d.platform.GlStateManager.*;
 
 public class EntitySnowFlake extends FakeEntity {
 
@@ -43,22 +43,22 @@ public class EntitySnowFlake extends FakeEntity {
     }
 
     @Override
-    public void tick(Random r, EntityPlayerSP player) {
+    public void tick(Random r, ClientPlayerEntity player) {
         if (livingTicks < lifespan) return;
 
         remove();
     }
 
     @Override
-    public void render(float partialTicks, RenderGlobal context, RenderManager render) {
+    public void render(float partialTicks, WorldRenderer context, RenderManager render) {
         float percentage = ((livingTicks + partialTicks) / (float) lifespan);
         float alpha = (1f - percentage);
         boolean thirdPerson = render.options.thirdPersonView == 2;
 
         { // setting up
             translate(0, -25 * percentage, 0);
-            depthMask(false);
-            enableBlend();
+            _depthMask(false);
+            _enableBlend();
             enableAlpha();
             //disableTexture2D();
             color(1f, 1f, 1f, alpha);
@@ -72,22 +72,22 @@ public class EntitySnowFlake extends FakeEntity {
         Textures.Particles.snow.bind();
 
         Tessellator tes = Tessellator.getInstance();
-        BufferBuilder buffer = tes.getBuffer();
+        BufferBuilder buffer = tes.getBuilder();
         { // drawing
             buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
 
-            buffer.pos(-.5,  .5, 0).tex(0, 1).color(color, color, color, alpha).endVertex();
-            buffer.pos( .5,  .5, 0).tex(1, 1).color(color, color, color, alpha).endVertex();
-            buffer.pos( .5, -.5, 0).tex(1, 0).color(color, color, color, alpha).endVertex();
-            buffer.pos(-.5, -.5, 0).tex(0, 0).color(color, color, color, alpha).endVertex();
+            buffer.vertex(-.5,  .5, 0).tex(0, 1).color(color, color, color, alpha).endVertex();
+            buffer.vertex( .5,  .5, 0).tex(1, 1).color(color, color, color, alpha).endVertex();
+            buffer.vertex( .5, -.5, 0).tex(1, 0).color(color, color, color, alpha).endVertex();
+            buffer.vertex(-.5, -.5, 0).tex(0, 0).color(color, color, color, alpha).endVertex();
 
-            tes.draw();
+            tes.end();
         }
 
         { // reset to default
-            disableBlend();
+            _disableBlend();
             enableTexture2D();
-            depthMask(true);
+            _depthMask(true);
             color(1f, 1f, 1f, 1f);
         }
     }

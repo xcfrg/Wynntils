@@ -17,17 +17,17 @@ import com.wynntils.modules.utilities.configs.UtilitiesConfig;
 import com.wynntils.webapi.profiles.item.enums.ItemTier;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GlStateManager;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.init.Items;
+import net.minecraft.item.Items;
 import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Slot;
+import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import org.lwjgl.opengl.GL11;
 
 import java.util.HashMap;
@@ -36,8 +36,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.lang.Math.PI;
-import static net.minecraft.client.renderer.GlStateManager.color;
-import static net.minecraft.client.renderer.GlStateManager.glTexEnvi;
+import static com.mojang.blaze3d.platform.GlStateManager.color;
+import static com.mojang.blaze3d.platform.GlStateManager.glTexEnvi;
 import static net.minecraft.util.math.MathHelper.cos;
 import static net.minecraft.util.math.MathHelper.sin;
 import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
@@ -99,7 +99,7 @@ public class RarityColorOverlay implements Listener {
     }
 
     private static void drawItemSlot(GuiContainer guiContainer, boolean isChest, Slot s) {
-        ItemStack is = s.getStack();
+        ItemStack is = s.getItem();
         String lore = ItemUtils.getStringLore(is);
         String name = StringUtils.normalizeBadString(is.getDisplayName());
 
@@ -120,7 +120,7 @@ public class RarityColorOverlay implements Listener {
             if (UtilitiesConfig.Items.INSTANCE.filterEnabled && !professionFilter.equals("-") && lore.contains(professionFilter)) {
                 return new CustomColor(0.078f, 0.35f, 0.8f);
             }
-            if (UtilitiesConfig.Items.INSTANCE.highlightCosmeticDuplicates && slotUnderMouse != null && lore.contains("Reward") && !lore.contains("Raid Reward") && slotUnderMouse.slotNumber != s.slotNumber && slotUnderMouse.getStack().getDisplayName().equals(name)) {
+            if (UtilitiesConfig.Items.INSTANCE.highlightCosmeticDuplicates && slotUnderMouse != null && lore.contains("Reward") && !lore.contains("Raid Reward") && slotUnderMouse.slotNumber != s.slotNumber && slotUnderMouse.getItem().getDisplayName().equals(name)) {
                 return new CustomColor(0f, 1f, 0f);
             }
             if (lore.contains("Reward")) {
@@ -204,24 +204,24 @@ public class RarityColorOverlay implements Listener {
     	int x = guiContainer.getGuiLeft() + s.xPos;
         int y = guiContainer.getGuiTop() + s.yPos;
 
-        GlStateManager.disableLighting();
+        GlStateManager._disableLighting();
         GlStateManager.disableDepth();
         GlStateManager.disableTexture2D();
         GlStateManager.disableAlpha();
-        GlStateManager.enableBlend();
+        GlStateManager._enableBlend();
         GlStateManager.glLineWidth(4.0f);
 
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferbuilder = tessellator.getBuffer();
+        BufferBuilder bufferbuilder = tessellator.getBuilder();
         int arcColor = MathHelper.hsvToRGB(Math.max(0.0F, durability) / 3.0F, 1.0F, 1.0F);
         int radius = (UtilitiesConfig.Items.INSTANCE.itemLevelArc) ? 7 : 8;
         drawArc(bufferbuilder, x, y, durability, radius, arcColor >> 16 & 255, arcColor >> 8 & 255, arcColor & 255, 160);
 
-        GlStateManager.disableBlend();
+        GlStateManager._disableBlend();
         GlStateManager.enableAlpha();
         GlStateManager.enableTexture2D();
         GlStateManager.enableDepth();
-        GlStateManager.enableLighting();
+        GlStateManager._enableLighting();
     }
 
     private static void drawArc(BufferBuilder renderer, int x, int y, float fill, int radius, int red, int green, int blue, int alpha) {
@@ -241,23 +241,23 @@ public class RarityColorOverlay implements Listener {
         int x = guiContainer.getGuiLeft() + s.xPos;
         int y = guiContainer.getGuiTop() + s.yPos;
 
-        GlStateManager.disableLighting();
+        GlStateManager._disableLighting();
         GlStateManager.disableDepth();
         GlStateManager.disableTexture2D();
         GlStateManager.disableAlpha();
-        GlStateManager.enableBlend();
+        GlStateManager._enableBlend();
         GlStateManager.glLineWidth(4.0f);
 
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferbuilder = tessellator.getBuffer();
+        BufferBuilder bufferbuilder = tessellator.getBuilder();
         float arcFill = (level.getAverage() / MAX_LEVEL);
         drawArc(bufferbuilder, x, y, arcFill, 8, 0, 0, 0, 120);
 
-        GlStateManager.disableBlend();
+        GlStateManager._disableBlend();
         GlStateManager.enableAlpha();
         GlStateManager.enableTexture2D();
         GlStateManager.enableDepth();
-        GlStateManager.enableLighting();
+        GlStateManager._enableLighting();
     }
 
     private static void drawHighlightColor(GuiContainer guiContainer, Slot s, CustomColor colour) {
@@ -279,7 +279,7 @@ public class RarityColorOverlay implements Listener {
     }
 
     private static boolean isPowder(ItemStack is) {
-        return (is.getItem() == Items.DYE && is.hasDisplayName() && is.getDisplayName().contains("Powder") &&
+        return (is.getItem() == Items.DYE && is.hasCustomHoverName() && is.getDisplayName().contains("Powder") &&
                 TextFormatting.getTextWithoutFormattingCodes(ItemUtils.getStringLore(is)).contains("Effect on Weapons"));
     }
 

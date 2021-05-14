@@ -12,11 +12,11 @@ import com.wynntils.core.framework.interfaces.Listener;
 import com.wynntils.core.framework.rendering.ScreenRenderer;
 import com.wynntils.core.framework.rendering.textures.Textures;
 import com.wynntils.modules.utilities.configs.UtilitiesConfig;
-import net.minecraft.client.renderer.GlStateManager;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.inventory.Slot;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraft.inventory.container.Slot;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class ItemLockOverlay implements Listener {
 
@@ -36,7 +36,7 @@ public class ItemLockOverlay implements Listener {
         if (!Reference.onWorld) return;
 
         for (Slot s : e.getGui().inventorySlots.inventorySlots) {
-            if (s.slotNumber < e.getGui().getLowerInv().getSizeInventory()) continue;
+            if (s.slotNumber < e.getGui().getLowerInv().getContainerSize()) continue;
 
             renderItemLock(s, e.getGui().getGuiLeft(), e.getGui().getGuiTop());
         }
@@ -47,7 +47,7 @@ public class ItemLockOverlay implements Listener {
         if (!Reference.onWorld) return;
 
         for (Slot s : e.getGui().inventorySlots.inventorySlots) {
-            if (s.slotNumber < e.getGui().getUpperInv().getSizeInventory()) continue; // it's upper in horse!
+            if (s.slotNumber < e.getGui().getUpperInv().getContainerSize()) continue; // it's upper in horse!
 
             renderItemLock(s, e.getGui().getGuiLeft(), e.getGui().getGuiTop());
         }

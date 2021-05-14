@@ -26,18 +26,18 @@ import com.wynntils.webapi.WebManager;
 import com.wynntils.webapi.profiles.item.ItemProfile;
 import com.wynntils.webapi.profiles.item.enums.ItemType;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.PositionedSoundRecord;
-import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
-import net.minecraft.init.SoundEvents;
+import net.minecraft.client.audio.SimpleSound;
+import net.minecraft.client.MainWindow;
+import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.block.Blocks;
+import net.minecraft.item.Items;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.text.TextFormatting;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
-import org.lwjgl.input.Keyboard;
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
 import java.io.IOException;
@@ -205,15 +205,15 @@ public class ItemPage extends QuestBookPage {
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-        ScaledResolution res = new ScaledResolution(mc);
-        int posX = ((res.getScaledWidth() / 2) - mouseX);
-        int posY = ((res.getScaledHeight() / 2) - mouseY);
+        MainWindow res = new MainWindow(mc);
+        int posX = ((res.getGuiScaledWidth() / 2) - mouseX);
+        int posY = ((res.getGuiScaledHeight() / 2) - mouseY);
 
         checkMenuButton(posX, posY);
         checkForwardAndBackButtons(posX, posY);
 
         if (posX >= -157 && posX <= -147 && posY >= 89 && posY <= 99) { // search mode toggle button
-            Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1f));
+            Minecraft.getInstance().getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1f));
             if (QuestBookConfig.INSTANCE.advancedItemSearch) {
                 QuestBookConfig.INSTANCE.advancedItemSearch = false;
                 initBasicSearch();
@@ -235,7 +235,7 @@ public class ItemPage extends QuestBookPage {
         }
 
         if (selected < 0) { // an item in the guide is hovered
-            if (mouseButton != 1 || !(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT))) return;
+            if (mouseButton != 1 || !(Utils.isKeyDown(GLFW.GLFW_KEY_LEFT_SHIFT) || Utils.isKeyDown(GLFW.GLFW_KEY_RIGHT_SHIFT))) return;
 
             int selectedIndex = -(selected + 1);
             if (selectedIndex >= itemSearch.size()) return;
@@ -304,10 +304,10 @@ public class ItemPage extends QuestBookPage {
                 ItemType.NECKLACE, ItemType.RING, ItemType.BRACELET);
 
         static {
-            relikIcon.setTagCompound(ItemType.RELIK.getNBT());
-            ringsIcon.setTagCompound(ItemType.RING.getNBT());
-            necklaceIcon.setTagCompound(ItemType.NECKLACE.getNBT());
-            braceletsIcon.setTagCompound(ItemType.BRACELET.getNBT());
+            relikIcon.setTag(ItemType.RELIK.getNBT());
+            ringsIcon.setTag(ItemType.RING.getNBT());
+            necklaceIcon.setTag(ItemType.NECKLACE.getNBT());
+            braceletsIcon.setTag(ItemType.BRACELET.getNBT());
         }
 
         private final Set<ItemType> allowedTypes = EnumSet.allOf(ItemType.class);
@@ -411,19 +411,19 @@ public class ItemPage extends QuestBookPage {
             switch (selected) { // is one of the sorting buttons hovered?
                 case 1:
                     if (sortFunction != SortFunction.ALPHABETICAL) {
-                        Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1f));
+                        Minecraft.getInstance().getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1f));
                         sortFunction = SortFunction.ALPHABETICAL;
                     }
                     return true;
                 case 2:
                     if (sortFunction != SortFunction.BY_LEVEL) {
-                        Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1f));
+                        Minecraft.getInstance().getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1f));
                         sortFunction = SortFunction.BY_LEVEL;
                     }
                     return true;
                 case 3:
                     if (sortFunction != SortFunction.BY_RARITY) {
-                        Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1f));
+                        Minecraft.getInstance().getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1f));
                         sortFunction = SortFunction.BY_RARITY;
                     }
                     return true;
@@ -432,7 +432,7 @@ public class ItemPage extends QuestBookPage {
             if (selected < 10) return false; // selected >= 10 means one of the item filter buttons is hovered
 
             ItemType selectedType = itemTypeArray.get(selected / 10 - 1);
-            if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
+            if (Utils.isKeyDown(GLFW.GLFW_KEY_LEFT_SHIFT)) {
                 if (allowedTypes.size() == 1 && allowedTypes.contains(selectedType)) {
                     allowedTypes.addAll(itemTypeArray);
                 } else {
@@ -444,7 +444,7 @@ public class ItemPage extends QuestBookPage {
             } else {
                 allowedTypes.add(selectedType);
             }
-            Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1f));
+            Minecraft.getInstance().getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1f));
 
             return true;
         }
@@ -529,8 +529,8 @@ public class ItemPage extends QuestBookPage {
         static final AdvancedSearchHandler INSTANCE = new AdvancedSearchHandler();
 
         private static final ItemStack SCROLL_STACK = new ItemStack(Items.DIAMOND_AXE);
-        private static final ItemStack RED_POTION_STACK = new ItemStack(Items.POTIONITEM);
-        private static final ItemStack BLUE_POTION_STACK = new ItemStack(Items.POTIONITEM);
+        private static final ItemStack RED_POTION_STACK = new ItemStack(Items.POTION);
+        private static final ItemStack BLUE_POTION_STACK = new ItemStack(Items.POTION);
 
         private static final HelpCategory[] ADV_SEARCH_HELP = {
                 new HelpCategory.Builder(new ItemStack(Items.WRITABLE_BOOK), "Writing Filter Strings",
@@ -750,7 +750,7 @@ public class ItemPage extends QuestBookPage {
                         .with(ByStat.TYPE_SPRINT).with(ByStat.TYPE_SPRINT_REGEN)
                         .with(ByStat.TYPE_JUMP_HEIGHT)
                         .build(),
-                new HelpCategory.Builder(new ItemStack(Items.SIGN), "Miscellaneous Stats",
+                new HelpCategory.Builder(new ItemStack(Items.OAK_SIGN), "Miscellaneous Stats",
                         "Filters by stats that don't",
                         "fit into the other categories.",
                         "",
@@ -762,19 +762,19 @@ public class ItemPage extends QuestBookPage {
         };
 
         static {
-            SCROLL_STACK.setItemDamage(42);
-            NBTTagCompound tag = new NBTTagCompound();
-            tag.setBoolean("Unbreakable", true);
-            tag.setInteger("HideFlags", 6);
-            SCROLL_STACK.setTagCompound(tag);
+            SCROLL_STACK.setDamageValue(42);
+            CompoundNBT tag = new CompoundNBT();
+            tag.putBoolean("Unbreakable", true);
+            tag.putInt("HideFlags", 6);
+            SCROLL_STACK.setTag(tag);
 
-            tag = new NBTTagCompound();
-            tag.setInteger("CustomPotionColor", 0xff0000);
-            RED_POTION_STACK.setTagCompound(tag);
+            tag = new CompoundNBT();
+            tag.putInt("CustomPotionColor", 0xff0000);
+            RED_POTION_STACK.setTag(tag);
 
-            tag = new NBTTagCompound();
-            tag.setInteger("CustomPotionColor", 0x0000ff);
-            BLUE_POTION_STACK.setTagCompound(tag);
+            tag = new CompoundNBT();
+            tag.putInt("CustomPotionColor", 0x0000ff);
+            BLUE_POTION_STACK.setTag(tag);
         }
 
         private AdvancedSearchHandler() {}

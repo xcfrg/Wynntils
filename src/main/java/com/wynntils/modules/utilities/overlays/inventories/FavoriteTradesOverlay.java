@@ -13,12 +13,12 @@ import com.wynntils.core.utils.ItemUtils;
 import com.wynntils.core.utils.reference.EmeraldSymbols;
 import com.wynntils.modules.utilities.managers.KeyManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GlStateManager;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.inventory.Slot;
+import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,8 +33,8 @@ public class FavoriteTradesOverlay implements Listener {
         if (!Reference.onWorld || !e.getGui().getLowerInv().getDisplayName().getFormattedText().contains("Marketplace")) return;
         if (e.getKeyCode() != KeyManager.getFavoriteTradeKey().getKeyBinding().getKeyCode()) return;
 
-        if (e.getGui().getSlotUnderMouse() != null && Minecraft.getMinecraft().player.inventory != e.getGui().getSlotUnderMouse().inventory) {
-            toggleLockState(e.getGui().getSlotUnderMouse().getStack());
+        if (e.getGui().getSlotUnderMouse() != null && Minecraft.getInstance().player.inventory != e.getGui().getSlotUnderMouse().inventory) {
+            toggleLockState(e.getGui().getSlotUnderMouse().getItem());
         }
     }
 
@@ -48,8 +48,8 @@ public class FavoriteTradesOverlay implements Listener {
         }
 
         for (Slot s : e.getGui().inventorySlots.inventorySlots) {
-            if (s.slotNumber >= e.getGui().getLowerInv().getSizeInventory()) continue;
-            if (isNotMarketItem(s.getStack())) continue;
+            if (s.slotNumber >= e.getGui().getLowerInv().getContainerSize()) continue;
+            if (isNotMarketItem(s.getItem())) continue;
             renderFavoriteItem(s, e.getGui().getGuiLeft(), e.getGui().getGuiTop());
         }
     }
@@ -65,7 +65,7 @@ public class FavoriteTradesOverlay implements Listener {
     }
 
     private void renderFavoriteItem(Slot s, int guiLeft, int guiTop) {
-        ItemStack it = s.getStack();
+        ItemStack it = s.getItem();
         ItemIdentificationOverlay.replaceLore(it);
         String lore = Arrays.toString(ItemUtils.getLore(it).toArray());
         if (!favorites_trade_items_lore.contains(lore)) return;

@@ -28,15 +28,15 @@ import com.wynntils.webapi.profiles.item.objects.IdentificationContainer;
 import com.wynntils.webapi.profiles.item.objects.ItemRequirementsContainer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
-import net.minecraft.client.gui.inventory.GuiInventory;
-import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.gui.screen.inventory.InventoryScreen;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.init.Items;
-import net.minecraft.inventory.ClickType;
+import net.minecraft.item.Items;
+import net.minecraft.inventory.container.ClickType;
 import net.minecraft.inventory.InventoryBasic;
-import net.minecraft.inventory.Slot;
+import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagInt;
 import net.minecraft.util.ResourceLocation;
@@ -55,14 +55,14 @@ public class GearViewerUI extends FakeGuiContainer {
     private static final ResourceLocation INVENTORY_GUI_TEXTURE = new ResourceLocation("textures/gui/container/inventory.png");
 
     private InventoryBasic inventory;
-    private EntityPlayer player;
+    private PlayerEntity player;
 
-    public GearViewerUI(InventoryBasic inventory, EntityPlayer player) {
+    public GearViewerUI(InventoryBasic inventory, PlayerEntity player) {
         super(new ContainerGearViewer(inventory, ModCore.mc().player));
         this.inventory = inventory;
 
         // create copy of given player and inventory to keep items and models separate
-        this.player = new EntityOtherPlayerMP(player.getEntityWorld(), player.getGameProfile());
+        this.player = new EntityOtherPlayerMP(player.getEntityWorld(), player.getProfile());
         this.copyInventory(this.player.inventory, player.inventory);
 
         this.xSize = 103;
@@ -76,7 +76,7 @@ public class GearViewerUI extends FakeGuiContainer {
         // create item lore for armor pieces
         for (int i = 0; i < 4; i++) {
             ItemStack is = player.inventory.armorItemInSlot(i);
-            if (!is.hasDisplayName()) continue;
+            if (!is.hasCustomHoverName()) continue;
             createLore(is);
             is.setTagInfo("HideFlags", new NBTTagInt(6));
             inventory.setInventorySlotContents(3 - i, is);
@@ -84,7 +84,7 @@ public class GearViewerUI extends FakeGuiContainer {
 
         // create item lore for held item
         ItemStack hand = player.inventory.getCurrentItem();
-        if (hand.hasDisplayName()) {
+        if (hand.hasCustomHoverName()) {
             createLore(hand);
             hand.setTagInfo("HideFlags", new NBTTagInt(6));
             inventory.setInventorySlotContents(4, hand);
@@ -112,20 +112,20 @@ public class GearViewerUI extends FakeGuiContainer {
 
         // replace lore with advanced ids if enabled
         if (this.getSlotUnderMouse() != null && this.getSlotUnderMouse().getHasStack())
-            ItemIdentificationOverlay.replaceLore(this.getSlotUnderMouse().getStack());
+            ItemIdentificationOverlay.replaceLore(this.getSlotUnderMouse().getItem());
     }
 
     @Override
     protected void drawGuiContainerBackgroundLayer(float partialTicks, int mouseX, int mouseY) {
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-        this.mc.getTextureManager().bindTexture(INVENTORY_GUI_TEXTURE);
+        this.mc.getTextureManager().bind(INVENTORY_GUI_TEXTURE);
         int i = (this.width - this.xSize) / 2;
         int j = (this.height - this.ySize) / 2;
         this.drawTexturedModalRect(i, j, 0, 0, 96, 83);
         this.drawTexturedModalRect(i + 96, j, 169, 0, 7, 15);
         this.drawTexturedModalRect(i + 96, j + 15, 169, 91, 7, 75);
         this.drawTexturedModalRect(i, j + 83, 0, 159, 96, 7);
-        GuiInventory.drawEntityOnScreen(this.guiLeft + 51, this.guiTop + 75, 30, 0, 0, player);
+        InventoryScreen.drawEntityOnScreen(this.guiLeft + 51, this.guiTop + 75, 30, 0, 0, player);
     }
 
     private void createLore(ItemStack stack) {
@@ -142,7 +142,7 @@ public class GearViewerUI extends FakeGuiContainer {
         ItemProfile item = WebManager.getItems().get(itemName);
 
         // disable viewing unidentified items
-        if (stack.getItem() == Items.STONE_SHOVEL && stack.getItemDamage() >= 1 && stack.getItemDamage() <= 6) {
+        if (stack.getItem() == Items.STONE_SHOVEL && stack.getDamageValue() >= 1 && stack.getDamageValue() <= 6) {
             stack.setStackDisplayName(item.getTier().getTextColor() + "Unidentified Item");
             return;
         }
@@ -331,7 +331,7 @@ public class GearViewerUI extends FakeGuiContainer {
 
         // item lore
         if (item.getLore() != null && !item.getLore().isEmpty()) {
-            itemLore.addAll(Minecraft.getMinecraft().fontRenderer.listFormattedStringToWidth(DARK_GRAY + item.getLore(), 150));
+            itemLore.addAll(Minecraft.getInstance().font.listFormattedStringToWidth(DARK_GRAY + item.getLore(), 150));
         }
 
         ItemUtils.replaceLore(stack, itemLore);
@@ -340,8 +340,8 @@ public class GearViewerUI extends FakeGuiContainer {
 
     private void copyInventory(InventoryPlayer destination, InventoryPlayer source) {
         // create deep copy of inventory
-        for (int i = 0; i < source.getSizeInventory(); i++) {
-            destination.setInventorySlotContents(i, source.getStackInSlot(i).copy());
+        for (int i = 0; i < source.getContainerSize(); i++) {
+            destination.setInventorySlotContents(i, source.getItem(i).copy());
         }
     }
 
@@ -350,8 +350,8 @@ public class GearViewerUI extends FakeGuiContainer {
 
         if (ModCore.mc().objectMouseOver == null) return;
         Entity e = ModCore.mc().objectMouseOver.entityHit;
-        if (!(e instanceof EntityPlayer)) return;
-        EntityPlayer ep = (EntityPlayer) e;
+        if (!(e instanceof PlayerEntity)) return;
+        PlayerEntity ep = (PlayerEntity) e;
         if (ep.getTeam() == null) return; // player model npc
 
         ModCore.mc().displayGuiScreen(new GearViewerUI(new InventoryBasic("", false, 5), ep));

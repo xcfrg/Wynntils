@@ -14,10 +14,12 @@ import com.wynntils.modules.map.configs.MapConfig;
 import com.wynntils.modules.map.configs.MapConfig.IconTexture;
 import com.wynntils.modules.map.overlays.objects.MapApiIcon;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.client.gui.screen.Screen;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.input.Mouse;
@@ -25,15 +27,16 @@ import org.lwjgl.input.Mouse;
 import java.io.IOException;
 import java.util.*;
 
-public class WorldMapSettingsUI extends GuiScreen {
+public class WorldMapSettingsUI extends Screen {
 
     private Map<String, Boolean> enabledMapIcons, enabledMinimapIcons;
     private int page = 0;
     private int maxPage;
     private List<Button> settingButtons = Collections.EMPTY_LIST;
-    private GuiButton textureButton, nextPageButton, previousPageButton;
+    private Button textureButton, nextPageButton, previousPageButton;
 
     public WorldMapSettingsUI() {
+        super(StringTextComponent.EMPTY);
         enabledMapIcons = MapConfig.resetMapIcons(false);
         enabledMinimapIcons = MapConfig.resetMapIcons(true);
         for (String key : enabledMapIcons.keySet()) {
@@ -74,12 +77,12 @@ public class WorldMapSettingsUI extends GuiScreen {
             this.settingButtons.add(button);
         }
 
-        this.buttonList.add(textureButton = new GuiButton(99, rightAlign + 120, this.height-65, 55, 18, MapConfig.INSTANCE.iconTexture.name()));
-        this.buttonList.add(new GuiButton(100, this.width/2 - 71, this.height-40, 45, 18, "Cancel"));
-        this.buttonList.add(new GuiButton(101, this.width/2 - 23, this.height-40, 45, 18, "Default"));
-        this.buttonList.add(new GuiButton(102, this.width/2 + 25, this.height-40, 45, 18, "Save"));
-        this.buttonList.add(nextPageButton = new GuiButton(103, this.width/2 + 2, this.height - 90, 20, 20, ">"));
-        this.buttonList.add(previousPageButton = new GuiButton(104, this.width/2 - 22, this.height - 90, 20, 20, "<"));
+        this.buttonList.add(textureButton = new Button(99, rightAlign + 120, this.height-65, 55, 18, MapConfig.INSTANCE.iconTexture.name()));
+        this.buttonList.add(new Button(100, this.width/2 - 71, this.height-40, 45, 18, "Cancel"));
+        this.buttonList.add(new Button(101, this.width/2 - 23, this.height-40, 45, 18, "Default"));
+        this.buttonList.add(new Button(102, this.width/2 + 25, this.height-40, 45, 18, "Save"));
+        this.buttonList.add(nextPageButton = new Button(103, this.width/2 + 2, this.height - 90, 20, 20, ">"));
+        this.buttonList.add(previousPageButton = new Button(104, this.width/2 - 22, this.height - 90, 20, 20, "<"));
         nextPageButton.enabled = maxPage > 0;
         previousPageButton.enabled = false;
     }
@@ -88,17 +91,17 @@ public class WorldMapSettingsUI extends GuiScreen {
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawDefaultBackground();
         int topY = this.buttonList.get(0).y;
-        this.fontRenderer.drawString(TextFormatting.WHITE + "Enable/Disable Map Icons", (this.width - 349) / 2, topY - 15, 0xffFFFFFF);
-        this.fontRenderer.drawString(TextFormatting.WHITE + "Map Icon Textures:", (this.width - 349) / 2, this.height-60, 0xffFFFFFF);
+        this.font.drawString(TextFormatting.WHITE + "Enable/Disable Map Icons", (this.width - 349) / 2, topY - 15, 0xffFFFFFF);
+        this.font.drawString(TextFormatting.WHITE + "Map Icon Textures:", (this.width - 349) / 2, this.height-60, 0xffFFFFFF);
 
         // Draw labels rotated 45 degrees
-        GlStateManager.pushMatrix();
+        GlStateManager._pushMatrix();
         GlStateManager.translate((this.width-399) / 2.0f + 286, 29f, 0f);
         GlStateManager.rotate(-45, 0, 0, 1);
-        this.fontRenderer.drawString("Main map", 0, 0, 0xFFFFFFFF);
+        this.font.drawString("Main map", 0, 0, 0xFFFFFFFF);
         GlStateManager.translate(11 / MathHelper.SQRT_2, 17 / MathHelper.SQRT_2, 0f);
-        this.fontRenderer.drawString("Minimap", 0, 0, 0xFFFFFFFF);
-        GlStateManager.popMatrix();
+        this.font.drawString("Minimap", 0, 0, 0xFFFFFFFF);
+        GlStateManager._popMatrix();
 
         ScreenRenderer.beginGL(0, 0);
         super.drawScreen(mouseX, mouseY, partialTicks);
@@ -112,14 +115,14 @@ public class WorldMapSettingsUI extends GuiScreen {
                     btn.displayString,
                     (btn.onMainMap() ? visiblePrefix : invisiblePrefix) + TextFormatting.RESET + " on main map",
                     (btn.onMinimap() ? visiblePrefix : invisiblePrefix) + TextFormatting.RESET + " on minimap"
-                ), mouseX, mouseY, fontRenderer);
+                ), mouseX, mouseY, font);
             }
         }
     }
 
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
-        if (keyCode == Minecraft.getMinecraft().gameSettings.keyBindInventory.getKeyCode() ||  // DEFAULT: E
+        if (keyCode == Minecraft.getInstance().options.keyBindInventory.getKeyCode() ||  // DEFAULT: E
                 keyCode == MapModule.getModule().getMapKey().getKeyBinding().getKeyCode()) {  // DEFAULT: M
             Utils.displayGuiScreen(new MainWorldMapUI());
         }
@@ -152,13 +155,13 @@ public class WorldMapSettingsUI extends GuiScreen {
     }
 
     @Override
-    protected void actionPerformed(GuiButton button) {
+    protected void actionPerformed(Button button) {
         if (button.id == 100) {
             Utils.displayGuiScreen(new MainWorldMapUI());
         } else if (button.id == 102) {
             MapConfig.INSTANCE.enabledMapIcons = MapConfig.resetMapIcons(false);
             MapConfig.INSTANCE.enabledMinimapIcons = MapConfig.resetMapIcons(true);
-            for (GuiButton cb : this.buttonList) {
+            for (Button cb : this.buttonList) {
                 if (cb instanceof Button) {
                     MapConfig.INSTANCE.enabledMapIcons.put(((Button) cb).key, ((Button) cb).onMainMap());
                     MapConfig.INSTANCE.enabledMinimapIcons.put(((Button) cb).key, ((Button) cb).onMinimap());
@@ -172,7 +175,7 @@ public class WorldMapSettingsUI extends GuiScreen {
             this.enabledMapIcons = MapConfig.resetMapIcons(false);
             this.enabledMinimapIcons = MapConfig.resetMapIcons(true);
             page = 0;
-            for (GuiButton b : this.buttonList) {
+            for (Button b : this.buttonList) {
                 if (b instanceof Button) {
                     Button btn = (Button) b;
                     btn.updatePage(0);
@@ -209,7 +212,7 @@ public class WorldMapSettingsUI extends GuiScreen {
     private static final int ON_MAINMAP = 0b01;
     private static final int ON_MINIMAP = 0b10;
 
-    private static class Button extends GuiButton {
+    private static class Button extends Button {
 
         static final ScreenRenderer renderer = new ScreenRenderer();
 
@@ -304,7 +307,7 @@ public class WorldMapSettingsUI extends GuiScreen {
             icon.renderAt(renderer, x + height + (height * 0.375f), y + (height / 2f), miniScale, 1);
             CommonColors.WHITE.applyColor();
 
-            this.drawString(mc.fontRenderer, displayString, this.x + (int) (height * 1.75f) + 2, this.y + (this.height - mc.fontRenderer.FONT_HEIGHT) / 2, 0xFFFFFFFF);
+            this.drawString(mc.font, displayString, this.x + (int) (height * 1.75f) + 2, this.y + (this.height - mc.font.FONT_HEIGHT) / 2, 0xFFFFFFFF);
         }
 
     }

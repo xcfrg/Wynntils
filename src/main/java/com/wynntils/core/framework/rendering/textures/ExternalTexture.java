@@ -5,7 +5,7 @@
 package com.wynntils.core.framework.rendering.textures;
 
 import com.wynntils.core.framework.enums.ActionResult;
-import net.minecraft.client.renderer.GlStateManager;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.renderer.texture.TextureUtil;
 
 import javax.imageio.ImageIO;
@@ -49,7 +49,7 @@ public class ExternalTexture extends Texture {
     public ActionResult unload() {
         if (!loaded) return ActionResult.ISSUE;
 
-        TextureUtil.deleteTexture(glID);
+        TextureUtil.release(glID);
         loaded = false;
         return ActionResult.SUCCESS;
     }
@@ -58,7 +58,7 @@ public class ExternalTexture extends Texture {
     public ActionResult bind() {
         if (!loaded) return ActionResult.ERROR;
 
-        GlStateManager.bindTexture(glID);
+        GlStateManager.bind(glID);
         return ActionResult.SUCCESS;
     }
 }

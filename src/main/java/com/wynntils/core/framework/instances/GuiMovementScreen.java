@@ -5,14 +5,14 @@
 package com.wynntils.core.framework.instances;
 
 import com.wynntils.core.framework.enums.wynntils.WynntilsConflictContext;
-import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.settings.KeyBinding;
-import org.lwjgl.input.Keyboard;
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.input.Mouse;
 
 import java.io.IOException;
 
-public class GuiMovementScreen extends GuiScreen {
+public class GuiMovementScreen extends Screen {
     protected boolean allowMovement = true;
 
     @Override
@@ -30,7 +30,7 @@ public class GuiMovementScreen extends GuiScreen {
         if (Keyboard.isCreated()) {
             while (Keyboard.next()) {
 
-                for (KeyBinding key : mc.gameSettings.keyBindings) {
+                for (KeyBinding key : mc.options.keyBindings) {
                     if (key.getKeyCode() != Keyboard.getEventKey() || key.getKeyConflictContext() != WynntilsConflictContext.ALLOW_MOVEMENTS) continue;
 
                     KeyBinding.setKeyBindState(Keyboard.getEventKey(), Keyboard.getEventKeyState());

@@ -18,21 +18,21 @@ import com.wynntils.core.framework.rendering.textures.Texture;
 import com.wynntils.core.utils.ItemUtils;
 import com.wynntils.core.utils.reference.EmeraldSymbols;
 import com.wynntils.modules.utilities.configs.UtilitiesConfig;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
+import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.block.Blocks;
+import net.minecraft.item.Items;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import org.lwjgl.input.Keyboard;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import org.lwjgl.glfw.GLFW;
 
 import java.text.DecimalFormat;
 
-import static net.minecraft.client.renderer.GlStateManager.color;
-import static net.minecraft.client.renderer.GlStateManager.disableLighting;
+import static com.mojang.blaze3d.platform.GlStateManager.color;
+import static com.mojang.blaze3d.platform.GlStateManager._disableLighting;
 
 public class EmeraldCountOverlay implements Listener {
 
@@ -63,13 +63,13 @@ public class EmeraldCountOverlay implements Listener {
             if (UtilitiesConfig.Items.INSTANCE.emeraldCountInventory)
                 drawTextMoneyAmount(170, -10, ItemUtils.countMoney(lowerInv), renderer, CommonColors.WHITE);
             if (UtilitiesConfig.Items.INSTANCE.emeraldCountChest)
-                drawTextMoneyAmount(170, 2 * (lowerInv.getSizeInventory() + 10), ItemUtils.countMoney(upperInv), renderer, textColor);
+                drawTextMoneyAmount(170, 2 * (lowerInv.getContainerSize() + 10), ItemUtils.countMoney(upperInv), renderer, textColor);
             return;
         }
         if (UtilitiesConfig.Items.INSTANCE.emeraldCountInventory)
             drawIconsMoneyAmount(178, 0, ItemUtils.countMoney(lowerInv), renderer);
         if (UtilitiesConfig.Items.INSTANCE.emeraldCountChest)
-            drawIconsMoneyAmount(178, 2 * (lowerInv.getSizeInventory() + 10), ItemUtils.countMoney(upperInv), renderer);
+            drawIconsMoneyAmount(178, 2 * (lowerInv.getContainerSize() + 10), ItemUtils.countMoney(upperInv), renderer);
     }
 
     @SubscribeEvent
@@ -97,12 +97,12 @@ public class EmeraldCountOverlay implements Listener {
      */
     private static void drawTextMoneyAmount(int x, int y, int moneyAmount, ScreenRenderer renderer, CustomColor color) {
         // rendering setup
-        disableLighting();
+        _disableLighting();
         color(1F, 1F, 1F, 1F);
 
         // generating text
         String moneyText = "";
-        if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {  // plain text
+        if (Utils.isKeyDown(GLFW.GLFW_KEY_LSHIFT) || Utils.isKeyDown(GLFW.GLFW_KEY_RSHIFT)) {  // plain text
             moneyText = formatAmount(moneyAmount) + EmeraldSymbols.EMERALDS;
         } else {  // sliced text
             int[] moneySlices = calculateMoneyAmount(moneyAmount);
@@ -121,7 +121,7 @@ public class EmeraldCountOverlay implements Listener {
     }
 
     private static final Texture inventoryTexture = new AssetsTexture(new ResourceLocation("textures/gui/container/inventory.png"), false);
-    private static final Item EMERALD_BLOCK = Item.getItemFromBlock(Blocks.EMERALD_BLOCK);
+    private static final Item EMERALD_BLOCK = Item.byBlock(Blocks.EMERALD_BLOCK);
 
     /**
      * Renders the money amount as 0 to 3 icons (LEs, blocks and emeralds) with numbers in potion effect boxes
@@ -135,7 +135,7 @@ public class EmeraldCountOverlay implements Listener {
         String emeraldAmount = null;
         String blocksAmount = null;
         String leAmount = null;
-        if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {
+        if (Utils.isKeyDown(GLFW.GLFW_KEY_LSHIFT) || Utils.isKeyDown(GLFW.GLFW_KEY_RSHIFT)) {
             // Alternative render: Amount after converting all to one type (Including fractional blocks / LE)
             emeraldAmount = formatAmount((double) moneyAmount);
             blocksAmount = formatAmount(moneyAmount / 64D);
@@ -179,21 +179,21 @@ public class EmeraldCountOverlay implements Listener {
         int textureWidthScale = (int) inventoryTexture.width / 256;
         renderer.drawRect(inventoryTexture, x, y, x + 24, y + 24, textureWidthScale * 141, textureHeightScale * 190, textureWidthScale * 165, textureHeightScale * 166);
 
-        int textWidth = ScreenRenderer.fontRenderer.getStringWidth(text);
+        int textWidth = ScreenRenderer.font.width(text);
         renderer.drawItemStack(new ItemStack(i), x + 4, y + 4, textWidth > 18 ? "" : text);
         if (textWidth <= 18) return;
-        GlStateManager.pushMatrix();
+        GlStateManager._pushMatrix();
         {
             GlStateManager.translate(x + 4 + 17, y + 4 + 18, 0);
             GlStateManager.scale(18f / textWidth, 18f / textWidth, 1);
-            GlStateManager.disableLighting();
+            GlStateManager._disableLighting();
             GlStateManager.disableDepth();
-            GlStateManager.disableBlend();
-            ScreenRenderer.fontRenderer.drawStringWithShadow(text, -textWidth, -ScreenRenderer.fontRenderer.FONT_HEIGHT, 0xFFFFFFFF);
+            GlStateManager._disableBlend();
+            ScreenRenderer.font.drawStringWithShadow(text, -textWidth, -ScreenRenderer.font.FONT_HEIGHT, 0xFFFFFFFF);
             GlStateManager.enableDepth();
-            GlStateManager.enableBlend();
+            GlStateManager._enableBlend();
         }
-        GlStateManager.popMatrix();
+        GlStateManager._popMatrix();
     }
 
     private static String formatAmount(int value) {

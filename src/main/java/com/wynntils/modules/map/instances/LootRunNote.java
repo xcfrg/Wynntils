@@ -7,11 +7,11 @@ import com.wynntils.core.framework.rendering.colors.CustomColor;
 import com.wynntils.core.utils.StringUtils;
 import com.wynntils.core.utils.objects.Location;
 
-import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.entity.RenderManager;
 
-import static net.minecraft.client.renderer.GlStateManager.*;
+import static com.mojang.blaze3d.platform.GlStateManager.*;
 
 public class LootRunNote {
 
@@ -44,7 +44,7 @@ public class LootRunNote {
     public void drawNote(CustomColor color) {
         RenderManager render = ModCore.mc().getRenderManager();
         FontRenderer fr = render.getFontRenderer();
-        EntityPlayerSP player = ModCore.mc().player;
+        ClientPlayerEntity player = ModCore.mc().player;
 
         if (player.getDistanceSq(location.x, location.y, location.z) > 4096f)
             return; // only draw nametag when close
@@ -59,7 +59,7 @@ public class LootRunNote {
     }
 
     private static void drawNametag(String input, CustomColor color, float x, float y, float z, int verticalShift, float viewerYaw, float viewerPitch, boolean isThirdPersonFrontal) {
-        pushMatrix();
+        _pushMatrix();
         {
             ScreenRenderer.beginGL(0, 0); // we set to 0 because we don't want the ScreenRender to handle this thing
             {
@@ -69,9 +69,9 @@ public class LootRunNote {
                 rotate(-viewerYaw, 0.0F, 1.0F, 0.0F);
                 rotate((float) (isThirdPersonFrontal ? -1 : 1) * viewerPitch, 1.0F, 0.0F, 0.0F);
                 scale(-0.025F, -0.025F, 0.025F);
-                disableLighting();
+                _disableLighting();
 
-                int middlePos = (int) renderer.getStringWidth(input) / 2;
+                int middlePos = (int) renderer.width(input) / 2;
 
                 // draws the label
                 renderer.drawString(input, -middlePos, verticalShift, color, SmartFontRenderer.TextAlignment.LEFT_RIGHT, SmartFontRenderer.TextShadow.NONE);
@@ -82,13 +82,13 @@ public class LootRunNote {
 
                 // returns back to normal
                 enableDepth();
-                enableLighting();
-                disableBlend();
+                _enableLighting();
+                _disableBlend();
                 color(1.0f, 1.0f, 1.0f, 1.0f);
             }
             ScreenRenderer.endGL();
         }
-        popMatrix();
+        _popMatrix();
     }
 
 }

@@ -8,12 +8,12 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.wynntils.ModCore;
 import com.wynntils.core.utils.reflections.ReflectionFields;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.GuiTextField;
-import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.MainWindow;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
@@ -21,14 +21,16 @@ import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.util.Util;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.event.ClickEvent;
+import net.minecraft.world.World;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import org.lwjgl.LWJGLException;
-import org.lwjgl.input.Keyboard;
+import org.lwjgl.glfw.GLFW;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
@@ -49,7 +51,7 @@ public class Utils {
 
     private static final DataParameter<String> NAME_KEY = ReflectionFields.Entity_CUSTOM_NAME.getValue(Entity.class);
     private static final DataParameter<Boolean> NAME_VISIBLE_KEY = ReflectionFields.Entity_CUSTOM_NAME_VISIBLE.getValue(Entity.class);
-    private static final DataParameter<Boolean> ITEM_KEY = ReflectionFields.EntityItemFrame_ITEM.getValue(Entity.class);
+    private static final DataParameter<Boolean> ITEM_KEY = ReflectionFields.ItemFrameEntity_ITEM.getValue(Entity.class);
     public static final Pattern CHAR_INFO_PAGE_TITLE = Pattern.compile("§c([0-9]+)§4 skill points? remaining");
     public static final Pattern SERVER_SELECTOR_TITLE = Pattern.compile("Wynncraft Servers(: Page \\d+)?");
 
@@ -131,7 +133,7 @@ public class Utils {
         }
     }
 
-    public static String getPlayerHPBar(EntityPlayer entityPlayer) {
+    public static String getPlayerHPBar(PlayerEntity entityPlayer) {
         int health = (int) (0.3f + (entityPlayer.getHealth() / entityPlayer.getMaxHealth()) * 15);  // 0.3f for better experience rounding off near full hp
         String healthBar = TextFormatting.DARK_RED + "[" + TextFormatting.RED + "|||||||||||||||" + TextFormatting.DARK_RED + "]";
         healthBar = healthBar.substring(0, 5 + Math.min(health, 15)) + TextFormatting.DARK_GRAY + healthBar.substring(5 + Math.min(health, 15));
@@ -140,18 +142,18 @@ public class Utils {
     }
 
     /**
-     * Return true if the GuiScreen is the character information page (selected from the compass)
+     * Return true if the Screen is the character information page (selected from the compass)
      */
-    public static boolean isCharacterInfoPage(GuiScreen gui) {
+    public static boolean isCharacterInfoPage(Screen gui) {
         if (!(gui instanceof GuiContainer)) return false;
         Matcher m = CHAR_INFO_PAGE_TITLE.matcher(((GuiContainer)gui).inventorySlots.getSlot(0).inventory.getName());
         return m.find();
     }
 
     /**
-     * @return true if the GuiScreen is the server selection, false otherwise
+     * @return true if the Screen is the server selection, false otherwise
      */
-    public static boolean isServerSelector(GuiScreen gui) {
+    public static boolean isServerSelector(Screen gui) {
         if (!(gui instanceof GuiContainer)) return false;
         Matcher m = SERVER_SELECTOR_TITLE.matcher(((GuiContainer) gui).inventorySlots.getSlot(0).inventory.getName());
         return m.find();
@@ -165,10 +167,10 @@ public class Utils {
      * @return the Scoreboard Team
      */
     public static ScorePlayerTeam createFakeScoreboard(String name, Team.CollisionRule rule) {
-        Scoreboard mc = Minecraft.getMinecraft().world.getScoreboard();
+        Scoreboard mc = Minecraft.getInstance().level.getScoreboard();
         if (mc.getTeam(name) != null) return mc.getTeam(name);
 
-        String player = Minecraft.getMinecraft().player.getName();
+        String player = Minecraft.getInstance().player.getName();
         if (mc.getPlayersTeam(player) != null) previousTeam = mc.getPlayersTeam(player).getName();
 
         ScorePlayerTeam team = mc.createTeam(name);
@@ -184,11 +186,11 @@ public class Utils {
      * @param name the scoreboard name
      */
     public static void removeFakeScoreboard(String name) {
-        Scoreboard mc = Minecraft.getMinecraft().world.getScoreboard();
+        Scoreboard mc = Minecraft.getInstance().level.getScoreboard();
         if (mc.getTeam(name) == null) return;
 
         mc.removeTeam(mc.getTeam(name));
-        if (previousTeam != null) mc.addPlayerToTeam(Minecraft.getMinecraft().player.getName(), previousTeam);
+        if (previousTeam != null) mc.addPlayerToTeam(Minecraft.getInstance().player.getName(), previousTeam);
     }
 
     /**
@@ -196,10 +198,10 @@ public class Utils {
      *
      * @param screen the provided screen
      */
-    public static void displayGuiScreen(GuiScreen screen) {
-        Minecraft mc = Minecraft.getMinecraft();
+    public static void displayGuiScreen(Screen screen) {
+        Minecraft mc = Minecraft.getInstance();
 
-        GuiScreen oldScreen = mc.currentScreen;
+        Screen oldScreen = mc.screen;
 
         GuiOpenEvent event = new GuiOpenEvent(screen);
         if (MinecraftForge.EVENT_BUS.post(event)) return;
@@ -210,18 +212,18 @@ public class Utils {
             oldScreen.onGuiClosed();
         }
 
-        mc.currentScreen = screen;
+        mc.screen = screen;
 
         if (screen != null) {
-            Minecraft.getMinecraft().setIngameNotInFocus();
+            Minecraft.getInstance().setIngameNotInFocus();
 
-            ScaledResolution scaledresolution = new ScaledResolution(mc);
-            int i = scaledresolution.getScaledWidth();
-            int j = scaledresolution.getScaledHeight();
+            MainWindow scaledresolution = new MainWindow(mc);
+            int i = scaledresolution.getGuiScaledWidth();
+            int j = scaledresolution.getGuiScaledHeight();
             screen.setWorldAndResolution(mc, i, j);
             mc.skipRenderWorld = false;
         } else {
-            mc.getSoundHandler().resumeSounds();
+            mc.getSoundManager().resumeSounds();
             mc.setIngameFocus();
         }
     }
@@ -311,10 +313,10 @@ public class Utils {
         }
 
         Utils.copyToClipboard(url);
-        TextComponentString text = new TextComponentString("Error opening link, it has been copied to your clipboard\n");
+        StringTextComponent text = new StringTextComponent("Error opening link, it has been copied to your clipboard\n");
         text.getStyle().setColor(TextFormatting.DARK_RED);
 
-        TextComponentString urlComponent = new TextComponentString(url);
+        StringTextComponent urlComponent = new StringTextComponent(url);
         urlComponent.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
         urlComponent.getStyle().setColor(TextFormatting.DARK_AQUA);
         urlComponent.getStyle().setUnderlined(true);
@@ -422,6 +424,17 @@ public class Utils {
             }
         }
         return ItemStack.EMPTY;
+    }
+
+
+    public static boolean isKeyDown(int keycode) {
+        int state = GLFW.glfwGetKey(ModCore.mc().getWindow().getWindow(), keycode) == GLFW.GLFW_PRESS
+        return (state == GLFW.GLFW_PRESS);
+    }
+
+    public static boolean isAirBlock(World world, BlockPos pos)
+    {
+        return world.getBlockState(pos).getBlock().isAir(world.getBlockState(pos), this, pos);
     }
 
     // Alias if using already imported org.apache.commons.lang3.StringUtils

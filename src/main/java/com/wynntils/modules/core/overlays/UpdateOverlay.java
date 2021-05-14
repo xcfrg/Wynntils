@@ -17,11 +17,11 @@ import com.wynntils.modules.core.enums.UpdateStream;
 import com.wynntils.webapi.WebManager;
 import com.wynntils.webapi.downloader.DownloaderManager;
 import com.wynntils.webapi.downloader.enums.DownloadAction;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import org.lwjgl.input.Keyboard;
+import net.minecraftforge.event.TickEvent;
+import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
 import java.io.IOException;
@@ -132,7 +132,7 @@ public class UpdateOverlay extends Overlay {
                             String message = TextFormatting.DARK_AQUA + "An update to Wynntils (";
                             message += CoreDBConfig.INSTANCE.updateStream == UpdateStream.STABLE ? "Version " + jarName.split("_")[0].split("-")[1] : "Build " + jarName.split("_")[1].replace(".jar", "");
                             message += ") has been downloaded, and will be applied when the game is restarted.";
-                            ModCore.mc().player.sendMessage(new TextComponentString(message));
+                            ModCore.mc().player.sendMessage(new StringTextComponent(message));
                             scheduleCopyUpdateAtShutdown(jarName);
                         } catch (Exception ex) {
                             ex.printStackTrace();
@@ -145,7 +145,7 @@ public class UpdateOverlay extends Overlay {
             }
         }
         if (acceptYesOrNo) {
-            if (Keyboard.isKeyDown(Keyboard.KEY_Y)) {
+            if (Utils.isKeyDown(GLFW.GLFW_KEY_Y)) {
                 disappear = true;
                 acceptYesOrNo = false;
                 download = true;
@@ -153,7 +153,7 @@ public class UpdateOverlay extends Overlay {
                 CoreDBConfig.INSTANCE.showChangelogs = true;
                 CoreDBConfig.INSTANCE.lastVersion = Reference.VERSION;
                 CoreDBConfig.INSTANCE.saveSettings(CoreModule.getModule());
-            } else if (Keyboard.isKeyDown(Keyboard.KEY_N)) {
+            } else if (Utils.isKeyDown(GLFW.GLFW_KEY_N)) {
                 timeout = 35000;
                 acceptYesOrNo = false;
                 download = false;
@@ -199,5 +199,4 @@ public class UpdateOverlay extends Overlay {
     public static boolean isDownloading() {
         return download;
     }
-
 }

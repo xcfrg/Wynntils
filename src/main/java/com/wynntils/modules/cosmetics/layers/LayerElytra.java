@@ -12,15 +12,15 @@ import com.wynntils.modules.cosmetics.layers.models.CustomElytraModel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.model.ModelBase;
-import net.minecraft.client.renderer.GlStateManager.DestFactor;
-import net.minecraft.client.renderer.GlStateManager.SourceFactor;
+import com.mojang.blaze3d.platform.GlStateManager.DestFactor;
+import com.mojang.blaze3d.platform.GlStateManager.SourceFactor;
 import net.minecraft.client.renderer.entity.RenderLivingBase;
-import net.minecraft.client.renderer.entity.RenderPlayer;
+import net.minecraft.client.renderer.entity.PlayerRenderer;
 import net.minecraft.client.renderer.entity.layers.LayerRenderer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 
-import static net.minecraft.client.renderer.GlStateManager.*;
+import static com.mojang.blaze3d.platform.GlStateManager.*;
 
 public class LayerElytra extends ModelBase implements LayerRenderer<AbstractClientPlayer> {
 
@@ -37,17 +37,17 @@ public class LayerElytra extends ModelBase implements LayerRenderer<AbstractClie
      */
     private final CustomElytraModel modelElytra = new CustomElytraModel();
 
-    public LayerElytra(RenderPlayer playerRendererIn) {
+    public LayerElytra(PlayerRenderer playerRendererIn) {
         this.renderPlayer = playerRendererIn;
     }
 
     @Override
     public void doRenderLayer(AbstractClientPlayer player, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
         if (!CosmeticsConfig.INSTANCE.forceCapes
-                && !Minecraft.getMinecraft().gameSettings.getModelParts().toString().contains("CAPE")
-                && player.getUniqueID() == ModCore.mc().player.getUniqueID()) return;
+                && !Minecraft.getInstance().options.getModelParts().toString().contains("CAPE")
+                && player.getUUID() == ModCore.mc().player.getUUID()) return;
 
-        WynntilsUser info = UserManager.getUser(player.getUniqueID());
+        WynntilsUser info = UserManager.getUser(player.getUUID());
         if (info == null || !info.getCosmetics().hasElytra()) return;
 
         // loading cape
@@ -65,18 +65,18 @@ public class LayerElytra extends ModelBase implements LayerRenderer<AbstractClie
 
         color(1.0F, 1.0F, 1.0F, 1.0F);
         enableAlpha();
-        enableBlend();
+        _enableBlend();
         blendFunc(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA);
 
-        renderPlayer.bindTexture(elytra);
+        renderPlayer.bind(elytra);
 
         // rendering
-        { pushMatrix();
+        { _pushMatrix();
             translate(0.0F, 0.0F, 0.125F);
 
-            double d0 = player.prevChasingPosX + (player.chasingPosX - player.prevChasingPosX) * (double) partialTicks - (player.prevPosX + (player.posX - player.prevPosX) * (double) partialTicks);
-            double d1 = player.prevChasingPosY + (player.chasingPosY - player.prevChasingPosY) * (double) partialTicks - (player.prevPosY + (player.posY - player.prevPosY) * (double) partialTicks);
-            double d2 = player.prevChasingPosZ + (player.chasingPosZ - player.prevChasingPosZ) * (double) partialTicks - (player.prevPosZ + (player.posZ - player.prevPosZ) * (double) partialTicks);
+            double d0 = player.prevChasingPosX + (player.chasingPosX - player.prevChasingPosX) * (double) partialTicks - (player.prevPosX + (player.getX() - player.prevPosX) * (double) partialTicks);
+            double d1 = player.prevChasingPosY + (player.chasingPosY - player.prevChasingPosY) * (double) partialTicks - (player.prevPosY + (player.getY() - player.prevPosY) * (double) partialTicks);
+            double d2 = player.prevChasingPosZ + (player.chasingPosZ - player.prevChasingPosZ) * (double) partialTicks - (player.prevPosZ + (player.getZ() - player.prevPosZ) * (double) partialTicks);
             float f = player.prevRenderYawOffset + (player.renderYawOffset - player.prevRenderYawOffset) * partialTicks;
             double d3 = MathHelper.sin(f * 0.017453292F);
             double d4 = -MathHelper.cos(f * 0.017453292F);
@@ -109,8 +109,8 @@ public class LayerElytra extends ModelBase implements LayerRenderer<AbstractClie
             modelElytra.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale, player);
             modelElytra.render(player, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
 
-            disableBlend();
-        } popMatrix();
+            _disableBlend();
+        } _popMatrix();
     }
 
     public boolean shouldCombineTextures() {

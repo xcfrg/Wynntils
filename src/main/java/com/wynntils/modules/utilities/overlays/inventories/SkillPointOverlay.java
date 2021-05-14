@@ -26,22 +26,22 @@ import com.wynntils.modules.utilities.configs.UtilitiesConfig;
 import com.wynntils.modules.utilities.instances.SkillPointAllocation;
 import com.wynntils.modules.utilities.overlays.ui.SkillPointLoadoutUI;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.PositionedSoundRecord;
-import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.audio.SimpleSound;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.init.Items;
-import net.minecraft.init.SoundEvents;
-import net.minecraft.inventory.ClickType;
+import net.minecraft.item.Items;
+import net.minecraft.util.SoundEvents;
+import net.minecraft.inventory.container.ClickType;
 import net.minecraft.inventory.InventoryBasic;
-import net.minecraft.inventory.Slot;
+import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.play.client.CPacketClickWindow;
+import net.minecraft.network.play.client.CClickWindowPacket;
 import net.minecraft.network.play.server.SPacketCustomSound;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import org.lwjgl.input.Keyboard;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -98,12 +98,12 @@ public class SkillPointOverlay implements Listener {
         ItemStack save = new ItemStack(Items.WRITABLE_BOOK);
         save.setStackDisplayName(TextFormatting.GOLD + "[>] Save current loadout");
         ItemUtils.replaceLore(save, Arrays.asList(TextFormatting.GRAY + "Allows you to save this loadout with a name."));
-        e.getGui().inventorySlots.getSlot(SAVE_SLOT).putStack(save);
+        e.getGui().inventorySlots.getSlot(SAVE_SLOT).set(save);
 
         ItemStack load = new ItemStack(Items.ENCHANTED_BOOK);
         load.setStackDisplayName(TextFormatting.GOLD + "[>] Load loadout");
         ItemUtils.replaceLore(load, Arrays.asList(TextFormatting.GRAY + "Allows you to load one of your saved loadouts."));
-        e.getGui().inventorySlots.getSlot(LOAD_SLOT).putStack(load);
+        e.getGui().inventorySlots.getSlot(LOAD_SLOT).set(load);
 
         // skill point allocating
         if (!itemsLoaded || startBuild) {
@@ -111,9 +111,9 @@ public class SkillPointOverlay implements Listener {
             allocateSkillPoints(e.getGui());
         }
 
-        for (int i = 0; i < e.getGui().getLowerInv().getSizeInventory(); i++) {
-            ItemStack stack = e.getGui().getLowerInv().getStackInSlot(i);
-            if (stack.isEmpty() || !stack.hasDisplayName()) continue; // display name also checks for tag compound
+        for (int i = 0; i < e.getGui().getLowerInv().getContainerSize(); i++) {
+            ItemStack stack = e.getGui().getLowerInv().getItem(i);
+            if (stack.isEmpty() || !stack.hasCustomHoverName()) continue; // display name also checks for tag compound
 
             String lore = TextFormatting.getTextWithoutFormattingCodes(ItemUtils.getStringLore(stack));
             String name = TextFormatting.getTextWithoutFormattingCodes(stack.getDisplayName());
@@ -160,10 +160,10 @@ public class SkillPointOverlay implements Listener {
         if (!Utils.isCharacterInfoPage(e.getGui())) return;
 
         // draw name field
-        GlStateManager.pushMatrix();
+        GlStateManager._pushMatrix();
         GlStateManager.translate(0, 0, 500);
         if (nameField != null) nameField.drawTextBox();
-        GlStateManager.popMatrix();
+        GlStateManager._popMatrix();
     }
 
     @SubscribeEvent(priority = EventPriority.LOW)
@@ -171,7 +171,7 @@ public class SkillPointOverlay implements Listener {
         if (!Reference.onWorld || !Utils.isCharacterInfoPage(e.getGui())) return;
 
         for (Slot s : e.getGui().inventorySlots.inventorySlots) {
-            String name = TextFormatting.getTextWithoutFormattingCodes(s.getStack().getDisplayName());
+            String name = TextFormatting.getTextWithoutFormattingCodes(s.getItem().getDisplayName());
             SkillPoint skillPoint = SkillPoint.findSkillPoint(name);
             if (skillPoint == null) continue;
 
@@ -190,16 +190,16 @@ public class SkillPointOverlay implements Listener {
     public void onSlotClicked(GuiOverlapEvent.ChestOverlap.HandleMouseClick e) {
         if (!Reference.onWorld || !Utils.isCharacterInfoPage(e.getGui())) return;
 
-        if (e.getSlotId() == SAVE_SLOT) {
-            nameField = new GuiTextFieldWynn(200, Minecraft.getMinecraft().fontRenderer, 8, 5, 130, 10);
+        if (e.getSlot() == SAVE_SLOT) {
+            nameField = new GuiTextFieldWynn(200, Minecraft.getInstance().font, 8, 5, 130, 10);
             nameField.setFocused(true);
             nameField.setText("Enter build name");
             Keyboard.enableRepeatEvents(true);
 
             e.setCanceled(true);
-        } else if (e.getSlotId() == LOAD_SLOT) {
+        } else if (e.getSlot() == LOAD_SLOT) {
             ModCore.mc().displayGuiScreen(
-                    new SkillPointLoadoutUI(this, ModCore.mc().currentScreen,
+                    new SkillPointLoadoutUI(this, ModCore.mc().screen,
                             new InventoryBasic("Skill Points Loadouts", false, 54))
             );
 
@@ -236,15 +236,15 @@ public class SkillPointOverlay implements Listener {
         // handle typing in text boxes
         if (nameField == null || !nameField.isFocused()) return;
 
-        if (e.getKeyCode() == Keyboard.KEY_RETURN) {
+        if (e.getKeyCode() == GLFW.GLFW_KEY_RETURN) {
             String name = nameField.getText();
             nameField = null;
 
             name = name.replaceAll("&([a-f0-9k-or])", "§$1");
             UtilitiesConfig.INSTANCE.skillPointLoadouts.put(name, getSkillPoints(e.getGui()));
             UtilitiesConfig.INSTANCE.saveSettings(UtilitiesModule.getModule());
-            ModCore.mc().getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.BLOCK_NOTE_PLING, 1f));
-        } else if (e.getKeyCode() == Keyboard.KEY_ESCAPE) {
+            ModCore.mc().getSoundManager().play(SimpleSound.forUI(SoundEvents.BLOCK_NOTE_PLING, 1f));
+        } else if (e.getKeyCode() == GLFW.GLFW_KEY_ESCAPE) {
             nameField = null;
             loadedBuild = null;
             buildPercentage = 0.0f;
@@ -275,11 +275,11 @@ public class SkillPointOverlay implements Listener {
     }
 
     public void addManaTables(ChestReplacer gui) {
-        ItemStack stack = gui.getLowerInv().getStackInSlot(11);
-        if (stack.isEmpty() || !stack.hasDisplayName()) return; // display name also checks for tag compound
+        ItemStack stack = gui.getLowerInv().getItem(11);
+        if (stack.isEmpty() || !stack.hasCustomHoverName()) return; // display name also checks for tag compound
 
         int intelligencePoints = getIntelligencePoints(stack);
-        if (stack.getTagCompound().hasKey("wynntilsAnalyzed")) return;
+        if (stack.getTag().contains("wynntilsAnalyzed")) return;
 
         int closestUpgradeLevel = Integer.MAX_VALUE;
         int level = PlayerInfo.get(CharacterData.class).getLevel();
@@ -317,14 +317,14 @@ public class SkillPointOverlay implements Listener {
         loreTag.addAll(newLore);
 
         ItemUtils.replaceLore(stack, loreTag);
-        stack.getTagCompound().setBoolean("wynntilsAnalyzed", true);
+        stack.getTag().putBoolean("wynntilsAnalyzed", true);
     }
 
     private SkillPointAllocation getSkillPoints(ChestReplacer gui) {
         int[] sp = new int[5];
 
         for (int i = 0; i < 5; i++) {
-            ItemStack stack = gui.getLowerInv().getStackInSlot(i + 9); // sp indicators start at 9
+            ItemStack stack = gui.getLowerInv().getItem(i + 9); // sp indicators start at 9
             Matcher m = SKILLPOINT_PATTERN.matcher(TextFormatting.getTextWithoutFormattingCodes(ItemUtils.getStringLore(stack)));
             if (!m.find()) continue;
 
@@ -332,7 +332,7 @@ public class SkillPointOverlay implements Listener {
         }
 
         // following code subtracts gear sp from total sp to find player-allocated sp
-        ItemStack info = gui.getLowerInv().getStackInSlot(6); // player info slot
+        ItemStack info = gui.getLowerInv().getItem(6); // player info slot
         for (String line : ItemUtils.getLore(info)) {
             String unformattedLine = TextFormatting.getTextWithoutFormattingCodes(line);
             for (int i = 0; i < 5; i++) {
@@ -349,11 +349,11 @@ public class SkillPointOverlay implements Listener {
 
     public void loadBuild(SkillPointAllocation build) {
         if (build.getTotalSkillPoints() > skillPointsRemaining) {
-            TextComponentString text = new TextComponentString("Not enough free skill points!");
+            StringTextComponent text = new StringTextComponent("Not enough free skill points!");
             text.getStyle().setColor(TextFormatting.RED);
 
             ModCore.mc().player.sendMessage(text);
-            ModCore.mc().getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.BLOCK_ANVIL_PLACE, 1f));
+            ModCore.mc().getSoundManager().play(SimpleSound.forUI(SoundEvents.BLOCK_ANVIL_PLACE, 1f));
             return;
         }
 
@@ -363,7 +363,7 @@ public class SkillPointOverlay implements Listener {
 
     private void allocateSkillPoints(ChestReplacer gui) {
         if (loadedBuild == null) return;
-        if (gui.inventorySlots.getSlot(9).getStack().isEmpty()) return;
+        if (gui.inventorySlots.getSlot(9).getItem().isEmpty()) return;
         itemsLoaded = true;
 
         int[] currentSp = getSkillPoints(gui).getAsArray();
@@ -377,18 +377,18 @@ public class SkillPointOverlay implements Listener {
 
             buildPercentage += perSkill * (button == 1 ? 5 : 0);
 
-            CPacketClickWindow packet = new CPacketClickWindow(gui.inventorySlots.windowId, 9 + i, button,
-                    ClickType.PICKUP, gui.inventorySlots.getSlot(9 + i).getStack(),
+            CClickWindowPacket packet = new CClickWindowPacket(gui.inventorySlots.windowId, 9 + i, button,
+                    ClickType.PICKUP, gui.inventorySlots.getSlot(9 + i).getItem(),
                     gui.inventorySlots.getNextTransactionID(ModCore.mc().player.inventory));
 
-            Minecraft.getMinecraft().getSoundHandler().playSound(
-                    PositionedSoundRecord.getMasterRecord(SoundEvents.ENTITY_ITEM_PICKUP, 0.3f + (1.2f * buildPercentage)));
+            Minecraft.getInstance().getSoundManager().play(
+                    SimpleSound.forUI(SoundEvents.ENTITY_ITEM_PICKUP, 0.3f + (1.2f * buildPercentage)));
 
-            ModCore.mc().getConnection().sendPacket(packet);
+            ModCore.mc().getConnection().send(packet);
             return; // can only click once at a time
         }
 
-        Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.ENTITY_PLAYER_LEVELUP, 1f));
+        Minecraft.getInstance().getSoundManager().play(SimpleSound.forUI(SoundEvents.ENTITY_PLAYER_LEVELUP, 1f));
         loadedBuild = null; // we've fully loaded the build if we reach this point
         buildPercentage = 0.0f;
     }

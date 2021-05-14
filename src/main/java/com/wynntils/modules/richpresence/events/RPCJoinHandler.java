@@ -23,13 +23,13 @@ import com.wynntils.webapi.WebManager;
 import com.wynntils.webapi.profiles.player.PlayerStatsProfile.PlayerTag;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ServerData;
-import net.minecraft.inventory.ClickType;
+import net.minecraft.inventory.container.ClickType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
-import net.minecraftforge.client.event.RenderPlayerEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.client.event.PlayerRendererEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -53,12 +53,12 @@ public class RPCJoinHandler implements IDiscordActivityEvents.on_activity_join_c
 
     public void apply(Pointer eventData, String joinSecret) {
         lastSecret = new SecretContainer(joinSecret);
-        if (lastSecret.getOwner().isEmpty() || lastSecret.getRandomHash().isEmpty() || lastSecret.getWorldType().equals("HB") && WebManager.getPlayerProfile() != null && WebManager.getPlayerProfile().getTag() != PlayerTag.HERO)
+        if (lastSecret.getOwner().isEmpty() || lastSecret.getRandomHash().isEmpty() || lastSecret.getWorldType().equals("HB") && WebManager.getPlayerProfile() != null && WebManager.getPlayerProfile().get() != PlayerTag.HERO)
             return;
 
         RichPresenceModule.getModule().getRichPresence().setJoinSecret(lastSecret);
 
-        Minecraft mc = Minecraft.getMinecraft();
+        Minecraft mc = Minecraft.getInstance();
 
         if (!Reference.onServer) {
             ServerData serverData = ServerUtils.getWynncraftServerData(true);
@@ -69,11 +69,11 @@ public class RPCJoinHandler implements IDiscordActivityEvents.on_activity_join_c
         if (Reference.onWorld) {
             if (Reference.getUserWorld().replace("WC", "").replace("HB", "").equals(Integer.toString(lastSecret.getWorld())) && Reference.getUserWorld().replaceAll("\\d+", "").equals(lastSecret.getWorldType())) {
                 sentInvite = true;
-                mc.player.sendChatMessage("/msg " + lastSecret.getOwner() + " " + lastSecret.getRandomHash());
+                mc.player.chat("/msg " + lastSecret.getOwner() + " " + lastSecret.getRandomHash());
                 return;
             }
 
-            mc.player.sendChatMessage("/hub");
+            mc.player.chat("/hub");
             waitingLobby = true;
             return;
         }
@@ -83,7 +83,7 @@ public class RPCJoinHandler implements IDiscordActivityEvents.on_activity_join_c
     }
 
     @SubscribeEvent
-    public void onLobby(RenderPlayerEvent.Post e) {
+    public void onLobby(PlayerRendererEvent.Post e) {
         if (Reference.onWorld || !waitingLobby || delayTime > Minecraft.getSystemTime()) return;
 
         waitingLobby = false;
@@ -96,7 +96,7 @@ public class RPCJoinHandler implements IDiscordActivityEvents.on_activity_join_c
         if (!waitingInvite) return;
         sentInvite = true;
         waitingInvite = false;
-        Minecraft.getMinecraft().player.sendChatMessage("/msg " + lastSecret.getOwner() + " " + lastSecret.getRandomHash());
+        Minecraft.getInstance().player.chat("/msg " + lastSecret.getOwner() + " " + lastSecret.getRandomHash());
     }
 
     @SubscribeEvent
@@ -105,14 +105,14 @@ public class RPCJoinHandler implements IDiscordActivityEvents.on_activity_join_c
 
         // handles the invitation
         if (lastSecret != null && e.getMessage().getUnformattedText().startsWith("You have been invited to join " + lastSecret.getOwner())) {
-            Minecraft.getMinecraft().player.sendChatMessage("/party join " + lastSecret.getOwner());
+            Minecraft.getInstance().player.chat("/party join " + lastSecret.getOwner());
 
             lastSecret = null;
             return;
         }
 
         // handles the user join
-        if (sentInvite && e.getMessage().getUnformattedText().startsWith("[" + Minecraft.getMinecraft().player.getName())) {
+        if (sentInvite && e.getMessage().getUnformattedText().startsWith("[" + Minecraft.getInstance().player.getName())) {
             sentInvite = false;
             e.setCanceled(true);
             return;
@@ -132,7 +132,7 @@ public class RPCJoinHandler implements IDiscordActivityEvents.on_activity_join_c
                 return;
 
             e.setCanceled(true);
-            Minecraft.getMinecraft().player.sendChatMessage("/party invite " + user);
+            Minecraft.getInstance().player.chat("/party invite " + user);
         }
     }
 

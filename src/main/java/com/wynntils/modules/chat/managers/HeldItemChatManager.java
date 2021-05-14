@@ -16,12 +16,12 @@ import com.wynntils.modules.chat.overlays.ChatOverlay;
 import com.wynntils.modules.core.managers.CompassManager;
 import com.wynntils.modules.map.overlays.ui.MainWorldMapUI;
 import net.minecraft.client.Minecraft;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
+import net.minecraft.block.Blocks;
+import net.minecraft.item.Items;
 import net.minecraft.item.Item;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.util.text.event.HoverEvent;
@@ -46,29 +46,29 @@ public class HeldItemChatManager {
     }
 
     private static ITextComponent getMessage() {
-        Minecraft mc = Minecraft.getMinecraft();
+        Minecraft mc = Minecraft.getInstance();
         if (
             !ChatConfig.INSTANCE.heldItemChat ||
             mc.player == null || mc.world == null ||
-            mc.player.inventory.mainInventory.get(6).getItem() != Items.COMPASS ||
-            mc.player.inventory.mainInventory.get(7).getItem() != Items.WRITTEN_BOOK ||
-            mc.player.inventory.mainInventory.get(8).getItem() != Items.NETHER_STAR &&
-            mc.player.inventory.mainInventory.get(8).getItem() != Item.getItemFromBlock(Blocks.SNOW_LAYER) ||
+            mc.player.inventory.items.get(6).getItem() != Items.COMPASS ||
+            mc.player.inventory.items.get(7).getItem() != Items.WRITTEN_BOOK ||
+            mc.player.inventory.items.get(8).getItem() != Items.NETHER_STAR &&
+            mc.player.inventory.items.get(8).getItem() != Item.byBlock(Blocks.SNOW) ||
             !PlayerInfo.get(CharacterData.class).isLoaded()
         ) {
             reset();
             return null;
         }
 
-        if (lastHolding != mc.player.inventory.currentItem) {
-            lastHolding = mc.player.inventory.currentItem;
+        if (lastHolding != mc.player.inventory.selected) {
+            lastHolding = mc.player.inventory.selected;
             startedHolding = System.currentTimeMillis();
             return null;
         }
 
         if (System.currentTimeMillis() < startedHolding + DISPLAY_TIME) return null;
 
-        switch (mc.player.inventory.currentItem) {
+        switch (mc.player.inventory.selected) {
             case 6: return getCompassMessage();
             // case 7: return getQuestBookMessage();
             case 8: return getSoulPointsMessage();
@@ -90,32 +90,32 @@ public class HeldItemChatManager {
     }
 
     private static ITextComponent getCompassMessage() {
-        ITextComponent base = new TextComponentString("Compass Beacon");
+        ITextComponent base = new StringTextComponent("Compass Beacon");
         ITextComponent text = base;
 
         text.getStyle().setColor(TextFormatting.RED);
         text.getStyle().setBold(true);
 
-        text = add(text, new TextComponentString(" "));
+        text = add(text, new StringTextComponent(" "));
         text.getStyle().setColor(TextFormatting.WHITE);
         text.getStyle().setBold(false);
 
         Location compass = CompassManager.getCompassLocation();
         if (compass != null) {
-            ITextComponent clearBeacon = add(text, new TextComponentString("[Clear beacon]"));
-            clearBeacon.getStyle().setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponentString("Click to clear the compass beacon")));
+            ITextComponent clearBeacon = add(text, new StringTextComponent("[Clear beacon]"));
+            clearBeacon.getStyle().setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new StringTextComponent("Click to clear the compass beacon")));
             clearBeacon.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/compass clear"));
 
-            text = add(text, new TextComponentString(" "));
+            text = add(text, new StringTextComponent(" "));
         }
 
         add(text, getCancelComponent());
-        text = add(text, new TextComponentString("\n"));
+        text = add(text, new StringTextComponent("\n"));
         text.getStyle().setColor(TextFormatting.WHITE);
 
         if (compass == null) {
-            ITextComponent suggestCompass = add(text, new TextComponentString("Compass beacon not set"));
-            suggestCompass.getStyle().setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponentString("Do /compass or middle click on map to set compass")));
+            ITextComponent suggestCompass = add(text, new StringTextComponent("Compass beacon not set"));
+            suggestCompass.getStyle().setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new StringTextComponent("Do /compass or middle click on map to set compass")));
             suggestCompass.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/compass "));
             suggestCompass.getStyle().setColor(TextFormatting.GRAY);
             suggestCompass.getStyle().setItalic(true);
@@ -124,17 +124,17 @@ public class HeldItemChatManager {
 
         double compassX = compass.getX();
         double compassZ = compass.getZ();
-        double playerX = Minecraft.getMinecraft().player.posX;
-        double playerZ = Minecraft.getMinecraft().player.posZ;
+        double playerX = Minecraft.getInstance().player.getX();
+        double playerZ = Minecraft.getInstance().player.getZ();
 
         int distance = MathHelper.floor(MathHelper.sqrt((compassX - playerX) * (compassX - playerX) + (compassZ - playerZ) * (compassZ - playerZ)));
 
-        ITextComponent showOnMap = add(text, new TextComponentString(String.format(
+        ITextComponent showOnMap = add(text, new StringTextComponent(String.format(
             TextFormatting.DARK_AQUA + "%d, %d" + TextFormatting.RESET + ": %dm away",
             MathHelper.floor(compassX), MathHelper.floor(compassZ), distance
         )));
 
-        text.getStyle().setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponentString("Click to show on main map")));
+        text.getStyle().setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new StringTextComponent("Click to show on main map")));
         text.getStyle().setClickEvent(TextAction.getStaticEvent(OnOpenMapAtCompassClick.class));
 
         return base;
@@ -148,29 +148,29 @@ public class HeldItemChatManager {
 
         if (maxSoulPoints == -1 || currentSoulPoints == -1 || time == -1) return null;
 
-        ITextComponent base = new TextComponentString("Soul points");
+        ITextComponent base = new StringTextComponent("Soul points");
         ITextComponent text = base;
 
         text.getStyle().setColor(TextFormatting.AQUA);
         text.getStyle().setBold(true);
 
-        text = add(text, new TextComponentString(" "));
+        text = add(text, new StringTextComponent(" "));
         text.getStyle().setColor(TextFormatting.WHITE);
         text.getStyle().setBold(false);
 
         add(text, getCancelComponent());
-        text = add(text, new TextComponentString("\n"));
+        text = add(text, new StringTextComponent("\n"));
 
-        text = add(text, new TextComponentString(String.format(
+        text = add(text, new StringTextComponent(String.format(
             "§6§l%d§6/§l%d§r ",
             currentSoulPoints, maxSoulPoints
         )));
 
         if (currentSoulPoints >= maxSoulPoints) {
-            add(text, new TextComponentString("§e[§lFULL§e]"));
+            add(text, new StringTextComponent("§e[§lFULL§e]"));
         } else {
             int seconds = (time / 20) % 60;
-            add(text, new TextComponentString(String.format(
+            add(text, new StringTextComponent(String.format(
                 "§e[§l%s§e:§l%s§e]", time / (20 * 60), String.format("%02d", seconds)
             )));
         }
@@ -192,15 +192,15 @@ public class HeldItemChatManager {
             ChatConfig.INSTANCE.heldItemChat = false;
             ChatConfig.INSTANCE.saveSettings(ChatModule.getModule());
 
-            ITextComponent message = new TextComponentString("Enable §bMod options > Chat > Held Item Chat Messages§r to undo (or click this)");
-            Minecraft.getMinecraft().player.sendMessage(TextAction.withStaticEvent(message, OnUnhideClick.class));
+            ITextComponent message = new StringTextComponent("Enable §bMod options > Chat > Held Item Chat Messages§r to undo (or click this)");
+            Minecraft.getInstance().player.sendMessage(TextAction.withStaticEvent(message, OnUnhideClick.class));
         }
     }
 
     private static ITextComponent getCancelComponent() {
-        ITextComponent msg = new TextComponentString("[x]");
+        ITextComponent msg = new StringTextComponent("[x]");
         msg.getStyle().setColor(TextFormatting.DARK_RED);
-        msg.getStyle().setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponentString("Do not show this text")));
+        msg.getStyle().setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new StringTextComponent("Do not show this text")));
 
         return TextAction.withStaticEvent(msg, OnCancelClick.class);
     }

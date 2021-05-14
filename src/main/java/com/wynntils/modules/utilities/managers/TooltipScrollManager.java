@@ -6,10 +6,10 @@ package com.wynntils.modules.utilities.managers;
 
 import com.wynntils.modules.core.config.CoreDBConfig;
 import com.wynntils.modules.utilities.configs.UtilitiesConfig;
-import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.inventory.Slot;
+import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.event.RenderTooltipEvent;
@@ -18,7 +18,7 @@ import org.lwjgl.input.Mouse;
 import java.util.List;
 
 public class TooltipScrollManager {
-    private static GuiScreen lastGuiScreen = null;
+    private static Screen lastGuiScreen = null;
     private static boolean isGuiContainer = false;
     private static ItemStack lastItemStack = null;
     private static int scrollAmount = 0;
@@ -42,7 +42,7 @@ public class TooltipScrollManager {
             return;
         }
 
-        ItemStack hoveredStack = hovered.getStack();
+        ItemStack hoveredStack = hovered.getItem();
         if (hoveredStack != lastItemStack) {
             lastItemStack = hoveredStack;
             resetScroll();
@@ -54,7 +54,7 @@ public class TooltipScrollManager {
         scrollAmount = Math.min(scrollAmount, maxScroll);
     }
 
-    public static void onGuiMouseInput(GuiScreen on) {
+    public static void onGuiMouseInput(Screen on) {
         if (on != lastGuiScreen) return;
 
         int mDWheel = Integer.signum(Mouse.getEventDWheel() * CoreDBConfig.INSTANCE.scrollDirection.getScrollDirection());
@@ -62,7 +62,7 @@ public class TooltipScrollManager {
         scrollAmount = MathHelper.clamp(scrollAmount - scrollPower * mDWheel, 0, maxScroll);
     }
 
-    public static void onBeforeDrawScreen(GuiScreen on) {
+    public static void onBeforeDrawScreen(Screen on) {
         if (on != lastGuiScreen) {
             lastGuiScreen = on;
             isGuiContainer = on instanceof GuiContainer;
@@ -71,7 +71,7 @@ public class TooltipScrollManager {
         }
     }
 
-    public static void onAfterDrawScreen(GuiScreen on) {
+    public static void onAfterDrawScreen(Screen on) {
         if (on != lastGuiScreen) return;
 
         updateHoveredItemStack();
@@ -80,13 +80,13 @@ public class TooltipScrollManager {
     private static void onBeforeTooltipWrap(RenderTooltipEvent e) {
         updateHoveredItemStack();
 
-        if (lastItemStack == null || e.getStack() != lastItemStack) return;
+        if (lastItemStack == null || e.getItem() != lastItemStack) return;
 
         hasText = e.getLines().size() > 1;
     }
 
     private static void onBeforeTooltipRender(RenderTooltipEvent e, boolean updateMaxScroll) {
-        if (lastItemStack == null || e.getStack() != lastItemStack) return;
+        if (lastItemStack == null || e.getItem() != lastItemStack) return;
 
         if (updateMaxScroll) {
             calculateMaxScroll(e.getLines());
@@ -101,7 +101,7 @@ public class TooltipScrollManager {
             float offscreenHeight = maxScroll * ((float) scrollAmount / maxScroll);
             float scaleFactor = (lastGuiScreen.height + offscreenHeight) / tooltipHeight;
             int xOffset = e.getX() - 4;
-            GlStateManager.pushMatrix();
+            GlStateManager._pushMatrix();
             GlStateManager.translate(+xOffset, +lastGuiScreen.height, 0);
             GlStateManager.scale(scaleFactor, scaleFactor, 0);
             if (UtilitiesConfig.INSTANCE.renderTooltipsFromTop) {
@@ -119,7 +119,7 @@ public class TooltipScrollManager {
     }
 
     private static void onAfterTooltipRender(RenderTooltipEvent e, boolean updateMaxScroll) {
-        if (lastItemStack == null || e.getStack() != lastItemStack) return;
+        if (lastItemStack == null || e.getItem() != lastItemStack) return;
 
         if (updateMaxScroll) {
             calculateMaxScroll(e.getLines());
@@ -127,7 +127,7 @@ public class TooltipScrollManager {
 
         if (UtilitiesConfig.INSTANCE.renderTooltipsScaled) {
             if (maxScroll == 0 || (scrollAmount == maxScroll && !UtilitiesConfig.INSTANCE.renderTooltipsFromTop)) return;
-            GlStateManager.popMatrix();
+            GlStateManager._popMatrix();
             return;
         }
 

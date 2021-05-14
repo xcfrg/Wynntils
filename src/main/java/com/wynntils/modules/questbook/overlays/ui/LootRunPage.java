@@ -20,13 +20,13 @@ import com.wynntils.modules.questbook.instances.IconContainer;
 import com.wynntils.modules.questbook.instances.QuestBookPage;
 import com.wynntils.webapi.WebManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.PositionedSoundRecord;
-import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.audio.SimpleSound;
+import net.minecraft.client.MainWindow;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.init.SoundEvents;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.SoundEvents;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import org.lwjgl.opengl.GL11;
 
@@ -34,7 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import static net.minecraft.client.renderer.GlStateManager.*;
+import static com.mojang.blaze3d.platform.GlStateManager.*;
 
 public class LootRunPage extends QuestBookPage {
 
@@ -129,24 +129,24 @@ public class LootRunPage extends QuestBookPage {
                         render.drawRect(Textures.Map.paper_map_textures, mapX - boundarySize, mapY - boundarySize, mapX + mapWidth + boundarySize, mapY + mapHeight + boundarySize, 0, 0, 217, 217);
                         ScreenRenderer.enableScissorTest(mapX, mapY, mapWidth, mapHeight);
 
-                        map.bindTexture();
+                        map.bind();
                         color(1.0f, 1.0f, 1.0f, 1.0f);
 
                         glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
 
-                        enableBlend();
+                        _enableBlend();
                         enableTexture2D();
                         Tessellator tessellator = Tessellator.getInstance();
-                        BufferBuilder bufferbuilder = tessellator.getBuffer();
+                        BufferBuilder bufferbuilder = tessellator.getBuilder();
                         {
                             bufferbuilder.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION_TEX);
 
-                            bufferbuilder.pos(mapX, mapY + mapHeight, 0).tex(minX, maxZ).endVertex();
-                            bufferbuilder.pos(mapX + mapWidth, mapY + mapHeight, 0).tex(maxX, maxZ).endVertex();
-                            bufferbuilder.pos(mapX + mapWidth, mapY, 0).tex(maxX, minZ).endVertex();
-                            bufferbuilder.pos(mapX, mapY, 0).tex(minX, minZ).endVertex();
+                            bufferbuilder.vertex(mapX, mapY + mapHeight, 0).tex(minX, maxZ).endVertex();
+                            bufferbuilder.vertex(mapX + mapWidth, mapY + mapHeight, 0).tex(maxX, maxZ).endVertex();
+                            bufferbuilder.vertex(mapX + mapWidth, mapY, 0).tex(maxX, minZ).endVertex();
+                            bufferbuilder.vertex(mapX, mapY, 0).tex(minX, minZ).endVertex();
 
-                            tessellator.draw();
+                            tessellator.end();
                         }
 
                         //render the line on the map
@@ -166,7 +166,7 @@ public class LootRunPage extends QuestBookPage {
 
                     //reset settings
                     disableAlpha();
-                    disableBlend();
+                    _disableBlend();
                     ScreenRenderer.disableScissorTest();
                     ScreenRenderer.clearMask();
                 }
@@ -232,7 +232,7 @@ public class LootRunPage extends QuestBookPage {
                             render.drawRectF(background_2, x + 9, y - 96 + currentY, x + 146, y - 87 + currentY);
                         }
 
-                        disableLighting();
+                        _disableLighting();
 
                         if (LootRunManager.getActivePathName() != null && LootRunManager.getActivePathName().equals(currentName)) {
                             hoveredText = Arrays.asList(TextFormatting.BOLD + names.get(i), TextFormatting.YELLOW + "Loaded", TextFormatting.GOLD + "Middle click to open lootrun in folder",  TextFormatting.GREEN + "Left click to unload this lootrun");
@@ -255,7 +255,7 @@ public class LootRunPage extends QuestBookPage {
 
                     String friendlyName = getFriendlyName(currentName, 120);
                     if (selected == i && toCrop && animationTick > 0) {
-                        int maxScroll = fontRenderer.getStringWidth(friendlyName) - (120 - 10);
+                        int maxScroll = font.width(friendlyName) - (120 - 10);
                         int scrollAmount = (animationTick / 20) % (maxScroll + 60);
 
                         if (maxScroll <= scrollAmount && scrollAmount <= maxScroll + 40) {
@@ -319,11 +319,11 @@ public class LootRunPage extends QuestBookPage {
     }
 
     public String getFriendlyName(String str, int width) {
-        if (!(Minecraft.getMinecraft().fontRenderer.getStringWidth(str) > width)) return str;
+        if (!(Minecraft.getInstance().font.width(str) > width)) return str;
 
         str += "...";
 
-        while (Minecraft.getMinecraft().fontRenderer.getStringWidth(str) > width) {
+        while (Minecraft.getInstance().font.width(str) > width) {
             str = str.substring(0, str.length() - 4).trim() + "...";
         }
 
@@ -337,9 +337,9 @@ public class LootRunPage extends QuestBookPage {
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-        ScaledResolution res = new ScaledResolution(mc);
-        int posX = ((res.getScaledWidth() / 2) - mouseX);
-        int posY = ((res.getScaledHeight() / 2) - mouseY);
+        MainWindow res = new MainWindow(mc);
+        int posX = ((res.getGuiScaledWidth() / 2) - mouseX);
+        int posY = ((res.getGuiScaledHeight() / 2) - mouseY);
 
         checkMenuButton(posX, posY);
         checkForwardAndBackButtons(posX, posY);
@@ -363,11 +363,11 @@ public class LootRunPage extends QuestBookPage {
                             Location start = LootRunManager.getActivePath().getPoints().get(0);
                             String startingPointMsg = "Loot run " + LootRunManager.getActivePathName() + " starts at [" + (int) start.getX() + ", " + (int) start.getZ() + "]";
 
-                            Minecraft.getMinecraft().addScheduledTask(() ->
-                                    ChatOverlay.getChat().printChatMessageWithOptionalDeletion(new TextComponentString(startingPointMsg), MESSAGE_ID)
+                            Minecraft.getInstance().submit(() ->
+                                    ChatOverlay.getChat().printChatMessageWithOptionalDeletion(new StringTextComponent(startingPointMsg), MESSAGE_ID)
                             );
 
-                            Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.BLOCK_ANVIL_PLACE, 1f));
+                            Minecraft.getInstance().getSoundManager().play(SimpleSound.forUI(SoundEvents.BLOCK_ANVIL_PLACE, 1f));
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -380,7 +380,7 @@ public class LootRunPage extends QuestBookPage {
                 if (result) {
                     names.remove(selected);
                     updateSelected();
-                    Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.ENTITY_IRONGOLEM_HURT, 1f));
+                    Minecraft.getInstance().getSoundManager().play(SimpleSound.forUI(SoundEvents.ENTITY_IRONGOLEM_HURT, 1f));
                 }
 
                 return;

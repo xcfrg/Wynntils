@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 
 public class InfoFormatter {
 
-    private Minecraft mc = Minecraft.getMinecraft();
+    private Minecraft mc = Minecraft.getInstance();
 
     public Map<String, String> cache = new HashMap<>();
     public Map<String, InfoModule> formatters = new HashMap<>();
@@ -66,17 +66,17 @@ public class InfoFormatter {
 
         // X coordinate
         registerFormatter((input) ->
-                Integer.toString((int) mc.player.posX),
+                Integer.toString((int) mc.player.getX()),
                 "x");
 
         // Y coordinate
         registerFormatter((input) ->
-                Integer.toString((int) mc.player.posY),
+                Integer.toString((int) mc.player.getY()),
                 "y");
 
         // Z coordinate
         registerFormatter((input) ->
-                Integer.toString((int) mc.player.posZ),
+                Integer.toString((int) mc.player.getZ()),
                 "z");
 
         // The facing cardinal direction
@@ -244,7 +244,7 @@ public class InfoFormatter {
         // Distance from compass beacon
         registerFormatter((input) ->{
             Location compass = CompassManager.getCompassLocation();
-            Location playerPos = new Location(Minecraft.getMinecraft().player);
+            Location playerPos = new Location(Minecraft.getInstance().player);
 
             if (compass == null) return "";
             return String.valueOf((int) compass.distance(playerPos));

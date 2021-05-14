@@ -41,8 +41,8 @@ public abstract class InfoOverlay extends Overlay {
         // Determine width of largest string
         int width = 0;
         for (String line : lines) {
-            if (ScreenRenderer.fontRenderer.getStringWidth(line) > width) {
-                width = ScreenRenderer.fontRenderer.getStringWidth(line);
+            if (ScreenRenderer.font.width(line) > width) {
+                width = ScreenRenderer.font.width(line);
             }
         }
 

@@ -20,12 +20,12 @@ import com.wynntils.modules.utilities.overlays.hud.WarTimerOverlay;
 import com.wynntils.webapi.WebManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.play.server.SPacketTitle;
-import net.minecraft.network.play.server.SPacketWindowItems;
+import net.minecraft.network.play.server.STitlePacket;
+import net.minecraft.network.play.server.SWindowItemsPacket;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.event.TickEvent;
 
 
 public class ClientEvents implements Listener {
@@ -70,8 +70,8 @@ public class ClientEvents implements Listener {
 
     // special tracks
     @SubscribeEvent
-    public void dungeonTracks(PacketEvent<SPacketTitle> e) {
-        if (!MusicConfig.INSTANCE.replaceJukebox || e.getPacket().getType() != SPacketTitle.Type.TITLE) return;
+    public void dungeonTracks(PacketEvent<STitlePacket> e) {
+        if (!MusicConfig.INSTANCE.replaceJukebox || e.getPacket().getType() != STitlePacket.Type.TITLE) return;
 
         String title = TextFormatting.getTextWithoutFormattingCodes(e.getPacket().getMessage().getFormattedText());
         String songName = WebManager.getMusicLocations().getDungeonTrack(title);
@@ -92,28 +92,28 @@ public class ClientEvents implements Listener {
     public void areaTracks(SchedulerEvent.RegionUpdate e) {
         if (!MusicConfig.INSTANCE.replaceJukebox) return;
 
-        Minecraft.getMinecraft().addScheduledTask(BossTrackManager::update);
+        Minecraft.getInstance().submit(BossTrackManager::update);
 
         if (BossTrackManager.isAlive()) return;
-        AreaTrackManager.update(new Location(Minecraft.getMinecraft().player));
+        AreaTrackManager.update(new Location(Minecraft.getInstance().player));
     }
 
     // mythic found sfx
     @SubscribeEvent
-    public void onMythicFound(PacketEvent<SPacketWindowItems> e) {
+    public void onMythicFound(PacketEvent<SWindowItemsPacket> e) {
         if (!MusicConfig.SoundEffects.INSTANCE.mythicFound) return;
-        if (Minecraft.getMinecraft().currentScreen == null) return;
-        if (!(Minecraft.getMinecraft().currentScreen instanceof ChestReplacer)) return;
+        if (Minecraft.getInstance().screen == null) return;
+        if (!(Minecraft.getInstance().screen instanceof ChestReplacer)) return;
 
-        ChestReplacer chest = (ChestReplacer) Minecraft.getMinecraft().currentScreen;
+        ChestReplacer chest = (ChestReplacer) Minecraft.getInstance().screen;
         if (!chest.getLowerInv().getName().contains("Loot Chest") &&
                 !chest.getLowerInv().getName().contains("Daily Rewards") &&
                 !chest.getLowerInv().getName().contains("Objective Rewards")) return;
 
-        int size = Math.min(chest.getLowerInv().getSizeInventory(), e.getPacket().getItemStacks().size());
+        int size = Math.min(chest.getLowerInv().getContainerSize(), e.getPacket().getItems().size());
         for (int i = 0; i < size; i++) {
-            ItemStack stack = e.getPacket().getItemStacks().get(i);
-            if (stack.isEmpty() || !stack.hasDisplayName()) continue;
+            ItemStack stack = e.getPacket().getItems().get(i);
+            if (stack.isEmpty() || !stack.hasCustomHoverName()) continue;
             if (!stack.getDisplayName().contains(TextFormatting.DARK_PURPLE.toString())) continue;
             if (!stack.getDisplayName().contains("Unidentified")) continue;
 

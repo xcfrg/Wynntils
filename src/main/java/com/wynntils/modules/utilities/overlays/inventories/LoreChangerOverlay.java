@@ -10,16 +10,16 @@ import com.wynntils.core.framework.instances.data.InventoryData;
 import com.wynntils.core.framework.interfaces.Listener;
 import com.wynntils.core.utils.ItemUtils;
 import com.wynntils.core.utils.StringUtils;
-import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
+import net.minecraft.block.Blocks;
+import net.minecraft.item.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.StringNBT;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import org.lwjgl.input.Keyboard;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 
@@ -29,26 +29,26 @@ public class LoreChangerOverlay implements Listener {
     public void onChest(GuiOverlapEvent.ChestOverlap.DrawScreen.Post e) {
         if (e.getGui().getSlotUnderMouse() == null || !e.getGui().getSlotUnderMouse().getHasStack()) return;
 
-        replaceLore(e.getGui().getSlotUnderMouse().getStack());
+        replaceLore(e.getGui().getSlotUnderMouse().getItem());
     }
 
     @SubscribeEvent
     public void onInventory(GuiOverlapEvent.InventoryOverlap.DrawScreen e) {
         if (e.getGui().getSlotUnderMouse() == null || !e.getGui().getSlotUnderMouse().getHasStack()) return;
 
-        replaceLore(e.getGui().getSlotUnderMouse().getStack());
+        replaceLore(e.getGui().getSlotUnderMouse().getItem());
     }
 
     @SubscribeEvent
     public void onHorse(GuiOverlapEvent.HorseOverlap.DrawScreen e) {
         if (e.getGui().getSlotUnderMouse() == null || !e.getGui().getSlotUnderMouse().getHasStack()) return;
 
-        replaceLore(e.getGui().getSlotUnderMouse().getStack());
+        replaceLore(e.getGui().getSlotUnderMouse().getItem());
     }
 
     private static void replaceLore(ItemStack stack) {
         // Soul Point Timer
-        if ((stack.getItem() == Items.NETHER_STAR || stack.getItem() == Item.getItemFromBlock(Blocks.SNOW_LAYER)) && stack.getDisplayName().contains("Soul Point")) {
+        if ((stack.getItem() == Items.NETHER_STAR || stack.getItem() == Item.byBlock(Blocks.SNOW)) && stack.getDisplayName().contains("Soul Point")) {
             List<String> lore = ItemUtils.getLore(stack);
             if (lore != null && !lore.isEmpty()) {
                 if (lore.get(lore.size() - 1).contains("Time until next soul point: ")) {
@@ -66,15 +66,15 @@ public class LoreChangerOverlay implements Listener {
         }
 
         // Wynnic Translator
-        if (stack.hasTagCompound() && !stack.getTagCompound().getBoolean("showWynnic") && Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
+        if (stack.hasTagCompound() && !stack.getTag().getBoolean("showWynnic") && Utils.isKeyDown(GLFW.GLFW_KEY_LSHIFT)) {
             String fullLore = ItemUtils.getStringLore(stack);
             if (StringUtils.hasWynnic(fullLore) || StringUtils.hasGavellian(fullLore)) {
-                NBTTagList loreList = ItemUtils.getLoreTag(stack);
+                ListNBT loreList = ItemUtils.getLoreTag(stack);
                 if (loreList != null) {
-                    stack.getTagCompound().setTag("originalLore", loreList.copy());
+                    stack.getTag().put("originalLore", loreList.copy());
                     boolean capital = true;
-                    for (int index = 0; index < loreList.tagCount(); index++) {
-                        String lore = loreList.getStringTagAt(index);
+                    for (int index = 0; index < loreList.size(); index++) {
+                        String lore = loreList.getString(index);
                         if (StringUtils.hasWynnic(lore) || StringUtils.hasGavellian(lore)) {
                             StringBuilder translated = new StringBuilder();
                             boolean colorCode = false;
@@ -121,24 +121,24 @@ public class LoreChangerOverlay implements Listener {
                                 number = new StringBuilder();
                             }
 
-                            loreList.set(index, new NBTTagString(translated.toString()));
+                            loreList.set(index, StringNBT.valueOf(translated.toString()));
                         }
                     }
                 }
             }
-            stack.getTagCompound().setBoolean("showWynnic", true);
+            stack.getTag().putBoolean("showWynnic", true);
         }
 
-        if (stack.hasTagCompound() && stack.getTagCompound().getBoolean("showWynnic") && !Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) {
-            NBTTagCompound tag = stack.getTagCompound();
-            if (tag.hasKey("originalLore")) {
-                NBTTagCompound displayTag = tag.getCompoundTag("display");
+        if (stack.hasTagCompound() && stack.getTag().getBoolean("showWynnic") && !Utils.isKeyDown(GLFW.GLFW_KEY_LSHIFT)) {
+            CompoundNBT tag = stack.getTag();
+            if (tag.contains("originalLore")) {
+                CompoundNBT displayTag = tag.getCompound("display");
                 if (displayTag != null) {
-                    displayTag.setTag("Lore", tag.getTag("originalLore"));
+                    displayTag.put("Lore", tag.get("originalLore"));
                 }
                 tag.removeTag("originalLore");
             }
-            stack.getTagCompound().setBoolean("showWynnic", false);
+            stack.getTag().putBoolean("showWynnic", false);
         }
     }
 }

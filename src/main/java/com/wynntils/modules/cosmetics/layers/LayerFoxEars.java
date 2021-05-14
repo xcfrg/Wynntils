@@ -9,37 +9,37 @@ import com.wynntils.modules.core.instances.account.WynntilsUser;
 import com.wynntils.modules.core.managers.UserManager;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.model.ModelBase;
-import net.minecraft.client.renderer.entity.RenderPlayer;
+import net.minecraft.client.renderer.entity.PlayerRenderer;
 import net.minecraft.client.renderer.entity.layers.LayerRenderer;
 import com.wynntils.modules.cosmetics.layers.models.EarModelRenderer;
 
-import static net.minecraft.client.renderer.GlStateManager.*;
+import static com.mojang.blaze3d.platform.GlStateManager.*;
 
 public class LayerFoxEars implements LayerRenderer<AbstractClientPlayer> {
 
-    private final RenderPlayer playerRenderer;
+    private final PlayerRenderer playerRenderer;
     private final EarModelRenderer bipedFoxEarL;
     private final EarModelRenderer bipedFoxEarR;
 
-    public LayerFoxEars(RenderPlayer playerRendererIn) {
+    public LayerFoxEars(PlayerRenderer playerRendererIn) {
         this.playerRenderer = playerRendererIn;
         this.bipedFoxEarL = new EarModelRenderer(playerRendererIn.getMainModel(), 32, 0, 56, 0);
         this.bipedFoxEarR = new EarModelRenderer(playerRendererIn.getMainModel(), 32, 0, 56, 0);
     }
 
     public void doRenderLayer(AbstractClientPlayer player, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
-        WynntilsUser info = UserManager.getUser(player.getUniqueID());
+        WynntilsUser info = UserManager.getUser(player.getUUID());
         if (info == null || !info.getCosmetics().hasEars()) return;
         if (!player.hasSkin() || player.isInvisible()) return;
 
-        this.playerRenderer.bindTexture(player.getLocationSkin());
+        this.playerRenderer.bind(player.getLocationSkin());
 
         float f = player.prevRotationYawHead + (player.rotationYawHead - player.prevRotationYawHead) * partialTicks - (player.prevRenderYawOffset + (player.renderYawOffset - player.prevRenderYawOffset) * partialTicks);
         float f1 = player.prevRotationPitch + (player.rotationPitch - player.prevRotationPitch) * partialTicks;
 
 
-        pushMatrix();
-        enableBlend();
+        _pushMatrix();
+        _enableBlend();
         {
             rotate(f, 0.0F, 1.0F, 0.0F);
             rotate(f1, 1.0F, 0.0F, 0.0F);
@@ -51,11 +51,11 @@ public class LayerFoxEars implements LayerRenderer<AbstractClientPlayer> {
 
             renderModelR(player, playerRenderer.getMainModel(), 0.0625f);
         }
-        disableBlend();
-        popMatrix();
+        _disableBlend();
+        _popMatrix();
 
-        pushMatrix();
-        enableBlend();
+        _pushMatrix();
+        _enableBlend();
         {
             rotate(f, 0.0F, 1.0F, 0.0F);
             rotate(f1, 1.0F, 0.0F, 0.0F);
@@ -66,8 +66,8 @@ public class LayerFoxEars implements LayerRenderer<AbstractClientPlayer> {
 
             renderModelL(player, playerRenderer.getMainModel(), 0.0625f);
         }
-        disableBlend();
-        popMatrix();
+        _disableBlend();
+        _popMatrix();
     }
 
     public void renderModelL(AbstractClientPlayer player, ModelBase model, float scale) {

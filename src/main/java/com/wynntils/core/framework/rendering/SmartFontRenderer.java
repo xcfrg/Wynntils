@@ -10,7 +10,7 @@ import com.wynntils.core.framework.rendering.colors.MinecraftChatColors;
 import com.wynntils.core.utils.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.renderer.GlStateManager;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.util.ResourceLocation;
@@ -32,7 +32,7 @@ public class SmartFontRenderer extends FontRenderer {
     }
 
     public SmartFontRenderer() {
-        super(Minecraft.getMinecraft().gameSettings, new ResourceLocation("textures/font/ascii.png"), Minecraft.getMinecraft().getTextureManager(), false);
+        super(Minecraft.getInstance().options, new ResourceLocation("textures/font/ascii.png"), Minecraft.getInstance().getTextureManager(), false);
     }
 
     public float drawString(String text, float x, float y, CustomColor customColor, TextAlignment alignment, TextShadow shadow) {
@@ -45,13 +45,13 @@ public class SmartFontRenderer extends FontRenderer {
         String drawnText = text.replaceAll("§\\[\\d+\\.?\\d*,\\d+\\.?\\d*,\\d+\\.?\\d*\\]", "");
         switch (alignment) {
             case MIDDLE:
-                return drawString(text, x - getStringWidth(drawnText) / 2.0f, y, customColor, TextAlignment.LEFT_RIGHT, shadow);
+                return drawString(text, x - width(drawnText) / 2.0f, y, customColor, TextAlignment.LEFT_RIGHT, shadow);
             case RIGHT_LEFT:
-                return drawString(text, x - getStringWidth(drawnText), y, customColor, TextAlignment.LEFT_RIGHT, shadow);
+                return drawString(text, x - width(drawnText), y, customColor, TextAlignment.LEFT_RIGHT, shadow);
             default:
                 GlStateManager.enableTexture2D();
                 GlStateManager.enableAlpha();
-                GlStateManager.enableBlend();
+                GlStateManager._enableBlend();
                 int colour = customColor.toInt();
                 posX = x;
                 posY = y;
@@ -62,9 +62,9 @@ public class SmartFontRenderer extends FontRenderer {
 
     private float drawRainbowText(String input, float x, float y, TextAlignment alignment, TextShadow shadow) {
         if (alignment == TextAlignment.MIDDLE)
-            return drawRainbowText(input, x - getStringWidth(input) / 2.0f, y, TextAlignment.LEFT_RIGHT, shadow);
+            return drawRainbowText(input, x - width(input) / 2.0f, y, TextAlignment.LEFT_RIGHT, shadow);
         else if (alignment == TextAlignment.RIGHT_LEFT)
-            return drawRainbowText(input, x - getStringWidth(input), y, TextAlignment.LEFT_RIGHT, shadow);
+            return drawRainbowText(input, x - width(input), y, TextAlignment.LEFT_RIGHT, shadow);
 
         posX = x; posY = y;
 

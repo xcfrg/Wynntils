@@ -12,7 +12,7 @@ import com.wynntils.modules.map.instances.LootRunNote;
 import com.wynntils.modules.map.managers.LootRunManager;
 import com.wynntils.modules.questbook.enums.QuestBookPages;
 import com.wynntils.modules.questbook.instances.QuestBookPage;
-import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -21,7 +21,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.util.text.event.HoverEvent;
 import net.minecraftforge.client.IClientCommand;
@@ -80,11 +80,11 @@ public class CommandLootRun extends CommandBase implements IClientCommand {
                     throw new CommandException("The specified loot run doesn't exist!");
                 }
 
-                sender.sendMessage(new TextComponentString(message));
+                sender.sendMessage(new StringTextComponent(message));
 
                 if (!LootRunManager.getActivePath().getPoints().isEmpty()) {
                     Location start = LootRunManager.getActivePath().getPoints().get(0);
-                    ITextComponent startingPointMsg = new TextComponentString("Loot run starts at [" +
+                    ITextComponent startingPointMsg = new StringTextComponent("Loot run starts at [" +
                             (int) start.getX() + ", " + (int) start.getZ() + "]");
                     startingPointMsg.getStyle().setColor(GRAY);
                     sender.sendMessage(startingPointMsg);
@@ -100,7 +100,7 @@ public class CommandLootRun extends CommandBase implements IClientCommand {
                 String name = args[1];
 
                 if (LootRunManager.isRecording()) {
-                    sender.sendMessage(new TextComponentString(RED + "You're currently recording a lootrun, to save it first stop recording with /lootrun record!"));
+                    sender.sendMessage(new StringTextComponent(RED + "You're currently recording a lootrun, to save it first stop recording with /lootrun record!"));
                     return;
                 }
 
@@ -113,7 +113,7 @@ public class CommandLootRun extends CommandBase implements IClientCommand {
                     message = RED + "An error occurred while trying to save your loot run path!";
                 }
 
-                sender.sendMessage(new TextComponentString(message));
+                sender.sendMessage(new StringTextComponent(message));
                 return;
             }
             case "d":
@@ -132,7 +132,7 @@ public class CommandLootRun extends CommandBase implements IClientCommand {
                     message = RED + "The provided lootrun doesn't exists!";
                 }
 
-                sender.sendMessage(new TextComponentString(message));
+                sender.sendMessage(new StringTextComponent(message));
                 return;
             }
             case "rename": {
@@ -151,7 +151,7 @@ public class CommandLootRun extends CommandBase implements IClientCommand {
                     message = RED + "Could not rename " + oldName + " as it doesn't exist!";
                 }
 
-                sender.sendMessage(new TextComponentString(message));
+                sender.sendMessage(new StringTextComponent(message));
                 return;
             }
             case "r":
@@ -165,25 +165,25 @@ public class CommandLootRun extends CommandBase implements IClientCommand {
                     LootRunManager.startRecording();
                 }
 
-                sender.sendMessage(new TextComponentString(message));
+                sender.sendMessage(new StringTextComponent(message));
                 return;
             }
             case "u":
             case "undo": {
                 if (!LootRunManager.isRecording()) {
-                    sender.sendMessage(new TextComponentString(RED + "You are not currently recording a loot run!"));
+                    sender.sendMessage(new StringTextComponent(RED + "You are not currently recording a loot run!"));
                     return;
                 }
 
                 Entity lowest = ModCore.mc().player.getLowestRidingEntity();
                 String message;
-                if (LootRunManager.undoMovement(lowest.posX, lowest.posY, lowest.posZ)) {
+                if (LootRunManager.undoMovement(lowest.getX(), lowest.getY(), lowest.getZ())) {
                     message = GREEN + "Undid your most recent movements!";
                 } else {
                     message = RED + "Failed to undo your movements!\n" + RED + "Make sure you are standing on the part of the path you want to rewind to";
                 }
 
-                sender.sendMessage(new TextComponentString(message));
+                sender.sendMessage(new StringTextComponent(message));
                 return;
             }
             case "n":
@@ -193,7 +193,7 @@ public class CommandLootRun extends CommandBase implements IClientCommand {
                 }
 
                 if (args.length == 2 && args[1].equalsIgnoreCase("list")) {
-                    ITextComponent message = new TextComponentString(YELLOW + "Loot run notes:");
+                    ITextComponent message = new StringTextComponent(YELLOW + "Loot run notes:");
                     Set<LootRunNote> notes = null;
                     if (LootRunManager.isRecording()) {
                         notes = LootRunManager.getRecordingPath().getNotes();
@@ -209,14 +209,14 @@ public class CommandLootRun extends CommandBase implements IClientCommand {
                         message.appendText(GRAY + "No notes to display!");
                     } else {
                         for (LootRunNote n : notes) {
-                            ITextComponent deleteButton = new TextComponentString(RED + "[X] ");
+                            ITextComponent deleteButton = new StringTextComponent(RED + "[X] ");
                             deleteButton.getStyle()
-                                .setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponentString(
+                                .setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new StringTextComponent(
                                     "Click here to delete this note!"
                                 )))
                                 .setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/lootrun deletenote " + n.getShortLocationString()));
 
-                            ITextComponent noteMessage = new TextComponentString(n.getLocationString() + ": " + AQUA + n.getNote());
+                            ITextComponent noteMessage = new StringTextComponent(n.getLocationString() + ": " + AQUA + n.getNote());
                             noteMessage.getStyle().setColor(GRAY);
 
                             message.appendText("\n");
@@ -231,15 +231,15 @@ public class CommandLootRun extends CommandBase implements IClientCommand {
 
                 String text = String.join(" ", args);
                 text = text.substring(text.indexOf(" ")).trim();
-                EntityPlayerSP player = ModCore.mc().player;
-                LootRunNote note = new LootRunNote(new Location(player.posX, player.posY, player.posZ), text);
+                ClientPlayerEntity player = ModCore.mc().player;
+                LootRunNote note = new LootRunNote(new Location(player.getX(), player.getY(), player.getZ()), text);
 
                 ITextComponent message;
                 if (LootRunManager.addNote(note)) {
-                    message = new TextComponentString("Saved note at " + note.getLocationString() + "!");
+                    message = new StringTextComponent("Saved note at " + note.getLocationString() + "!");
                     message.getStyle().setColor(GREEN);
                 } else {
-                    message = new TextComponentString(RED + "You have no active or recording loot runs!");
+                    message = new StringTextComponent(RED + "You have no active or recording loot runs!");
                 }
 
                 sender.sendMessage(message);
@@ -251,10 +251,10 @@ public class CommandLootRun extends CommandBase implements IClientCommand {
                 String location = args[1];
                 ITextComponent message;
                 if (LootRunManager.removeNote(location)) {
-                    message = new TextComponentString("Removed note at (" + location.replace(",", ", ") + ")!");
+                    message = new StringTextComponent("Removed note at (" + location.replace(",", ", ") + ")!");
                     message.getStyle().setColor(GREEN);
                 } else {
-                    message = new TextComponentString(RED + "You have no active or recording loot runs!");
+                    message = new StringTextComponent(RED + "You have no active or recording loot runs!");
                 }
 
                 sender.sendMessage(message);
@@ -265,7 +265,7 @@ public class CommandLootRun extends CommandBase implements IClientCommand {
                 String command = args[0].toLowerCase(Locale.ROOT);
                 BlockPos pos;
                 if (args.length < 4) {
-                    pos = new BlockPos((int) ModCore.mc().player.posX, (int) ModCore.mc().player.posY, (int) ModCore.mc().player.posZ - 1);
+                    pos = new BlockPos((int) ModCore.mc().player.getX(), (int) ModCore.mc().player.getY(), (int) ModCore.mc().player.getZ() - 1);
                 } else {
                     int x = 0, y = 0, z = 0;
                     try {
@@ -273,7 +273,7 @@ public class CommandLootRun extends CommandBase implements IClientCommand {
                         y = Integer.parseInt(args[2]);
                         z = Integer.parseInt(args[3]);
                     } catch (NumberFormatException e) {
-                        sender.sendMessage(new TextComponentString(RED + "Invalid coordinates!"));
+                        sender.sendMessage(new StringTextComponent(RED + "Invalid coordinates!"));
                         return;
                     }
                     pos = new BlockPos(x, y, z - 1); // offset z by one
@@ -282,17 +282,17 @@ public class CommandLootRun extends CommandBase implements IClientCommand {
                 ITextComponent message;
                 if (command.equals("addchest")) {
                     if (LootRunManager.addChest(pos)) {
-                        message = new TextComponentString("Added chest at (" + pos.getX() + ", " + pos.getY() + ", " + (pos.getZ() + 1) + ")!");
+                        message = new StringTextComponent("Added chest at (" + pos.getX() + ", " + pos.getY() + ", " + (pos.getZ() + 1) + ")!");
                         message.getStyle().setColor(GREEN);
                     } else {
-                        message = new TextComponentString(RED + "You have no active or recording loot runs!");
+                        message = new StringTextComponent(RED + "You have no active or recording loot runs!");
                     }
                 } else {
                     if (LootRunManager.removeChest(pos)) {
-                        message = new TextComponentString("Removed chest at (" + pos.getX() + ", " + pos.getY() + ", " + (pos.getZ() + 1) + ")!");
+                        message = new StringTextComponent("Removed chest at (" + pos.getX() + ", " + pos.getY() + ", " + (pos.getZ() + 1) + ")!");
                         message.getStyle().setColor(GREEN);
                     } else {
-                        message = new TextComponentString(RED + "You have no active or recording loot runs!");
+                        message = new StringTextComponent(RED + "You have no active or recording loot runs!");
                     }
                 }
 
@@ -311,15 +311,15 @@ public class CommandLootRun extends CommandBase implements IClientCommand {
             case "c":
             case "clear":
                 if (!LootRunManager.isRecording() && LootRunManager.getActivePath() == null) {
-                    sender.sendMessage(new TextComponentString(RED + "You have no loot runs to clear!"));
+                    sender.sendMessage(new StringTextComponent(RED + "You have no loot runs to clear!"));
                     return;
                 }
                 LootRunManager.clear();
 
-                sender.sendMessage(new TextComponentString(GREEN + "Cleared current loot runs!"));
+                sender.sendMessage(new StringTextComponent(GREEN + "Cleared current loot runs!"));
                 return;
             case "help": {
-                sender.sendMessage(new TextComponentString(
+                sender.sendMessage(new StringTextComponent(
                     GOLD + "Loot run recording help\n" +
                     DARK_GRAY + "/lootrun " + RED + "load <name> " + GRAY + "Loads a saved loot run\n" +
                     DARK_GRAY + "/lootrun " + RED + "save <name> " + GRAY + "Save the currently recording loot run as the given name\n" +

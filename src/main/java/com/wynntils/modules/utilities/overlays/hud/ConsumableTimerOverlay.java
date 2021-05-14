@@ -16,7 +16,7 @@ import com.wynntils.modules.utilities.instances.IdentificationHolder;
 import com.wynntils.modules.utilities.overlays.inventories.ItemIdentificationOverlay;
 import com.wynntils.webapi.profiles.item.enums.IdentificationModifier;
 import net.minecraft.client.Minecraft;
-import net.minecraft.init.Items;
+import net.minecraft.item.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -55,8 +55,8 @@ public class ConsumableTimerOverlay extends Overlay {
     }
 
     public static void addConsumable(ItemStack stack) {
-        if (stack.isEmpty() || !stack.hasDisplayName()) return; // display name also checks for the nbt data
-        if (stack.getItem() != Items.DIAMOND_AXE && stack.getItem() != Items.POTIONITEM && stack.getItem() != Items.SPLASH_POTION) return; // foods and scrolls have DIAMOND_AXE as their items
+        if (stack.isEmpty() || !stack.hasCustomHoverName()) return; // display name also checks for the nbt data
+        if (stack.getItem() != Items.DIAMOND_AXE && stack.getItem() != Items.POTION && stack.getItem() != Items.SPLASH_POTION) return; // foods and scrolls have DIAMOND_AXE as their items
 
         // vanilla potions needs a special verification, they DON'T start with dark aqua
         if (!stack.getDisplayName().startsWith(DARK_AQUA.toString())) {
@@ -121,9 +121,9 @@ public class ConsumableTimerOverlay extends Overlay {
         String name;
         if (stack.getItem() == Items.POTIONITEM || stack.getItem() == Items.SPLASH_POTION)
             name = LIGHT_PURPLE + "Ⓛ Potion";
-        else if (stack.getItemDamage() >= 69 && stack.getItemDamage() <= 75) // food, 69 <= damage <= 75
+        else if (stack.getDamageValue() >= 69 && stack.getDamageValue() <= 75) // food, 69 <= damage <= 75
             name = GOLD + "Ⓐ Food";
-        else if (stack.getItemDamage() >= 42 && stack.getItemDamage() <= 44) // scrolls, 42 <= damage <= 44
+        else if (stack.getDamageValue() >= 42 && stack.getDamageValue() <= 44) // scrolls, 42 <= damage <= 44
             name = YELLOW + "Ⓔ Scroll";
         else return; // breaks if not valid
 

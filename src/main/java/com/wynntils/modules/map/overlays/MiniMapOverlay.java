@@ -19,7 +19,7 @@ import com.wynntils.modules.map.managers.LootRunManager;
 import com.wynntils.modules.map.overlays.objects.MapCompassIcon;
 import com.wynntils.modules.map.overlays.objects.MapIcon;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GlStateManager;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.math.MathHelper;
@@ -68,11 +68,11 @@ public class MiniMapOverlay extends Overlay {
         int zoom = MapConfig.INSTANCE.mapZoom;
 
         // texture position
-        float minX = map.getTextureXPosition(mc.player.posX) - extraFactor * (mapSize/2f + zoom);  // <--- min texture x point
-        float minZ = map.getTextureZPosition(mc.player.posZ) - extraFactor * (mapSize/2f + zoom);  // <--- min texture z point
+        float minX = map.getTextureXPosition(mc.player.getX()) - extraFactor * (mapSize/2f + zoom);  // <--- min texture x point
+        float minZ = map.getTextureZPosition(mc.player.getZ()) - extraFactor * (mapSize/2f + zoom);  // <--- min texture z point
 
-        float maxX = map.getTextureXPosition(mc.player.posX) + extraFactor * (mapSize/2f + zoom);  // <--- max texture x point
-        float maxZ = map.getTextureZPosition(mc.player.posZ) + extraFactor * (mapSize/2f + zoom);  // <--- max texture z point
+        float maxX = map.getTextureXPosition(mc.player.getX()) + extraFactor * (mapSize/2f + zoom);  // <--- max texture x point
+        float maxZ = map.getTextureZPosition(mc.player.getZ()) + extraFactor * (mapSize/2f + zoom);  // <--- max texture z point
 
         minX /= (float)map.getImageWidth(); maxX /= (float)map.getImageWidth();
         minZ /= (float)map.getImageHeight(); maxZ /= (float)map.getImageHeight();
@@ -94,7 +94,7 @@ public class MiniMapOverlay extends Overlay {
             }
 
             // map texture
-            map.bindTexture();
+            map.bind();
             GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
 
             // rotation axis
@@ -107,19 +107,19 @@ public class MiniMapOverlay extends Overlay {
             int option = MapConfig.INSTANCE.renderUsingLinear ? GL11.GL_LINEAR : GL11.GL_NEAREST;
             GlStateManager.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, option);
 
-            GlStateManager.enableBlend();
+            GlStateManager._enableBlend();
             GlStateManager.enableTexture2D();
             Tessellator tessellator = Tessellator.getInstance();
-            BufferBuilder bufferbuilder = tessellator.getBuffer();
+            BufferBuilder bufferbuilder = tessellator.getBuilder();
             {
                 bufferbuilder.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION_TEX);
 
-                bufferbuilder.pos(position.getDrawingX() - extraSize, position.getDrawingY() + mapSize + extraSize, 0).tex(minX, maxZ).endVertex();
-                bufferbuilder.pos(position.getDrawingX() + mapSize + extraSize, position.getDrawingY() + mapSize + extraSize, 0).tex(maxX, maxZ).endVertex();
-                bufferbuilder.pos(position.getDrawingX() + mapSize + extraSize, position.getDrawingY() - extraSize, 0).tex(maxX, minZ).endVertex();
-                bufferbuilder.pos(position.getDrawingX() - extraSize, position.getDrawingY() - extraSize, 0).tex(minX, minZ).endVertex();
+                bufferbuilder.vertex(position.getDrawingX() - extraSize, position.getDrawingY() + mapSize + extraSize, 0).tex(minX, maxZ).endVertex();
+                bufferbuilder.vertex(position.getDrawingX() + mapSize + extraSize, position.getDrawingY() + mapSize + extraSize, 0).tex(maxX, maxZ).endVertex();
+                bufferbuilder.vertex(position.getDrawingX() + mapSize + extraSize, position.getDrawingY() - extraSize, 0).tex(maxX, minZ).endVertex();
+                bufferbuilder.vertex(position.getDrawingX() - extraSize, position.getDrawingY() - extraSize, 0).tex(minX, minZ).endVertex();
 
-                tessellator.draw();
+                tessellator.end();
             }
 
 
@@ -139,11 +139,11 @@ public class MiniMapOverlay extends Overlay {
 
                 // These two points for a box bigger than the actual minimap so the icons outside
                 // can quickly be filtered out
-                final int minFastWorldX = (int) (mc.player.posX - extraFactor * (mapSize/2f + zoom));
-                final int minFastWorldZ = (int) (mc.player.posZ - extraFactor * (mapSize/2f + zoom));
+                final int minFastWorldX = (int) (mc.player.getX() - extraFactor * (mapSize/2f + zoom));
+                final int minFastWorldZ = (int) (mc.player.getZ() - extraFactor * (mapSize/2f + zoom));
 
-                final int maxFastWorldX = (int) (mc.player.posX + extraFactor * (mapSize/2f + zoom)) + 1;
-                final int maxFastWorldZ = (int) (mc.player.posZ + extraFactor * (mapSize/2f + zoom)) + 1;
+                final int maxFastWorldX = (int) (mc.player.getX() + extraFactor * (mapSize/2f + zoom)) + 1;
+                final int maxFastWorldZ = (int) (mc.player.getZ() + extraFactor * (mapSize/2f + zoom)) + 1;
 
                 Consumer<MapIcon> consumer = c -> {
                     if (!c.isEnabled(true)) return;
@@ -157,15 +157,15 @@ public class MiniMapOverlay extends Overlay {
                     ) {
                         return;
                     }
-                    float dx = (float) (posX - mc.player.posX) * scaleFactor;
-                    float dz = (float) (posZ - mc.player.posZ) * scaleFactor;
+                    float dx = (float) (posX - mc.player.getX()) * scaleFactor;
+                    float dz = (float) (posZ - mc.player.getZ()) * scaleFactor;
 
                     boolean followRotation = false;
 
                     if (MapConfig.INSTANCE.followPlayerRotation) {
                         // Rotate dx and dz
                         if (followRotation = c.followRotation()) {
-                            GlStateManager.pushMatrix();
+                            GlStateManager._pushMatrix();
                             Point drawingOrigin = MiniMapOverlay.drawingOrigin();
                             GlStateManager.translate(drawingOrigin.x + halfMapSize, drawingOrigin.y + halfMapSize, 0);
                             GlStateManager.rotate(180 - mc.player.rotationYaw, 0, 0, 1);
@@ -179,7 +179,7 @@ public class MiniMapOverlay extends Overlay {
 
                     c.renderAt(this, dx + halfMapSize, dz + halfMapSize, sizeMultiplier, scaleFactor);
                     if (followRotation) {
-                        GlStateManager.popMatrix();
+                        GlStateManager._popMatrix();
                     }
                 };
 
@@ -192,8 +192,8 @@ public class MiniMapOverlay extends Overlay {
                 MapIcon compassIcon = MapIcon.getCompass();
 
                 if (compassIcon.isEnabled(true)) {
-                    float dx = (float) (compassIcon.getPosX() - mc.player.posX) * scaleFactor;
-                    float dz = (float) (compassIcon.getPosZ() - mc.player.posZ) * scaleFactor;
+                    float dx = (float) (compassIcon.getPosX() - mc.player.getX()) * scaleFactor;
+                    float dz = (float) (compassIcon.getPosZ() - mc.player.getZ()) * scaleFactor;
 
                     if (MapConfig.INSTANCE.followPlayerRotation) {
                         float temp = dx * cosRotationRadians - dz * sinRotationRadians;
@@ -241,14 +241,14 @@ public class MiniMapOverlay extends Overlay {
 
                         Point drawingOrigin = MiniMapOverlay.drawingOrigin();
 
-                        GlStateManager.pushMatrix();
+                        GlStateManager._pushMatrix();
                         GlStateManager.translate(drawingOrigin.x + dx, drawingOrigin.y + dz, 0);
                         GlStateManager.rotate(angle, 0, 0, 1);
                         GlStateManager.translate(-drawingOrigin.x - dx, -drawingOrigin.y - dz, 0);
 
                         MapCompassIcon.pointer.renderAt(this, dx, dz, sizeMultiplier, 1f);
 
-                        GlStateManager.popMatrix();
+                        GlStateManager._popMatrix();
 
                         if (MapConfig.INSTANCE.compassDistanceType == MapConfig.DistanceMarkerType.ALWAYS ||
                                 MapConfig.INSTANCE.compassDistanceType == MapConfig.DistanceMarkerType.OFF_MAP)
@@ -263,7 +263,7 @@ public class MiniMapOverlay extends Overlay {
             }
 
             GlStateManager.disableAlpha();
-            GlStateManager.disableBlend();
+            GlStateManager._disableBlend();
             disableScissorTest();
             clearMask();
 
@@ -331,7 +331,7 @@ public class MiniMapOverlay extends Overlay {
 
             if (MapConfig.INSTANCE.showCoords) {
                 drawString(
-                        String.join(", ", Integer.toString((int) mc.player.posX), Integer.toString((int) mc.player.posY), Integer.toString((int) mc.player.posZ)),
+                        String.join(", ", Integer.toString((int) mc.player.getX()), Integer.toString((int) mc.player.getY()), Integer.toString((int) mc.player.getZ())),
                         mapSize / 2f, mapSize + 6, CommonColors.WHITE, SmartFontRenderer.TextAlignment.MIDDLE, SmartFontRenderer.TextShadow.OUTLINE
                 );
             }
@@ -342,7 +342,7 @@ public class MiniMapOverlay extends Overlay {
 
     private static void drawTextOverlay(ScreenRenderer renderer, float x, float y, String text) {
         ScreenRenderer.scale(0.8f);
-        float w = renderer.getStringWidth(text) / 2f + 3f, h = SmartFontRenderer.CHAR_HEIGHT / 2f + 2f;
+        float w = renderer.width(text) / 2f + 3f, h = SmartFontRenderer.CHAR_HEIGHT / 2f + 2f;
         renderer.drawRectF(new CustomColor(0f, 0f, 0f, 0.7f), x - w, y - h + 1f, x + w, y + h);
         renderer.drawCenteredString(text, x, y - 3f, CommonColors.WHITE);
         ScreenRenderer.resetScale();

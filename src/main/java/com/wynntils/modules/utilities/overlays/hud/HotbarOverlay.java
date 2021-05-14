@@ -14,7 +14,7 @@ import com.wynntils.modules.utilities.configs.OverlayConfig;
 import com.wynntils.modules.utilities.configs.UtilitiesConfig;
 import com.wynntils.modules.utilities.events.ClientEvents;
 import com.wynntils.webapi.profiles.item.enums.ItemTier;
-import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -31,13 +31,13 @@ public class HotbarOverlay extends Overlay {
     public void render(RenderGameOverlayEvent.Pre event) {
         if (!WIDGETS_TEXTURE.loaded) WIDGETS_TEXTURE.load();
 
-        EntityPlayerSP player = ModCore.mc().player;
+        ClientPlayerEntity player = ModCore.mc().player;
         int textureY = 0;
 
         if (OverlayConfig.Hotbar.INSTANCE.hotbarTexture == OverlayConfig.Hotbar.HotbarTextures.Resource_Pack) {
             float scale = WIDGETS_TEXTURE.height / 256;
             drawRect(WIDGETS_TEXTURE, -91, 0, 91, 22, 0, 0, (int) (182 * scale), (int) (22 * scale));
-            drawRect(WIDGETS_TEXTURE, -92 + player.inventory.currentItem * 20, -1, -68 + player.inventory.currentItem * 20, 21, 0, (int) (22 * scale), (int) (24 * scale), (int) (44 * scale));
+            drawRect(WIDGETS_TEXTURE, -92 + player.inventory.selected * 20, -1, -68 + player.inventory.selected * 20, 21, 0, (int) (22 * scale), (int) (24 * scale), (int) (44 * scale));
         } else {
             switch (OverlayConfig.Hotbar.INSTANCE.hotbarTexture) {
                 case Wynn: textureY = 0;
@@ -46,11 +46,11 @@ public class HotbarOverlay extends Overlay {
             }
 
             drawRect(Textures.Overlays.hotbar, -91, 0, 0, textureY, 182, 22);
-            drawRect(Textures.Overlays.hotbar, -92 + player.inventory.currentItem * 20, -1, 0, textureY + 22, 24, 22);
+            drawRect(Textures.Overlays.hotbar, -92 + player.inventory.selected * 20, -1, 0, textureY + 22, 24, 22);
         }
 
         for (int i = 0; i < 9; i++) {
-            ItemStack stack = player.inventory.mainInventory.get(i);
+            ItemStack stack = player.inventory.items.get(i);
             if (stack.isEmpty()) continue;
 
             int x = -88 + (i*20);

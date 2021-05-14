@@ -25,12 +25,12 @@ import net.minecraft.init.MobEffects;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.network.play.server.*;
 import net.minecraft.potion.Potion;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.event.TickEvent;
 
 import java.text.DecimalFormat;
 import java.util.Arrays;
@@ -67,7 +67,7 @@ public class OverlayEvents implements Listener {
     }
 
     @SubscribeEvent
-    public void onTitle(PacketEvent<SPacketTitle> e) {
+    public void onTitle(PacketEvent<STitlePacket> e) {
         WarTimerOverlay.onTitle(e);
     }
 
@@ -119,15 +119,15 @@ public class OverlayEvents implements Listener {
             /*Inventory full message*/
             if (OverlayConfig.GameUpdate.GameUpdateInventoryMessages.INSTANCE.enabled) {
                 if (tickcounter % (int) (OverlayConfig.GameUpdate.GameUpdateInventoryMessages.INSTANCE.inventoryUpdateRate * 20f) == 0) {
-                    IInventory inv = Minecraft.getMinecraft().player.inventory;
+                    IInventory inv = Minecraft.getInstance().player.inventory;
                     int itemCounter = 0;
-                    for (int i = 0; i < inv.getSizeInventory(); i++) {
-                        if (!inv.getStackInSlot(i).isEmpty()) {
+                    for (int i = 0; i < inv.getContainerSize(); i++) {
+                        if (!inv.getItem(i).isEmpty()) {
                             itemCounter++;
                         }
                     }
 
-                    if (itemCounter == inv.getSizeInventory() - 1) {
+                    if (itemCounter == inv.getContainerSize() - 1) {
                         GameUpdateOverlay.queueMessage(OverlayConfig.GameUpdate.GameUpdateInventoryMessages.INSTANCE.inventoryMessageFormat);
                     }
 
@@ -174,9 +174,9 @@ public class OverlayEvents implements Listener {
         String formattedText = e.getMessage().getFormattedText();
         if (messageText.split(" ")[0].matches("\\[\\d+:\\d+\\]")) {
             if (!wynnExpTimestampNotified) {
-                TextComponentString text = new TextComponentString("[" + Reference.NAME + "] WynnExpansion's chat timestamps detected, please use " + Reference.NAME + "' chat timestamps for full compatibility.");
+                StringTextComponent text = new StringTextComponent("[" + Reference.NAME + "] WynnExpansion's chat timestamps detected, please use " + Reference.NAME + "' chat timestamps for full compatibility.");
                 text.getStyle().setColor(DARK_RED);
-                Minecraft.getMinecraft().player.sendMessage(text);
+                Minecraft.getInstance().player.sendMessage(text);
                 wynnExpTimestampNotified = true;
             }
         }
@@ -715,17 +715,17 @@ public class OverlayEvents implements Listener {
     }
 
     @SubscribeEvent
-    public void onDisplayObjective(PacketEvent<SPacketDisplayObjective> e) {
+    public void onDisplayObjective(PacketEvent<SDisplayObjectivePacket> e) {
         ObjectivesOverlay.checkForSidebar(e.getPacket());
     }
 
     @SubscribeEvent
-    public void onScoreboardObjective(PacketEvent<SPacketScoreboardObjective> e) {
+    public void onScoreboardObjective(PacketEvent<SScoreboardObjectivePacket> e) {
         ObjectivesOverlay.checkSidebarRemoved(e.getPacket());
     }
 
     @SubscribeEvent
-    public void onUpdateScore(PacketEvent<SPacketUpdateScore> e) {
+    public void onUpdateScore(PacketEvent<SUpdateScorePacket> e) {
         ObjectivesOverlay.checkObjectiveUpdate(e.getPacket());
     }
 
@@ -754,7 +754,7 @@ public class OverlayEvents implements Listener {
 
     @SubscribeEvent
     public void onClassChange(WynnClassChangeEvent e) {
-        ModCore.mc().addScheduledTask(GameUpdateOverlay::resetMessages);
+        ModCore.mc().submit(GameUpdateOverlay::resetMessages);
         // WynnCraft seem to be off with its timer with around 10 seconds
         loginTime = Minecraft.getSystemTime() + 10000;
         msgcounter = 0;
@@ -770,7 +770,7 @@ public class OverlayEvents implements Listener {
         if (!Reference.onWorld || !OverlayConfig.ConsumableTimer.INSTANCE.showSpellEffects) return;
 
         SPacketEntityEffect effect = e.getPacket();
-        if (effect.getEntityId() != Minecraft.getMinecraft().player.getEntityId()) return;
+        if (effect.getId() != Minecraft.getInstance().player.getId()) return;
 
         Potion potion = Potion.getPotionById(effect.getEffectId());
 
@@ -808,7 +808,7 @@ public class OverlayEvents implements Listener {
         }
 
         // create timer with name and duration (duration in ticks)/20 -> seconds
-        Minecraft.getMinecraft().addScheduledTask(() ->
+        Minecraft.getInstance().submit(() ->
                 ConsumableTimerOverlay.addBasicTimer(timerName, effect.getDuration() / 20));
     }
 
@@ -817,9 +817,9 @@ public class OverlayEvents implements Listener {
         if (!Reference.onWorld || !OverlayConfig.ConsumableTimer.INSTANCE.showSpellEffects) return;
 
         SPacketRemoveEntityEffect effect = e.getPacket();
-        if (effect.getEntity(Minecraft.getMinecraft().world) != Minecraft.getMinecraft().player) return;
+        if (effect.getEntity(Minecraft.getInstance().level) != Minecraft.getInstance().player) return;
 
-        Minecraft.getMinecraft().addScheduledTask(() -> {
+        Minecraft.getInstance().submit(() -> {
             Potion potion = effect.getPotion();
 
             // When removing speed boost from (archer)

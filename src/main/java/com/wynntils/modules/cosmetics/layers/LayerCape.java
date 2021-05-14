@@ -13,21 +13,21 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
-import net.minecraft.client.renderer.entity.RenderPlayer;
+import net.minecraft.client.renderer.entity.PlayerRenderer;
 import net.minecraft.client.renderer.entity.layers.LayerRenderer;
-import net.minecraft.init.Items;
+import net.minecraft.item.Items;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 
-import static net.minecraft.client.renderer.GlStateManager.*;
+import static com.mojang.blaze3d.platform.GlStateManager.*;
 
 public class LayerCape implements LayerRenderer<AbstractClientPlayer> {
 
-    private final RenderPlayer playerRenderer;
+    private final PlayerRenderer playerRenderer;
     private final ModelRenderer bipedCape;
 
-    public LayerCape(RenderPlayer playerRendererIn) {
+    public LayerCape(PlayerRenderer playerRendererIn) {
         this.playerRenderer = playerRendererIn;
         this.bipedCape = new ModelRenderer(playerRendererIn.getMainModel());
     }
@@ -50,10 +50,10 @@ public class LayerCape implements LayerRenderer<AbstractClientPlayer> {
 
     public void doRenderLayer(AbstractClientPlayer player, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
         if (!CosmeticsConfig.INSTANCE.forceCapes
-                && !Minecraft.getMinecraft().gameSettings.getModelParts().toString().contains("CAPE")
-                && player.getUniqueID() == ModCore.mc().player.getUniqueID()) return;
+                && !Minecraft.getInstance().options.getModelParts().toString().contains("CAPE")
+                && player.getUUID() == ModCore.mc().player.getUUID()) return;
 
-        WynntilsUser info = UserManager.getUser(player.getUniqueID());
+        WynntilsUser info = UserManager.getUser(player.getUUID());
         if (info == null || !info.getCosmetics().hasCape()) return;
 
         // loading cape
@@ -65,19 +65,19 @@ public class LayerCape implements LayerRenderer<AbstractClientPlayer> {
 
         // texture
         color(1.0F, 1.0F, 1.0F, 1.0F);
-        playerRenderer.bindTexture(rl);
+        playerRenderer.bind(rl);
 
         // rendering
-        { pushMatrix();
+        { _pushMatrix();
             this.playerRenderer.getMainModel().bipedBody.postRender(scale);
             translate(0.0F, 0.0F, 0.125F);
             if (player.isSneaking()) {
                 translate(0.0F, 0.0F, -0.1F);
             }
 
-            double d0 = player.prevChasingPosX + (player.chasingPosX - player.prevChasingPosX) * (double) partialTicks - (player.prevPosX + (player.posX - player.prevPosX) * (double) partialTicks);
-            double d1 = player.prevChasingPosY + (player.chasingPosY - player.prevChasingPosY) * (double) partialTicks - (player.prevPosY + (player.posY - player.prevPosY) * (double) partialTicks);
-            double d2 = player.prevChasingPosZ + (player.chasingPosZ - player.prevChasingPosZ) * (double) partialTicks - (player.prevPosZ + (player.posZ - player.prevPosZ) * (double) partialTicks);
+            double d0 = player.prevChasingPosX + (player.chasingPosX - player.prevChasingPosX) * (double) partialTicks - (player.prevPosX + (player.getX() - player.prevPosX) * (double) partialTicks);
+            double d1 = player.prevChasingPosY + (player.chasingPosY - player.prevChasingPosY) * (double) partialTicks - (player.prevPosY + (player.getY() - player.prevPosY) * (double) partialTicks);
+            double d2 = player.prevChasingPosZ + (player.chasingPosZ - player.prevChasingPosZ) * (double) partialTicks - (player.prevPosZ + (player.getZ() - player.prevPosZ) * (double) partialTicks);
             float f = player.prevRenderYawOffset + (player.renderYawOffset - player.prevRenderYawOffset) * partialTicks;
             double d3 = MathHelper.sin(f * 0.017453292F);
             double d4 = -MathHelper.cos(f * 0.017453292F);
@@ -102,15 +102,15 @@ public class LayerCape implements LayerRenderer<AbstractClientPlayer> {
             rotate(180.0F, 0.0F, 1.0F, 0.0F);
 
             enableAlpha();
-            enableBlend();
+            _enableBlend();
 
             // Find out size of cape
             int frameCount = info.getCosmetics().getImage().getHeight() / (info.getCosmetics().getImage().getWidth() / 2);
             renderModel(player, playerRenderer.getMainModel(), 0.0625f, frameCount);
 
-            disableBlend();
+            _disableBlend();
             disableAlpha();
-        } popMatrix();
+        } _popMatrix();
     }
 
     public boolean shouldCombineTextures() {

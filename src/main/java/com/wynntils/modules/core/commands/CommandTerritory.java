@@ -13,10 +13,10 @@ import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
-import net.minecraft.init.SoundEvents;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.client.IClientCommand;
 import org.apache.commons.lang3.StringUtils;
@@ -44,7 +44,7 @@ public class CommandTerritory extends CommandBase implements IClientCommand {
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
         if (args.length <= 0) {
-            Minecraft.getMinecraft().player.playSound(SoundEvents.BLOCK_ANVIL_PLACE, 1.0f, 1.0f);
+            Minecraft.getInstance().player.play(SoundEvents.BLOCK_ANVIL_PLACE, 1.0f, 1.0f);
 
             throw new WrongUsageException("/territory [name] | Ex: /territory Detlas");
         }
@@ -60,12 +60,12 @@ public class CommandTerritory extends CommandBase implements IClientCommand {
 
         Optional<TerritoryProfile> selectedTerritory = territories.stream().filter(c -> c.getFriendlyName().equalsIgnoreCase(finalTerritoryName)).findFirst();
         if (!selectedTerritory.isPresent()) {
-            Minecraft.getMinecraft().player.playSound(SoundEvents.BLOCK_ANVIL_PLACE, 1.0f, 1.0f);
+            Minecraft.getInstance().player.play(SoundEvents.BLOCK_ANVIL_PLACE, 1.0f, 1.0f);
 
             throw new CommandException("Invalid territory! Use: /territory [name] | Ex: /territory Detlas");
         }
 
-        Minecraft.getMinecraft().player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 10.0f);
+        Minecraft.getInstance().player.play(SoundEvents.ENTITY_PLAYER_LEVELUP, 1.0f, 10.0f);
 
         TerritoryProfile tp = selectedTerritory.get();
 
@@ -74,15 +74,15 @@ public class CommandTerritory extends CommandBase implements IClientCommand {
 
         CompassManager.setCompassLocation(new Location(xMiddle, 0, zMiddle));  // update compass location
 
-        TextComponentString success = new TextComponentString("The compass is now pointing towards " + territoryName + " (" + xMiddle + ", " + zMiddle + ")");
+        StringTextComponent success = new StringTextComponent("The compass is now pointing towards " + territoryName + " (" + xMiddle + ", " + zMiddle + ")");
         success.getStyle().setColor(TextFormatting.GREEN);
 
-        TextComponentString warn = new TextComponentString("\nPlease be sure you know that this command redirects your compass to the middle of the territory.");
+        StringTextComponent warn = new StringTextComponent("\nPlease be sure you know that this command redirects your compass to the middle of the territory.");
         warn.getStyle().setColor(TextFormatting.AQUA);
 
         success.appendSibling(warn);
 
-        TextComponentString separator = new TextComponentString("-----------------------------------------------------");
+        StringTextComponent separator = new StringTextComponent("-----------------------------------------------------");
         separator.getStyle().setColor(TextFormatting.DARK_GRAY).setStrikethrough(true);
 
         sender.sendMessage(separator);

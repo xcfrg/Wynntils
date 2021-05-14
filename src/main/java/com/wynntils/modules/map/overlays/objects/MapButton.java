@@ -8,14 +8,14 @@ import com.wynntils.core.framework.rendering.ScreenRenderer;
 import com.wynntils.core.framework.rendering.textures.Textures;
 import com.wynntils.modules.map.overlays.enums.MapButtonType;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.PositionedSoundRecord;
-import net.minecraft.init.SoundEvents;
+import net.minecraft.client.audio.SimpleSound;
+import net.minecraft.util.SoundEvents;
 
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import static net.minecraft.client.renderer.GlStateManager.*;
+import static com.mojang.blaze3d.platform.GlStateManager.*;
 
 public class MapButton {
 
@@ -49,7 +49,7 @@ public class MapButton {
     }
 
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        pushMatrix();
+        _pushMatrix();
         {
             if (isEnabled.apply(null)) {
                 color(1f, 1f, 1f, 1f);
@@ -61,12 +61,12 @@ public class MapButton {
             renderer.drawRect(Textures.Map.map_buttons, startX, startY, endX, endY,
                     type.getStartX(), type.getStartY(), type.getEndX(), type.getEndY());
         }
-        popMatrix();
+        _popMatrix();
     }
 
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
-        Minecraft.getMinecraft().getSoundHandler().playSound(
-                PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1f)
+        Minecraft.getInstance().getSoundManager().play(
+                SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1f)
         );
 
         onClick.accept(this, mouseButton);

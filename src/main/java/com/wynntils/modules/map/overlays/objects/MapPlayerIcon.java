@@ -8,7 +8,7 @@ import com.wynntils.core.framework.rendering.ScreenRenderer;
 import com.wynntils.core.framework.rendering.colors.CommonColors;
 import com.wynntils.modules.core.instances.OtherPlayerProfile;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.network.NetworkPlayerInfo;
+import net.minecraft.client.network.play.NetworkPlayerInfo;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static net.minecraft.client.renderer.GlStateManager.*;
+import static com.mojang.blaze3d.platform.GlStateManager.*;
 
 public class MapPlayerIcon extends MapIcon {
 
@@ -84,9 +84,9 @@ public class MapPlayerIcon extends MapIcon {
     @Override
     public void renderAt(ScreenRenderer renderer, float centreX, float centreZ, float sizeMultiplier, float blockScale) {
         enableAlpha();
-        disableBlend();
+        _disableBlend();
 
-        { pushMatrix();
+        { _pushMatrix();
             float sizeX = getSizeX() * sizeMultiplier;
             float sizeZ = getSizeZ() * sizeMultiplier;
 
@@ -107,7 +107,7 @@ public class MapPlayerIcon extends MapIcon {
                     (centreZ) + sizeZ + .5f
             );
 
-            Minecraft.getMinecraft().getTextureManager().bindTexture(res);
+            Minecraft.getInstance().getTextureManager().bind(res);
 
             drawScaledCustomSizeModalRect(
                     ((centreX + ScreenRenderer.drawingOrigin().x) -sizeX),
@@ -120,9 +120,9 @@ public class MapPlayerIcon extends MapIcon {
             if (profile.hasHat())
                 drawScaledCustomSizeModalRect(-sizeX, -sizeZ, 40.0F, 8, 8, 8, sizeX * 2f, sizeZ * 2f, 64.0F, 64.0F);
 
-        } popMatrix();
+        } _popMatrix();
 
-        enableBlend();
+        _enableBlend();
     }
 
     @Override
@@ -139,13 +139,13 @@ public class MapPlayerIcon extends MapIcon {
         float f = 1.0F / tileWidth;
         float f1 = 1.0F / tileHeight;
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferbuilder = tessellator.getBuffer();
+        BufferBuilder bufferbuilder = tessellator.getBuilder();
         bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
-        bufferbuilder.pos(x, y + height, 0.0D).tex(u * f, (v + vHeight) * f1).endVertex();
-        bufferbuilder.pos(x + width, y + height, 0.0D).tex((u + uWidth) * f, (v + vHeight) * f1).endVertex();
-        bufferbuilder.pos(x + width, y, 0.0D).tex((u + uWidth) * f, v * f1).endVertex();
-        bufferbuilder.pos(x, y, 0.0D).tex(u * f, v * f1).endVertex();
-        tessellator.draw();
+        bufferbuilder.vertex(x, y + height, 0.0D).tex(u * f, (v + vHeight) * f1).endVertex();
+        bufferbuilder.vertex(x + width, y + height, 0.0D).tex((u + uWidth) * f, (v + vHeight) * f1).endVertex();
+        bufferbuilder.vertex(x + width, y, 0.0D).tex((u + uWidth) * f, v * f1).endVertex();
+        bufferbuilder.vertex(x, y, 0.0D).tex(u * f, v * f1).endVertex();
+        tessellator.end();
     }
 
     private ResourceLocation cachedResource;

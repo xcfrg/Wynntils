@@ -12,8 +12,10 @@ import com.wynntils.core.framework.ui.elements.UIEColorWheel;
 import com.wynntils.core.framework.ui.elements.UIEList;
 import com.wynntils.core.framework.ui.elements.UIETextBox;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.gui.screen.Screen;
+import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -21,13 +23,17 @@ import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.List;
 
-public abstract class UI extends GuiScreen {
+public abstract class UI extends Screen {
     private ScreenRenderer screenRenderer = new ScreenRenderer();
     protected long ticks = 0;
     protected int screenWidth = 0, screenHeight = 0, mouseX = 0, mouseY = 0;
     protected List<UIElement> UIElements = new ArrayList<>();
 
     private boolean initiated = false;
+
+    protected UI() {
+        super(StringTextComponent.EMPTY);
+    }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
@@ -38,8 +44,8 @@ public abstract class UI extends GuiScreen {
 
         ScreenRenderer.beginGL(0, 0);
 
-        screenWidth = ScreenRenderer.screen.getScaledWidth();
-        screenHeight = ScreenRenderer.screen.getScaledHeight();
+        screenWidth = ScreenRenderer.screen.getGuiScaledWidth();
+        screenHeight = ScreenRenderer.screen.getGuiScaledHeight();
 
         onRenderPreUIE(screenRenderer);
         for (UIElement uie : UIElements) {
@@ -130,7 +136,7 @@ public abstract class UI extends GuiScreen {
     @Override
     protected void drawGradientRect(int left, int top, int right, int bottom, int startColor, int endColor) {  // fix for alpha problems after doing default background
         super.drawGradientRect(left, top, right, bottom, startColor, endColor);
-        GlStateManager.enableBlend();
+        GlStateManager._enableBlend();
     }
 
     public static void setupUI(UI ui) {
@@ -145,17 +151,17 @@ public abstract class UI extends GuiScreen {
 
     public void show() {
         setupUI(this);
-        Minecraft.getMinecraft().displayGuiScreen(this);
+        Minecraft.getInstance().displayGuiScreen(this);
     }
 
     public static abstract class CommonUIFeatures {
         static ScreenRenderer render = new ScreenRenderer();
         public static void drawBook() {
-            int wh = ScreenRenderer.screen.getScaledWidth()/2, hh = ScreenRenderer.screen.getScaledHeight()/2;
+            int wh = ScreenRenderer.screen.getGuiScaledWidth()/2, hh = ScreenRenderer.screen.getGuiScaledHeight()/2;
             render.drawRect(Textures.UIs.book, wh - 200, hh - 110, wh + 200, hh + 110, 0, 0, 400, 220);
         }
         public static void drawScrollArea() {
-            int wh = ScreenRenderer.screen.getScaledWidth()/2, hh = ScreenRenderer.screen.getScaledHeight()/2;
+            int wh = ScreenRenderer.screen.getGuiScaledWidth()/2, hh = ScreenRenderer.screen.getGuiScaledHeight()/2;
             render.drawRect(Textures.UIs.book_scrollarea_settings, wh - 190, hh - 100, wh - 12, hh + 85, 0, 0, 178, 185);
         }
     }

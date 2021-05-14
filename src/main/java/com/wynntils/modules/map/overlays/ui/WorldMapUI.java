@@ -25,13 +25,13 @@ import com.wynntils.modules.utilities.managers.KeyManager;
 import com.wynntils.webapi.WebManager;
 import com.wynntils.webapi.profiles.TerritoryProfile;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.PositionedSoundRecord;
+import net.minecraft.client.audio.SimpleSound;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.init.SoundEvents;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.MathHelper;
-import org.lwjgl.input.Keyboard;
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
@@ -44,7 +44,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static net.minecraft.client.renderer.GlStateManager.*;
+import static com.mojang.blaze3d.platform.GlStateManager.*;
 
 public class WorldMapUI extends GuiMovementScreen {
 
@@ -82,11 +82,11 @@ public class WorldMapUI extends GuiMovementScreen {
     protected float outsideTextOpacity = 0f;
 
     protected WorldMapUI() {
-        this((float) Minecraft.getMinecraft().player.posX, (float) Minecraft.getMinecraft().player.posZ);
+        this((float) Minecraft.getInstance().player.getX(), (float) Minecraft.getInstance().player.getZ());
     }
 
     protected WorldMapUI(float startX, float startZ) {
-        mc = Minecraft.getMinecraft();
+        mc = Minecraft.getInstance();
 
         // HeyZeer0: Handles the territories
         for (TerritoryProfile territory : WebManager.getTerritories().values()) {
@@ -105,8 +105,8 @@ public class WorldMapUI extends GuiMovementScreen {
         this.animationEnd = System.currentTimeMillis() + MapConfig.WorldMap.INSTANCE.animationLength;
 
         // Opening SFX
-        Minecraft.getMinecraft().getSoundHandler().playSound(
-                PositionedSoundRecord.getMasterRecord(SoundEvents.ITEM_ARMOR_EQUIP_LEATHER, 1f)
+        Minecraft.getInstance().getSoundManager().play(
+                SimpleSound.forUI(SoundEvents.ITEM_ARMOR_EQUIP_LEATHER, 1f)
         );
     }
 
@@ -179,8 +179,8 @@ public class WorldMapUI extends GuiMovementScreen {
     }
 
     protected void updateCenterPositionWithPlayerPosition() {
-        float newX = (float) mc.player.posX;
-        float newZ = (float) mc.player.posZ;
+        float newX = (float) mc.player.getX();
+        float newZ = (float) mc.player.getZ();
         if (newX == centerPositionX && newZ == centerPositionZ) return;
         updateCenterPosition(newX, newZ);
     }
@@ -266,7 +266,7 @@ public class WorldMapUI extends GuiMovementScreen {
             color(1, 1, 1, 1f);
             enableTexture2D();
 
-            map.bindTexture();  // <--- binds the texture
+            map.bind();  // <--- binds the texture
             glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_CLAMP);
             glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_CLAMP);
 
@@ -274,15 +274,15 @@ public class WorldMapUI extends GuiMovementScreen {
 
             Tessellator tessellator = Tessellator.getInstance();
 
-            BufferBuilder bufferbuilder = tessellator.getBuffer();
+            BufferBuilder bufferbuilder = tessellator.getBuilder();
             {
                 bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
 
-                bufferbuilder.pos(0, height, 0).tex(minX, maxZ).endVertex();
-                bufferbuilder.pos(width, height, 0).tex(maxX, maxZ).endVertex();
-                bufferbuilder.pos(width, 0, 0).tex(maxX, minZ).endVertex();
-                bufferbuilder.pos(0, 0, 0).tex(minX, minZ).endVertex();
-                tessellator.draw();
+                bufferbuilder.vertex(0, height, 0).tex(minX, maxZ).endVertex();
+                bufferbuilder.vertex(width, height, 0).tex(maxX, maxZ).endVertex();
+                bufferbuilder.vertex(width, 0, 0).tex(maxX, minZ).endVertex();
+                bufferbuilder.vertex(0, 0, 0).tex(minX, minZ).endVertex();
+                tessellator.end();
             }
 
         } catch (Exception ignored) {}
@@ -301,7 +301,7 @@ public class WorldMapUI extends GuiMovementScreen {
         float scale = getScaleFactor();
         // draw map icons
         boolean[] needToReset = { false };
-        enableBlend();
+        _enableBlend();
         forEachIcon(i -> {
             if (i.getInfo().hasDynamicLocation()) resetIcon(i);
             if (!i.getInfo().isEnabled(false)) {
@@ -313,8 +313,8 @@ public class WorldMapUI extends GuiMovementScreen {
 
         if (needToReset[0]) resetAllIcons();
 
-        float playerPositionX = (map.getTextureXPosition(mc.player.posX) - minX) / (maxX - minX);
-        float playerPositionZ = (map.getTextureZPosition(mc.player.posZ) - minZ) / (maxZ - minZ);
+        float playerPositionX = (map.getTextureXPosition(mc.player.getX()) - minX) / (maxX - minX);
+        float playerPositionZ = (map.getTextureZPosition(mc.player.getZ()) - minZ) / (maxZ - minZ);
 
         if (playerPositionX > 0 && playerPositionX < 1 && playerPositionZ > 0 && playerPositionZ < 1) {  // <--- player position
             playerPositionX = width * playerPositionX;
@@ -322,7 +322,7 @@ public class WorldMapUI extends GuiMovementScreen {
 
             Point drawingOrigin = ScreenRenderer.drawingOrigin();
 
-            pushMatrix();
+            _pushMatrix();
             translate(drawingOrigin.x + playerPositionX, drawingOrigin.y + playerPositionZ, 0);
             rotate(180 + MathHelper.fastFloor(mc.player.rotationYaw), 0, 0, 1);
             translate(-drawingOrigin.x - playerPositionX, -drawingOrigin.y - playerPositionZ, 0);
@@ -334,10 +334,10 @@ public class WorldMapUI extends GuiMovementScreen {
             renderer.drawRectF(Textures.Map.map_pointers, playerPositionX - type.dWidth * 1.5f, playerPositionZ - type.dHeight * 1.5f, playerPositionX + type.dWidth * 1.5f, playerPositionZ + type.dHeight * 1.5f, 0, type.yStart, type.width, type.yStart + type.height);
             color(1, 1, 1, 1);
 
-            popMatrix();
+            _popMatrix();
         }
 
-        if (MapConfig.WorldMap.INSTANCE.keepTerritoryVisible || Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL)) {
+        if (MapConfig.WorldMap.INSTANCE.keepTerritoryVisible || Utils.isKeyDown(GLFW.GLFW_KEY_LCONTROL) || Utils.isKeyDown(GLFW.GLFW_KEY_RCONTROL)) {
             territories.values().forEach(c -> c.drawScreen(mouseX, mouseY, partialTicks,
                     MapConfig.WorldMap.INSTANCE.territoryArea, false, false, true));
         }
@@ -400,7 +400,7 @@ public class WorldMapUI extends GuiMovementScreen {
         OUTSIDE_MAP_COLOR_1.setA(outsideTextOpacity);
         OUTSIDE_MAP_COLOR_2.setA(outsideTextOpacity);
 
-        pushMatrix();
+        _pushMatrix();
         {
             translate(width / 2, height / 2, 0);
             scale(2, 2, 2);
@@ -412,7 +412,7 @@ public class WorldMapUI extends GuiMovementScreen {
                     SmartFontRenderer.TextAlignment.MIDDLE, SmartFontRenderer.TextShadow.NORMAL
             );
         }
-        popMatrix();
+        _popMatrix();
     }
 
     private void zoomBy(int by) {
