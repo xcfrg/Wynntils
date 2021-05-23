@@ -12,14 +12,14 @@ import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import org.lwjgl.opengl.GL11;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.mojang.blaze3d.platform.GlStateManager.*;
+import static com.wynntils.transition.GlStateManager.*;
 
 public class EntitySnowFlake extends FakeEntity {
 
@@ -50,15 +50,15 @@ public class EntitySnowFlake extends FakeEntity {
     }
 
     @Override
-    public void render(float partialTicks, WorldRenderer context, RenderManager render) {
+    public void render(float partialTicks, WorldRenderer context, EntityRendererManager render) {
         float percentage = ((livingTicks + partialTicks) / (float) lifespan);
         float alpha = (1f - percentage);
         boolean thirdPerson = render.options.thirdPersonView == 2;
 
         { // setting up
             translate(0, -25 * percentage, 0);
-            _depthMask(false);
-            _enableBlend();
+            depthMask(false);
+            enableBlend();
             enableAlpha();
             //disableTexture2D();
             color(1f, 1f, 1f, alpha);
@@ -76,18 +76,18 @@ public class EntitySnowFlake extends FakeEntity {
         { // drawing
             buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
 
-            buffer.vertex(-.5,  .5, 0).tex(0, 1).color(color, color, color, alpha).endVertex();
-            buffer.vertex( .5,  .5, 0).tex(1, 1).color(color, color, color, alpha).endVertex();
-            buffer.vertex( .5, -.5, 0).tex(1, 0).color(color, color, color, alpha).endVertex();
-            buffer.vertex(-.5, -.5, 0).tex(0, 0).color(color, color, color, alpha).endVertex();
+            buffer.vertex(-.5,  .5, 0).uv(0, 1).color(color, color, color, alpha).endVertex();
+            buffer.vertex( .5,  .5, 0).uv(1, 1).color(color, color, color, alpha).endVertex();
+            buffer.vertex( .5, -.5, 0).uv(1, 0).color(color, color, color, alpha).endVertex();
+            buffer.vertex(-.5, -.5, 0).uv(0, 0).color(color, color, color, alpha).endVertex();
 
             tes.end();
         }
 
         { // reset to default
-            _disableBlend();
+            disableBlend();
             enableTexture2D();
-            _depthMask(true);
+            depthMask(true);
             color(1f, 1f, 1f, 1f);
         }
     }

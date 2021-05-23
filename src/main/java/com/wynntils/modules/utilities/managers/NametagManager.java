@@ -29,9 +29,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.BufferBuilder;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.wynntils.transition.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -49,7 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import static com.mojang.blaze3d.platform.GlStateManager.*;
+import static com.wynntils.transition.GlStateManager.*;
 
 public class NametagManager {
 
@@ -75,7 +75,7 @@ public class NametagManager {
     public static boolean checkForNametags(RenderLivingEvent.Specials.Pre e) {
         Entity entity =  e.getEntity();
 
-        if (!canRender(e.getEntity(), e.getRenderer().getRenderManager())) return true;
+        if (!canRender(e.getEntity(), e.getRenderer().getEntityRenderDispatcher())) return true;
 
         List<NametagLabel> customLabels = new ArrayList<>();
 
@@ -97,13 +97,13 @@ public class NametagManager {
             if (UtilitiesConfig.INSTANCE.showArmors) customLabels.addAll(getUserArmorLabels((PlayerEntity)entity));  // armors
         } else if (!UtilitiesConfig.INSTANCE.hideNametags && !UtilitiesConfig.INSTANCE.hideNametagBox) return false;
 
-        double distance = entity.getDistanceSq(e.getRenderer().getRenderManager().renderViewEntity);
+        double distance = entity.getDistanceSq(e.getRenderer().getEntityRenderDispatcher().renderViewEntity);
         double range = entity.isSneaking() ? 1024.0d : 4096.0d;
 
         if (distance > range) return true;
 
         alphaFunc(516, 0.1F);
-        drawLabels(entity, McIf.getFormattedText(entity.getDisplayName()), e.getX(), e.getY(), e.getZ(), e.getRenderer().getRenderManager(), customLabels);
+        drawLabels(entity, McIf.getFormattedText(entity.getDisplayName()), e.getX(), e.getY(), e.getZ(), e.getRenderer().getEntityRenderDispatcher(), customLabels);
 
         return true;
     }
@@ -111,7 +111,7 @@ public class NametagManager {
     /**
      * Check if the nametag should be rendered, used over checkForNametags
      */
-    private static boolean canRender(Entity entity, RenderManager manager) {
+    private static boolean canRender(Entity entity, EntityRendererManager manager) {
         if (entity.isBeingRidden()) return false;
         if (!(entity instanceof PlayerEntity)) return entity.getAlwaysRenderNameTagForRender() && entity.hasCustomName();
 
@@ -140,7 +140,7 @@ public class NametagManager {
     /**
      * Handles the nametags drawing, if you want to add more tags use checkForNametags
      */
-    private static void drawLabels(Entity entity, String entityName, double x, double y, double z, RenderManager renderManager, List<NametagLabel> labels) {
+    private static void drawLabels(Entity entity, String entityName, double x, double y, double z, EntityRendererManager renderManager, List<NametagLabel> labels) {
         double distance = entity.getDistanceSq(renderManager.renderViewEntity);
 
         if (distance >= 4096.0d || entityName.isEmpty() || entityName.contains("\u0001")) return;
@@ -183,7 +183,7 @@ public class NametagManager {
     }
 
     private static void drawBadge(ProfessionType profession, int tier, float x, float y, float z, double horizontalShift, int verticalShift, float viewerYaw, float viewerPitch, boolean isThirdPersonFrontal, boolean isSneaking) {
-        _pushMatrix();
+        pushMatrix();
         {
             ScreenRenderer.beginGL(0, 0);
             {
@@ -192,8 +192,8 @@ public class NametagManager {
                 rotate(-viewerYaw, 0f, 1f, 0f);
                 rotate((float) (isThirdPersonFrontal ? -1 : 1) * viewerPitch, 1.0F, 0.0F, 0.0F);
                 scale(-0.025F, -0.025F, 0.025F);
-                _disableLighting();
-                _depthMask(true);
+                disableLighting();
+                depthMask(true);
                 color(1.0f, 1.0f, 1.0f, 1.0f);
 
                 AssetsTexture texture = Textures.World.leaderboard_badges;
@@ -208,19 +208,19 @@ public class NametagManager {
                 BufferBuilder vertexBuffer = tesselator.getBuilder();
                 {
                     vertexBuffer.begin(7, DefaultVertexFormats.POSITION_TEX);
-                    vertexBuffer.vertex(-9.5 - horizontalShift, -8.5 + verticalShift, 0).tex(texMinX, texMinY).endVertex();
-                    vertexBuffer.vertex(-9.5 - horizontalShift, +8.5 + verticalShift, 0).tex(texMinX, texMaxY).endVertex();
-                    vertexBuffer.vertex(+9.5 - horizontalShift, +8.5 + verticalShift, 0).tex(texMaxX, texMaxY).endVertex();
-                    vertexBuffer.vertex(+9.5 - horizontalShift, -8.5 + verticalShift, 0).tex(texMaxX, texMinY).endVertex();
+                    vertexBuffer.vertex(-9.5 - horizontalShift, -8.5 + verticalShift, 0).uv(texMinX, texMinY).endVertex();
+                    vertexBuffer.vertex(-9.5 - horizontalShift, +8.5 + verticalShift, 0).uv(texMinX, texMaxY).endVertex();
+                    vertexBuffer.vertex(+9.5 - horizontalShift, +8.5 + verticalShift, 0).uv(texMaxX, texMaxY).endVertex();
+                    vertexBuffer.vertex(+9.5 - horizontalShift, -8.5 + verticalShift, 0).uv(texMaxX, texMinY).endVertex();
                 }
                 tesselator.draw();
 
                 enableDepth();
-                _enableLighting();
-                _disableBlend();
+                enableLighting();
+                disableBlend();
             }
         }
-        _popMatrix();
+        popMatrix();
     }
 
     /**
@@ -229,7 +229,7 @@ public class NametagManager {
     private static void drawNametag(String input, CustomColor color, float x, float y, float z, int verticalShift, float viewerYaw, float viewerPitch, boolean isThirdPersonFrontal, boolean isSneaking, float scale) {
         FontRenderer font = McIf.mc().font;  // since our fontrender ignores bold or italic texts we need to use the mc one
 
-        _pushMatrix();
+        pushMatrix();
         {
             if (scale != 1) scale(scale, scale, scale);
             verticalShift = (int)(verticalShift/scale);
@@ -242,8 +242,8 @@ public class NametagManager {
                 rotate(-viewerYaw, 0.0F, 1.0F, 0.0F);
                 rotate((float) (isThirdPersonFrontal ? -1 : 1) * viewerPitch, 1.0F, 0.0F, 0.0F);
                 scale(-0.025F, -0.025F, 0.025F);
-                _disableLighting();
-                _depthMask(false);
+                disableLighting();
+                depthMask(false);
 
                 // disable depth == will be visible through walls
                 if (!isSneaking && !UtilitiesConfig.INSTANCE.hideNametags) {
@@ -254,7 +254,7 @@ public class NametagManager {
 
                 // Nametag Box
                 if (!UtilitiesConfig.INSTANCE.hideNametagBox) {
-                    _enableBlend();
+                    enableBlend();
                     tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
                     disableTexture2D();
                     Tessellator tesselator = Tessellator.getInstance();
@@ -276,7 +276,7 @@ public class NametagManager {
                     enableTexture2D();
                 }
 
-                _depthMask(true);
+                depthMask(true);
 
                 // draws the label
                 if (!isSneaking && color != null) {
@@ -297,13 +297,13 @@ public class NametagManager {
 
                 // returns back to normal
                 enableDepth();
-                _enableLighting();
-                _disableBlend();
+                enableLighting();
+                disableBlend();
                 color(1.0f, 1.0f, 1.0f, 1.0f);
             }
             ScreenRenderer.endGL();
         }
-        _popMatrix();
+        popMatrix();
     }
 
     /**
@@ -320,7 +320,7 @@ public class NametagManager {
 
         for (ItemStack is : player.getEquipmentAndArmor()) {
             if (!is.hasCustomHoverName()) continue;
-            String itemName = WebManager.getTranslatedItemName(TextFormatting.getTextWithoutFormattingCodes(is.getDisplayName())).replace("֎", "");
+            String itemName = WebManager.getTranslatedItemName(McIf.getTextWithoutFormattingCodes(is.getDisplayName())).replace("֎", "");
 
             CustomColor color;
             String displayName;
@@ -339,7 +339,7 @@ public class NametagManager {
                 displayName = itemName;
             } else continue;
 
-            labels.add(new NametagLabel(color, TextFormatting.getTextWithoutFormattingCodes(displayName), 0.4f));
+            labels.add(new NametagLabel(color, McIf.getTextWithoutFormattingCodes(displayName), 0.4f));
         }
 
         return labels;

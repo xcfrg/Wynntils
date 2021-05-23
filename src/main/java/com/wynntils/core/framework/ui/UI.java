@@ -4,6 +4,7 @@
 
 package com.wynntils.core.framework.ui;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.wynntils.McIf;
 import com.wynntils.core.framework.enums.MouseButton;
 import com.wynntils.core.framework.rendering.ScreenRenderer;
@@ -12,10 +13,8 @@ import com.wynntils.core.framework.ui.elements.UIEClickZone;
 import com.wynntils.core.framework.ui.elements.UIEColorWheel;
 import com.wynntils.core.framework.ui.elements.UIEList;
 import com.wynntils.core.framework.ui.elements.UIETextBox;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
-import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.util.text.ITextComponent;
+import com.wynntils.transition.GlStateManager;
 import net.minecraft.util.text.StringTextComponent;
 
 import java.io.IOException;
@@ -37,9 +36,9 @@ public abstract class UI extends Screen {
     }
 
     @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
         if (!initiated) { initiated = true; onInit(); }
-        super.drawScreen(mouseX, mouseY, partialTicks);
+        super.render(matrix, mouseX, mouseY, partialTicks);
         this.mouseX = mouseX;
         this.mouseY = mouseY;
 
@@ -60,17 +59,18 @@ public abstract class UI extends Screen {
         ScreenRenderer.endGL();
     }
 
-    @Override public void updateScreen() {
+    @Override public void tick() {
         ticks++; onTick();
         for (UIElement uie : UIElements)
             uie.tick(ticks);
     }
-    @Override public void initGui() { if (!initiated) { initiated = true; onInit(); } onWindowUpdate(); }
-    @Override public void onGuiClosed() {onClose();}
+    @Override public void init() { if (!initiated) { initiated = true; onInit(); } onWindowUpdate(); }
+    @Override public void onClose() {
+        onCloseWynntils();}
 
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-        super.mouseClicked(mouseX, mouseY, mouseButton);
+    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+        boolean result = super.mouseClicked(mouseX, mouseY, mouseButton);
         try {
             for (UIElement uie : UIElements)
                 if (uie instanceof UIEList) {
@@ -79,13 +79,15 @@ public abstract class UI extends Screen {
                     mouseClicked(mouseX, mouseY, mouseButton);
                     this.UIElements = UIElements_old;
                 } else if (uie instanceof UIEClickZone)
-                    ((UIEClickZone) uie).click(mouseX, mouseY, mouseButton > 2 ? MouseButton.UNKNOWN : MouseButton.values()[mouseButton], this);
+                    ((UIEClickZone) uie).click((int) mouseX, (int) mouseY, mouseButton > 2 ? MouseButton.UNKNOWN : MouseButton.values()[mouseButton], this);
         } catch (ConcurrentModificationException ignored) {}
+        // FIXME: We should probably include the result of our elements...
+        return result;
     }
 
     @Override
-    protected void mouseReleased(int mouseX, int mouseY, int state) {
-        super.mouseReleased(mouseX, mouseY, state);
+    public boolean mouseReleased(double mouseX, double mouseY, int state) {
+        boolean result = super.mouseReleased(mouseX, mouseY, state);
         for (UIElement uie : UIElements) {
             if (uie instanceof UIEList) {
                 List<UIElement> UIElements_old = this.UIElements;
@@ -93,51 +95,60 @@ public abstract class UI extends Screen {
                 mouseReleased(mouseX, mouseY, state);
                 this.UIElements = UIElements_old;
             } else if (uie instanceof UIEClickZone)
-                ((UIEClickZone) uie).release(mouseX, mouseY, state > 2 ? MouseButton.UNKNOWN : MouseButton.values()[state], this);
+                ((UIEClickZone) uie).release((int) mouseX, (int) mouseY, state > 2 ? MouseButton.UNKNOWN : MouseButton.values()[state], this);
         }
+        // FIXME: We should probably include the result of our elements...
+        return result;
     }
 
+    // FIXME: the change from mouseClickMove to mouseDragged is problematic
+    // What is d1/d2? What happened to timeSinceLastClick?
     @Override
-    protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick) {
+    public boolean mouseDragged(double mouseX, double mouseY, int mouseButton, double d1, double d2) {
+        // FIXME: should we not call super?
         for (UIElement uie : UIElements) {
             if (uie instanceof UIEList) {
                 List<UIElement> UIElements_old = this.UIElements;
                 this.UIElements = ((UIEList) uie).elements;
-                mouseClickMove(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
+                mouseDragged(mouseX, mouseY, mouseButton, d1, d2);
                 this.UIElements = UIElements_old;
             } else if (uie instanceof UIEClickZone)
-                ((UIEClickZone) uie).clickMove(mouseX, mouseY, clickedMouseButton > 2 ? MouseButton.UNKNOWN : MouseButton.values()[clickedMouseButton], timeSinceLastClick, this);
+                ((UIEClickZone) uie).clickMove((int) mouseX, (int) mouseY, mouseButton > 2 ? MouseButton.UNKNOWN : MouseButton.values()[mouseButton], (int) d1, this);
         }
+        // FIXME: We should probably include the result of our elements...
+        return true;
     }
 
     @Override
-    protected void keyTyped(char typedChar, int keyCode) throws IOException {
-        super.keyTyped(typedChar, keyCode);
+    public boolean keyPressed(int typedChar, int keyCode, int j) {
+        boolean result = super.keyPressed(typedChar, keyCode, j);
         for (UIElement uie : UIElements) {
             if (uie instanceof UIEList) {
                 List<UIElement> UIElements_old = this.UIElements;
                 this.UIElements = ((UIEList) uie).elements;
-                keyTyped(typedChar, keyCode);
+                keyPressed(typedChar, keyCode, j);
                 this.UIElements = UIElements_old;
             } else if (uie instanceof UIETextBox) {
-                ((UIETextBox) uie).keyTyped(typedChar, keyCode, this);
+                ((UIETextBox) uie).keyPressed(typedChar, keyCode, j,this);
             } else if (uie instanceof UIEColorWheel)
-                ((UIEColorWheel) uie).keyTyped(typedChar, keyCode, this);
+                ((UIEColorWheel) uie).keyPressed(typedChar, keyCode, j, this);
         }
+        // FIXME: We should probably include the result of our elements...
+        return result;
     }
 
     // v  USE THESE INSTEAD OF GUISCREEN METHODS IF POSSIBLE  v \\
     public abstract void onInit();
-    public abstract void onClose();
+    public abstract void onCloseWynntils();
     public abstract void onTick();
     public abstract void onRenderPreUIE(ScreenRenderer render);
     public abstract void onRenderPostUIE(ScreenRenderer render);
     public abstract void onWindowUpdate();
 
     @Override
-    protected void drawGradientRect(int left, int top, int right, int bottom, int startColor, int endColor) {  // fix for alpha problems after doing default background
-        super.drawGradientRect(left, top, right, bottom, startColor, endColor);
-        GlStateManager._enableBlend();
+    protected void fillGradient(MatrixStack matrices, int left, int top, int right, int bottom, int startColor, int endColor) {  // fix for alpha problems after doing default background
+        super.fillGradient(matrices, left, top, right, bottom, startColor, endColor);
+        GlStateManager.enableBlend();
     }
 
     public static void setupUI(UI ui) {
@@ -152,7 +163,7 @@ public abstract class UI extends Screen {
 
     public void show() {
         setupUI(this);
-        McIf.mc().displayGuiScreen(this);
+        McIf.mc().setScreen(this);
     }
 
     public static abstract class CommonUIFeatures {

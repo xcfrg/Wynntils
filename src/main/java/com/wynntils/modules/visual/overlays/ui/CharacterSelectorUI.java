@@ -4,6 +4,7 @@
 
 package com.wynntils.modules.visual.overlays.ui;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.wynntils.McIf;
 import com.wynntils.core.framework.enums.CharacterGameMode;
 import com.wynntils.core.framework.rendering.ScreenRenderer;
@@ -22,7 +23,7 @@ import net.minecraft.util.SoundEvents;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.inventory.InventoryScreen;
 import net.minecraft.client.renderer.BufferBuilder;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.wynntils.transition.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.SoundEvents;
@@ -38,7 +39,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.mojang.blaze3d.platform.GlStateManager.*;
+import static com.wynntils.transition.GlStateManager.*;
 
 public class CharacterSelectorUI extends Screen {
 
@@ -91,7 +92,7 @@ public class CharacterSelectorUI extends Screen {
     }
 
     @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
         Tessellator tes = Tessellator.getInstance();
         BufferBuilder builder = tes.getBuilder();
 
@@ -186,8 +187,8 @@ public class CharacterSelectorUI extends Screen {
     }
 
     @Override
-    public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
-        if (hoveredButton == -1) return;
+    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+        if (hoveredButton == -1) return false;
 
         boolean isDoubleClick = (hoveredButton == lastButton) && (System.currentTimeMillis() - lastClick) <= 250;
         lastClick = System.currentTimeMillis();
@@ -201,51 +202,53 @@ public class CharacterSelectorUI extends Screen {
 
             if (isDoubleClick) { // double click pick
                 hoveredButton = 57;
-                mouseClicked(0, 0, mouseButton);
+                return mouseClicked(0, 0, mouseButton);
             }
-            return;
+            return false;
         }
 
         if (hoveredButton == 51 && createCharacterSlot != -1) { // create character
-            chest.handleMouseClick(chest.inventorySlots.getSlot(createCharacterSlot), createCharacterSlot, 0, ClickType.PICKUP);
+            chest.slotClicked(chest.getMenu().getSlot(createCharacterSlot), createCharacterSlot, 0, ClickType.PICKUP);
         } else if (hoveredButton == 52) { // edit menu
-            chest.handleMouseClick(chest.inventorySlots.getSlot(8), 8, 0, ClickType.PICKUP);
+            chest.slotClicked(chest.getMenu().getSlot(8), 8, 0, ClickType.PICKUP);
         } else if (hoveredButton == 53) { // delete character
-            if (selectedCharacter == -1) return;
+            if (selectedCharacter == -1) return false;
 
             CharacterProfile selected = availableCharacters.get(selectedCharacter);
-            chest.handleMouseClick(chest.inventorySlots.getSlot(selected.getSlot()), selected.getSlot(), 1, ClickType.PICKUP);
+            chest.slotClicked(chest.getMenu().getSlot(selected.getSlot()), selected.getSlot(), 1, ClickType.PICKUP);
         } else if (hoveredButton == 57) { // play button
-            if (selectedCharacter == -1) return;
+            if (selectedCharacter == -1) return false;
 
             CharacterProfile selected = availableCharacters.get(selectedCharacter);
-            chest.handleMouseClick(chest.inventorySlots.getSlot(selected.getSlot()), selected.getSlot(), 0, ClickType.PICKUP);
+            chest.slotClicked(chest.getMenu().getSlot(selected.getSlot()), selected.getSlot(), 0, ClickType.PICKUP);
         } else if (hoveredButton == 58) { // character deletion
-            chest.handleMouseClick(chest.inventorySlots.getSlot(26), 26, 0, ClickType.PICKUP);
+            chest.slotClicked(chest.getMenu().getSlot(26), 26, 0, ClickType.PICKUP);
         } else if (hoveredButton == 59 && availableCharacters.size() > 7) {
             scrollPosition = (this.mouseY - 3) / 245f;
         }
+        return false;
     }
 
     @Override
-    public void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick) {
-        if (hoveredButton != 59 || availableCharacters.size() <= 7) return;
+    public boolean mouseDragged(double mouseX, double mouseY, int mouseButton, double d1, double d2) {
+        if (hoveredButton != 59 || availableCharacters.size() <= 7) return true;
 
         scrollPosition = (this.mouseY - 3) / 245f;
+        return true;
     }
 
     @Override
-    public void keyTyped(char typedChar, int keyCode)  {
-        if (keyCode == GLFW.GLFW_KEY_RETURN) { // return select character
+    public boolean keyPressed(int typedChar, int keyCode, int j)  {
+        if (keyCode == GLFW.GLFW_KEY_ENTER) { // return select character
             hoveredButton = 57;
             mouseClicked(0, 0, 1);
-            return;
+            return true;
         }
 
         // character picker
-        if (keyCode <= 1 || keyCode > 10) return; // key offset from num 1~9
+        if (keyCode <= 1 || keyCode > 10) return false; // key offset from num 1~9
         int characterPosition = keyCode - 2;
-        if (availableCharacters.size() <= characterPosition) return;
+        if (availableCharacters.size() <= characterPosition) return false;
         hoveredButton = characterPosition;
 
         // double click detection
@@ -256,11 +259,12 @@ public class CharacterSelectorUI extends Screen {
         if (isDoubleClick) { // pick the class
             hoveredButton = 57;
             mouseClicked(0, 0, 1);
-            return;
+            return true;
         }
 
         // character picking
         selectedCharacter = characterPosition;
+        return true;
     }
 
     @Override
@@ -287,18 +291,18 @@ public class CharacterSelectorUI extends Screen {
     private void updateItems() {
         if (receivedItems) return;
 
-        for (Slot s : chest.inventorySlots.inventorySlots) {
+        for (Slot s : chest.getMenu().slots) {
             ItemStack stack = s.getItem();
             if (stack.isEmpty() || !stack.hasCustomHoverName()) continue;
 
-            String displayName = stack.getDisplayName();
+            String displayName = McIf.toText(stack.getDisplayName());
             if (displayName.contains("Create a new character")) {
                 createCharacterSlot = s.slotNumber;
                 receivedItems = true;
                 continue;
             }
 
-            if (!TextFormatting.getTextWithoutFormattingCodes(displayName).matches("\\[>\\] Select [a-zA-Z0-9_ ]+") && !displayName.contains("Deleting")) continue;
+            if (!McIf.getTextWithoutFormattingCodes(displayName).matches("\\[>\\] Select [a-zA-Z0-9_ ]+") && !displayName.contains("Deleting")) continue;
 
             receivedItems = true;
             availableCharacters.add(new CharacterProfile(stack, s.slotNumber));
@@ -431,7 +435,7 @@ public class CharacterSelectorUI extends Screen {
     private void drawPlayer(int middleX) {
         {
             enableAlpha();
-            _enableBlend();
+            enableBlend();
         }
 
         InventoryScreen.drawEntityOnScreen(middleX, 210, 60, 0, 0, McIf.player());
@@ -530,7 +534,7 @@ public class CharacterSelectorUI extends Screen {
 
     private void drawBackground(BufferBuilder builder, Tessellator tes) {
         {
-            _enableBlend();
+            enableBlend();
             color(1f, 1f, 1f, 1f);
         }
 
@@ -540,16 +544,16 @@ public class CharacterSelectorUI extends Screen {
             // original
             builder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
             {
-                builder.vertex(0, height, 0).tex(0, 1).endVertex();
-                builder.vertex(width, height, 0).tex(1, 1).endVertex();
-                builder.vertex(width, 0, 0).tex(1, 0).endVertex();
-                builder.vertex(0, 0, 0).tex(0, 0).endVertex();
+                builder.vertex(0, height, 0).uv(0, 1).endVertex();
+                builder.vertex(width, height, 0).uv(1, 1).endVertex();
+                builder.vertex(width, 0, 0).uv(1, 0).endVertex();
+                builder.vertex(0, 0, 0).uv(0, 0).endVertex();
             }
             tes.end();
         }
 
         {
-            _disableBlend();
+            disableBlend();
             color(1f, 1f, 1f, 1f);
         }
     }

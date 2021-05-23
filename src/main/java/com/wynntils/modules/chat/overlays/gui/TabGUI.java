@@ -4,13 +4,17 @@
 
 package com.wynntils.modules.chat.overlays.gui;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.wynntils.McIf;
 import com.wynntils.modules.chat.instances.ChatTab;
 import com.wynntils.modules.chat.managers.TabManager;
 import com.wynntils.modules.chat.overlays.ChatOverlay;
-import net.minecraft.client.gui.*;
+import net.minecraft.client.gui.widget.*;
 import static net.minecraft.util.text.TextFormatting.*;
-import net.minecraftforge.fml.client.config.GuiCheckBox;
+
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.client.gui.widget.button.CheckboxButton;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
@@ -29,24 +33,24 @@ public class TabGUI extends Screen {
         if (id != -2)
             tab = TabManager.getTabById(id);
     }
-    List<GuiCheckBox> simpleRegexSettings = new ArrayList<>();
+    List<CheckboxButton> simpleRegexSettings = new ArrayList<>();
 
     // ui things
     Button saveButton;
     Button deleteButton;
     Button advancedButton;
     Button closeButton;
-    GuiCheckBox lowPriority;
-    GuiCheckBox allRegex;
-    GuiCheckBox localRegex;
-    GuiCheckBox guildRegex;
-    GuiCheckBox partyRegex;
-    GuiCheckBox shoutsRegex;
-    GuiCheckBox pmRegex;
-    GuiTextField nameTextField;
-    GuiTextField regexTextField;
-    GuiTextField autoCommandField;
-    GuiTextField orderNbField;
+    CheckboxButton lowPriority;
+    CheckboxButton allRegex;
+    CheckboxButton localRegex;
+    CheckboxButton guildRegex;
+    CheckboxButton partyRegex;
+    CheckboxButton shoutsRegex;
+    CheckboxButton pmRegex;
+    TextFieldWidget nameTextField;
+    TextFieldWidget regexTextField;
+    TextFieldWidget autoCommandField;
+    TextFieldWidget orderNbField;
 
     // labels
     GuiLabel nameLabel;
@@ -56,65 +60,65 @@ public class TabGUI extends Screen {
     GuiLabel simpleSettings;
 
     @Override
-    public void initGui() {
+    public void init() {
         labelList.clear();
         simpleRegexSettings.clear();
 
         int x = width / 2; int y = height / 2;
 
         // General
-        buttonList.add(saveButton = new Button(0, x - 90, y + 40, 40, 20, GREEN + "Save"));
-        buttonList.add(deleteButton = new Button(1, x - 45, y + 40, 40, 20, DARK_RED + "Delete"));
-        buttonList.add(closeButton = new Button(2, x + 50, y + 40, 40, 20, WHITE + "Close"));
-        buttonList.add(advancedButton = new Button(4, x - 65, y - 60, 130, 20, "Show Advanced Settings"));
+        buttons.add(saveButton = new Button(0, x - 90, y + 40, 40, 20, GREEN + "Save"));
+        buttons.add(deleteButton = new Button(1, x - 45, y + 40, 40, 20, DARK_RED + "Delete"));
+        buttons.add(closeButton = new Button(2, x + 50, y + 40, 40, 20, WHITE + "Close"));
+        buttons.add(advancedButton = new Button(4, x - 65, y - 60, 130, 20, "Show Advanced Settings"));
 
         deleteButton.enabled = (id != -2) && TabManager.getAvailableTabs().size() > 1;
 
-        nameTextField = new GuiTextField(3, McIf.mc().font, x - 110, y - 90, 80, 20);
+        nameTextField = new TextFieldWidget(3, McIf.mc().font, x - 110, y - 90, 80, 20);
         nameTextField.setVisible(true);
         nameTextField.setEnabled(true);
         nameTextField.setEnableBackgroundDrawing(true);
-        nameTextField.setMaxStringLength(10);
+        nameTextField.setMaxLength(10);
 
-        autoCommandField = new GuiTextField(3, McIf.mc().font, x - 12, y - 90, 80, 20);
+        autoCommandField = new TextFieldWidget(3, McIf.mc().font, x - 12, y - 90, 80, 20);
         autoCommandField.setVisible(true);
         autoCommandField.setEnabled(true);
         autoCommandField.setEnableBackgroundDrawing(true);
-        autoCommandField.setMaxStringLength(10);
+        autoCommandField.setMaxLength(10);
 
-        orderNbField = new GuiTextField(3, McIf.mc().font, x + 85, y - 90, 25, 20);
+        orderNbField = new TextFieldWidget(3, McIf.mc().font, x + 85, y - 90, 25, 20);
         orderNbField.setVisible(true);
         orderNbField.setEnabled(true);
         orderNbField.setEnableBackgroundDrawing(true);
-        orderNbField.setMaxStringLength(2);
+        orderNbField.setMaxLength(2);
 
-        buttonList.add(lowPriority = new GuiCheckBox(3, x - 100, y + 22, "Low Priority", true));
+        buttons.add(lowPriority = new CheckboxButton(3, x - 100, y + 22, "Low Priority", true));
 
         // Simple
         labelList.add(simpleSettings = new GuiLabel(McIf.mc().font, 4, x - 100, y - 35, 10, 10, 0xFFFFFF));
         simpleSettings.addLine("Message types " + RED + "*");
 
-        simpleRegexSettings.add(allRegex = new GuiCheckBox(10, x - 100, y - 25, "All", false));
-        simpleRegexSettings.add(localRegex = new GuiCheckBox(11, x - 50, y - 25, "Local", false));
-        simpleRegexSettings.add(guildRegex = new GuiCheckBox(12, x, y - 25, "Guild", false));
-        simpleRegexSettings.add(partyRegex = new GuiCheckBox(13, x + 50, y - 25, "Party", false));
-        simpleRegexSettings.add(shoutsRegex = new GuiCheckBox(14, x - 100, y - 10, "Shouts", false));
-        simpleRegexSettings.add(pmRegex = new GuiCheckBox(15, x - 50, y - 10, "PMs", false));
-        buttonList.addAll(simpleRegexSettings);
+        simpleRegexSettings.add(allRegex = new CheckboxButton(10, x - 100, y - 25, "All", false));
+        simpleRegexSettings.add(localRegex = new CheckboxButton(11, x - 50, y - 25, "Local", false));
+        simpleRegexSettings.add(guildRegex = new CheckboxButton(12, x, y - 25, "Guild", false));
+        simpleRegexSettings.add(partyRegex = new CheckboxButton(13, x + 50, y - 25, "Party", false));
+        simpleRegexSettings.add(shoutsRegex = new CheckboxButton(14, x - 100, y - 10, "Shouts", false));
+        simpleRegexSettings.add(pmRegex = new CheckboxButton(15, x - 50, y - 10, "PMs", false));
+        buttons.addAll(simpleRegexSettings);
         applyRegexSettings();
         // Advanced
-        regexTextField = new GuiTextField(3, McIf.mc().font, x - 100, y - 20, 200, 20);
+        regexTextField = new TextFieldWidget(3, McIf.mc().font, x - 100, y - 20, 200, 20);
         regexTextField.setVisible(false);
         regexTextField.setEnabled(true);
         regexTextField.setEnableBackgroundDrawing(true);
-        regexTextField.setMaxStringLength(400);
+        regexTextField.setMaxLength(400);
 
         if (tab != null) {
-            nameTextField.setText(tab.getName());
-            regexTextField.setText(tab.getRegex().replace("§", "&"));
+            nameTextField.setValue(tab.getName());
+            regexTextField.setValue(tab.getRegex().replace("§", "&"));
             lowPriority.setIsChecked(tab.isLowPriority());
-            autoCommandField.setText(tab.getAutoCommand());
-            orderNbField.setText(Integer.toString(tab.getOrderNb()));
+            autoCommandField.setValue(tab.getAutoCommand());
+            orderNbField.setValue(Integer.toString(tab.getOrderNb()));
             checkIfRegexIsValid();
         }
 
@@ -132,7 +136,7 @@ public class TabGUI extends Screen {
     }
 
     @Override
-    public void onGuiClosed() {
+    public void onClose() {
         Keyboard.enableRepeatEvents(false);
     }
 
@@ -140,31 +144,31 @@ public class TabGUI extends Screen {
     protected void actionPerformed(Button button) throws IOException {
         super.actionPerformed(button);
 
-        if (button == closeButton) McIf.mc().displayGuiScreen(new ChatGUI());
+        if (button == closeButton) McIf.mc().setScreen(new ChatGUI());
         else if (button == saveButton) {
             if (id == -2) {
-                TabManager.registerNewTab(new ChatTab(nameTextField.getText(), regexTextField.getText(), regexSettingsCreator(), autoCommandField.getText(), lowPriority.isChecked(), orderNbField.getText().matches("[0-9]+") ? Integer.parseInt(orderNbField.getText()) : 0));
+                TabManager.registerNewTab(new ChatTab(nameTextField.getValue(), regexTextField.getValue(), regexSettingsCreator(), autoCommandField.getValue(), lowPriority.isChecked(), orderNbField.getValue().matches("[0-9]+") ? Integer.parseInt(orderNbField.getValue()) : 0));
             } else {
-                TabManager.updateTab(id, nameTextField.getText(), regexTextField.getText(), regexSettingsCreator(), autoCommandField.getText(), lowPriority.isChecked(), orderNbField.getText().matches("[0-9]+") ? Integer.parseInt(orderNbField.getText()) : 0);
+                TabManager.updateTab(id, nameTextField.getValue(), regexTextField.getValue(), regexSettingsCreator(), autoCommandField.getValue(), lowPriority.isChecked(), orderNbField.getValue().matches("[0-9]+") ? Integer.parseInt(orderNbField.getValue()) : 0);
             }
-            McIf.mc().displayGuiScreen(new ChatGUI());
+            McIf.mc().setScreen(new ChatGUI());
         } else if (button == deleteButton) {
-            McIf.mc().displayGuiScreen(new GuiYesNo((result, cc) -> {
+            McIf.mc().setScreen(new ConfirmScreen((result, cc) -> {
                 if (result) {
                     int c = TabManager.deleteTab(id);
                     if (ChatOverlay.getChat().getCurrentTabId() == id) ChatOverlay.getChat().setCurrentTab(c);
-                    McIf.mc().displayGuiScreen(new ChatGUI());
+                    McIf.mc().setScreen(new ChatGUI());
                 } else {
-                    McIf.mc().displayGuiScreen(this);
+                    McIf.mc().setScreen(this);
                 }
             }, WHITE + (BOLD + "Do you really want to delete this chat tab?"), RED + "This action is irreversible!", 0));
         } else if (button == advancedButton) {
             boolean simple;
-            if (button.displayString.equals("Show Advanced Settings")) {
-                button.displayString = "Hide Advanced Settings";
+            if (button.getMessage().equals("Show Advanced Settings")) {
+                button.setMessage("Hide Advanced Settings");
                 simple = false;
             } else {
-                button.displayString = "Show Advanced Settings";
+                button.setMessage("Show Advanced Settings");
                 simple = true;
             }
             regexTextField.setVisible(!simple);
@@ -172,19 +176,19 @@ public class TabGUI extends Screen {
             simpleSettings.visible = simple;
             simpleRegexSettings.forEach(b -> b.visible = simple);
         } else if (button == allRegex) {
-            simpleRegexSettings.forEach(b -> b.setIsChecked(((GuiCheckBox) button).isChecked()));
+            simpleRegexSettings.forEach(b -> b.setIsChecked(((CheckboxButton) button).isChecked()));
         }
         if (button.id >= 10 && button.id <= 16) {
-            regexTextField.setText(regexCreator());
+            regexTextField.setValue(regexCreator());
             checkIfRegexIsValid();
         }
     }
 
     @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
         drawDefaultBackground();
 
-        super.drawScreen(mouseX, mouseY, partialTicks);
+        super.render(matrix, mouseX, mouseY, partialTicks);
 
         if (nameTextField != null) nameTextField.drawTextBox();
         if (regexTextField != null) regexTextField.drawTextBox();
@@ -206,7 +210,7 @@ public class TabGUI extends Screen {
         if (mouseX >= lowPriority.x && mouseX < lowPriority.x + lowPriority.width && mouseY >= lowPriority.y && mouseY < lowPriority.y + lowPriority.height)
             drawHoveringText(Arrays.asList(GREEN + (BOLD + "Low priority"), GRAY + "If selected, messages", GRAY + "will attempt to match", GRAY + "with other tabs first.", "", GRAY + "This will also duplicate", GRAY + "messages across other", GRAY + "low priority tabs.", RED + "Optional"), mouseX, mouseY);
 
-        if (advancedButton.displayString.equals("Show Advanced Settings")) {
+        if (advancedButton.getMessage().equals("Show Advanced Settings")) {
             if (mouseX >= allRegex.x && mouseX < allRegex.x + allRegex.width && mouseY >= allRegex.y && mouseY < allRegex.y + allRegex.height) {
                 drawHoveringText(Arrays.asList(GREEN + (BOLD + "Message Type: All"), GRAY + "This will send all", GRAY + "messages, except those", GRAY + "deselected to this tab."), mouseX, mouseY);
             } else if (mouseX >= localRegex.x && mouseX < localRegex.x + localRegex.width && mouseY >= localRegex.y && mouseY < localRegex.y + localRegex.height) {
@@ -228,34 +232,37 @@ public class TabGUI extends Screen {
         if (deleteButton.enabled && mouseX >= deleteButton.x && mouseX < deleteButton.x + deleteButton.width && mouseY >= deleteButton.y && mouseY < deleteButton.y + deleteButton.height)
             drawHoveringText(Arrays.asList(DARK_RED + (BOLD + "Delete"), GRAY + "Click here to delete", GRAY + "this chat tab.", "", RED + "Irreversible action"), mouseX, mouseY);
 
-        saveButton.enabled = !regexTextField.getText().isEmpty() && regexValid && !nameTextField.getText().isEmpty();
+        saveButton.enabled = !regexTextField.getValue().isEmpty() && regexValid && !nameTextField.getValue().isEmpty();
     }
 
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-        super.mouseClicked(mouseX, mouseY, mouseButton);
+    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+        boolean result = super.mouseClicked(mouseX, mouseY, mouseButton);
 
         regexTextField.mouseClicked(mouseX, mouseY, mouseButton);
         nameTextField.mouseClicked(mouseX, mouseY, mouseButton);
         autoCommandField.mouseClicked(mouseX, mouseY, mouseButton);
         orderNbField.mouseClicked(mouseX, mouseY, mouseButton);
+        // Actually we should track the return of all componentts
+        return result;
     }
 
     @Override
-    protected void keyTyped(char typedChar, int keyCode) throws IOException {
-        super.keyTyped(typedChar, keyCode);
+    public boolean keyPressed(int typedChar, int keyCode, int j {
+        boolean result = super.keyPressed(typedChar, keyCode, j);
 
-        nameTextField.textboxKeyTyped(typedChar, keyCode);
-        autoCommandField.textboxKeyTyped(typedChar, keyCode);
-        orderNbField.textboxKeyTyped(typedChar, keyCode);
-        if (regexTextField.textboxKeyTyped(typedChar, keyCode)) checkIfRegexIsValid();
+        nameTextField.keyPressed(typedChar, keyCode, j);
+        autoCommandField.keyPressed(typedChar, keyCode, j);
+        orderNbField.keyPressed(typedChar, keyCode, j);
+        if (regexTextField.keyPressed(typedChar, keyCode, j)) checkIfRegexIsValid();
+        return result;
     }
 
     boolean regexValid = false;
 
     private void checkIfRegexIsValid() {
         try {
-            Pattern.compile(regexTextField.getText());
+            Pattern.compile(regexTextField.getValue());
             regexTextField.setTextColor(0x55FF55);
             regexValid = true;
             return;
@@ -266,18 +273,18 @@ public class TabGUI extends Screen {
     }
 
     private Map<String, Boolean> regexSettingsCreator() {
-        if (advancedButton.displayString.equals("Hide Advanced Settings")) return null;
+        if (advancedButton.getMessage().equals("Hide Advanced Settings")) return null;
 
         Map<String, Boolean> r = new HashMap<>();
-        simpleRegexSettings.forEach(b-> r.put(b.displayString, b.isChecked()));
+        simpleRegexSettings.forEach(b-> r.put(b.getMessage(), b.isChecked()));
         return r;
     }
 
     private void applyRegexSettings() {
         if (tab == null || tab.getRegexSettings() == null) return;
         tab.getRegexSettings().forEach((k, v) -> {
-            for (GuiCheckBox cb: simpleRegexSettings) {
-                if (cb.displayString.equals(k)) {
+            for (CheckboxButton cb: simpleRegexSettings) {
+                if (cb.getMessage().equals(k)) {
                     cb.setIsChecked(v);
                 }
             }
@@ -285,7 +292,7 @@ public class TabGUI extends Screen {
     }
 
     private String regexCreator() {
-        if (advancedButton.displayString.equals("Hide Advanced Settings")) return "";
+        if (advancedButton.getMessage().equals("Hide Advanced Settings")) return "";
 
         Map<String, Boolean> regexSettings = regexSettingsCreator();
         List<String> result = new ArrayList<>();

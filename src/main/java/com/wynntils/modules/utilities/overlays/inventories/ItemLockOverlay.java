@@ -12,8 +12,8 @@ import com.wynntils.core.framework.interfaces.Listener;
 import com.wynntils.core.framework.rendering.ScreenRenderer;
 import com.wynntils.core.framework.rendering.textures.Textures;
 import com.wynntils.modules.utilities.configs.UtilitiesConfig;
-import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.client.renderer.RenderHelper;
+import com.wynntils.transition.GlStateManager;
+import com.wynntils.transition.RenderHelper;
 import net.minecraft.inventory.container.Slot;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -24,7 +24,7 @@ public class ItemLockOverlay implements Listener {
     public void onInventoryGui(GuiOverlapEvent.InventoryOverlap.HoveredToolTip.Pre e) {
         if (!Reference.onWorld) return;
 
-        for (Slot s : e.getGui().inventorySlots.inventorySlots) {
+        for (Slot s : e.getGui().getMenu().slots) {
             if (s.slotNumber <= 4) continue;
 
             renderItemLock(s, e.getGui().getGuiLeft(), e.getGui().getGuiTop());
@@ -35,7 +35,7 @@ public class ItemLockOverlay implements Listener {
     public void onChestGui(GuiOverlapEvent.ChestOverlap.HoveredToolTip.Pre e) {
         if (!Reference.onWorld) return;
 
-        for (Slot s : e.getGui().inventorySlots.inventorySlots) {
+        for (Slot s : e.getGui().getMenu().slots) {
             if (s.slotNumber < e.getGui().getLowerInv().getContainerSize()) continue;
 
             renderItemLock(s, e.getGui().getGuiLeft(), e.getGui().getGuiTop());
@@ -46,7 +46,7 @@ public class ItemLockOverlay implements Listener {
     public void onHorseGui(GuiOverlapEvent.HorseOverlap.HoveredToolTip.Pre e) {
         if (!Reference.onWorld) return;
 
-        for (Slot s : e.getGui().inventorySlots.inventorySlots) {
+        for (Slot s : e.getGui().getMenu().slots) {
             if (s.slotNumber < e.getGui().getUpperInv().getContainerSize()) continue; // it's upper in horse!
 
             renderItemLock(s, e.getGui().getGuiLeft(), e.getGui().getGuiTop());

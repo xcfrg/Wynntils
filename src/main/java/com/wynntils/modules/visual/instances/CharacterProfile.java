@@ -4,11 +4,11 @@
 
 package com.wynntils.modules.visual.instances;
 
+import com.wynntils.McIf;
 import com.wynntils.core.framework.enums.CharacterGameMode;
 import com.wynntils.core.utils.ItemUtils;
 import com.wynntils.core.utils.StringUtils;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.text.TextFormatting;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,11 +35,11 @@ public class CharacterProfile {
         this.stack = stack;
         this.slot = slot;
 
-        String name = stack.getDisplayName();
-        className = TextFormatting.getTextWithoutFormattingCodes(name).replace("[>] Select ", "");
+        String name = McIf.toText(stack.getDisplayName());
+        className = McIf.getTextWithoutFormattingCodes(name).replace("[>] Select ", "");
 
         for (String line : ItemUtils.getLore(stack)) {
-            line = TextFormatting.getTextWithoutFormattingCodes(line);
+            line = McIf.getTextWithoutFormattingCodes(line);
 
             if (line.contains("Deletion in ")) {
                 deletion = line.replace("Deletion in ", "");

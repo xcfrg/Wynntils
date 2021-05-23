@@ -10,13 +10,13 @@ import com.wynntils.core.utils.objects.Location;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 
-import static com.mojang.blaze3d.platform.GlStateManager.*;
+import static com.wynntils.transition.GlStateManager.*;
 
 public class BeaconManager {
 
@@ -24,13 +24,13 @@ public class BeaconManager {
     private static final ResourceLocation beamResource = new ResourceLocation("textures/entity/beacon_beam.png");
 
     public static void drawBeam(Location loc, CustomColor color, float partialTicks) {
-        RenderManager renderManager = McIf.mc().getRenderManager();
+        EntityRendererManager renderManager = McIf.mc().getEntityRenderDispatcher();
         if (renderManager.renderViewEntity == null) return;
 
         float alpha = 1f;
 
-        Vec3d positionVec = new Vec3d(loc.getX(), loc.getY() + 0.118D, loc.getZ());
-        Vec3d playerVec = renderManager.renderViewEntity.getPositionVector();
+        Vector3d positionVec = new Vector3d(loc.getX(), loc.getY() + 0.118D, loc.getZ());
+        Vector3d playerVec = renderManager.renderViewEntity.getPositionVector();
 
         double distance = playerVec.distanceTo(positionVec);
         if (distance <= 4f || distance > 4000f) return;
@@ -43,10 +43,10 @@ public class BeaconManager {
         double maxDistance = McIf.mc().options.renderDistanceChunks * 16d;
         if (distance > maxDistance) {  // this will drag the beam to the visible area if outside of it
             // partial ticks aren't factored into player pos, so if we're going to use it for rendering, we need to recalculate to account for partial ticks
-            Vec3d prevPosVec = new Vec3d(renderManager.renderViewEntity.prevPosX, renderManager.renderViewEntity.prevPosY, renderManager.renderViewEntity.prevPosZ);
+            Vector3d prevPosVec = new Vector3d(renderManager.renderViewEntity.prevPosX, renderManager.renderViewEntity.prevPosY, renderManager.renderViewEntity.prevPosZ);
             playerVec = playerVec.subtract(prevPosVec).scale(partialTicks).add(prevPosVec);
 
-            Vec3d delta = positionVec.subtract(playerVec).normalize();
+            Vector3d delta = positionVec.subtract(playerVec).normalize();
             positionVec = playerVec.add(delta.x * maxDistance, delta.y * maxDistance, delta.z * maxDistance);
         }
 
@@ -68,10 +68,10 @@ public class BeaconManager {
             double d2 = -1f + offset;
             double d3 = 256.0F * alpha + d2;
 
-            _disableLighting();
+            disableLighting();
             enableDepth();
-            _disableCull();
-            _enableBlend();
+            disableCull();
+            enableBlend();
             tryBlendFuncSeparate(770, 771, 1, 0);
             color(1f, 1f, 1f, 1f);
 
@@ -79,29 +79,29 @@ public class BeaconManager {
             tessellator.getBuilder().begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
             BufferBuilder builder = tessellator.getBuilder();
             {
-                builder.vertex(x + .2d, y + d1, z + .2d).tex(1d, d3).color(color.r, color.g, color.b, alpha).endVertex();
-                builder.vertex(x + .2d, y, z + .2d).tex(1d, d2).color(color.r, color.g, color.b, alpha).endVertex();
-                builder.vertex(x + .8d, y, z + .2d).tex(0d, d2).color(color.r, color.g, color.b, alpha).endVertex();
-                builder.vertex(x + .8d, y + d1, z + .2d).tex(0d, d3).color(color.r, color.g, color.b, alpha).endVertex();
-                builder.vertex(x + .8d, y + d1, z + .8d).tex(1d, d3).color(color.r, color.g, color.b, alpha).endVertex();
-                builder.vertex(x + .8d, y, z + .8d).tex(1d, d2).color(color.r, color.g, color.b, alpha).endVertex();
-                builder.vertex(x + .2d, y, z + .8d).tex(0d, d2).color(color.r, color.g, color.b, alpha).endVertex();
-                builder.vertex(x + .2d, y + d1, z + .8d).tex(0d, d3).color(color.r, color.g, color.b, alpha).endVertex();
-                builder.vertex(x + .8d, y + d1, z + .2d).tex(1d, d3).color(color.r, color.g, color.b, alpha).endVertex();
-                builder.vertex(x + .8d, y, z + .2d).tex(1d, d2).color(color.r, color.g, color.b, alpha).endVertex();
-                builder.vertex(x + .8d, y, z + .8d).tex(0d, d2).color(color.r, color.g, color.b, alpha).endVertex();
-                builder.vertex(x + .8d, y + d1, z + .8d).tex(0d, d3).color(color.r, color.g, color.b, alpha).endVertex();
-                builder.vertex(x + .2d, y + d1, z + .8d).tex(1d, d3).color(color.r, color.g, color.b, alpha).endVertex();
-                builder.vertex(x + .2d, y, z + .8d).tex(1d, d2).color(color.r, color.g, color.b, alpha).endVertex();
-                builder.vertex(x + .2d, y, z + .2d).tex(0d, d2).color(color.r, color.g, color.b, alpha).endVertex();
-                builder.vertex(x + .2d, y + d1, z + .2d).tex(0d, d3).color(color.r, color.g, color.b, alpha).endVertex();
+                builder.vertex(x + .2d, y + d1, z + .2d).uv(1d, d3).color(color.r, color.g, color.b, alpha).endVertex();
+                builder.vertex(x + .2d, y, z + .2d).uv(1d, d2).color(color.r, color.g, color.b, alpha).endVertex();
+                builder.vertex(x + .8d, y, z + .2d).uv(0d, d2).color(color.r, color.g, color.b, alpha).endVertex();
+                builder.vertex(x + .8d, y + d1, z + .2d).uv(0d, d3).color(color.r, color.g, color.b, alpha).endVertex();
+                builder.vertex(x + .8d, y + d1, z + .8d).uv(1d, d3).color(color.r, color.g, color.b, alpha).endVertex();
+                builder.vertex(x + .8d, y, z + .8d).uv(1d, d2).color(color.r, color.g, color.b, alpha).endVertex();
+                builder.vertex(x + .2d, y, z + .8d).uv(0d, d2).color(color.r, color.g, color.b, alpha).endVertex();
+                builder.vertex(x + .2d, y + d1, z + .8d).uv(0d, d3).color(color.r, color.g, color.b, alpha).endVertex();
+                builder.vertex(x + .8d, y + d1, z + .2d).uv(1d, d3).color(color.r, color.g, color.b, alpha).endVertex();
+                builder.vertex(x + .8d, y, z + .2d).uv(1d, d2).color(color.r, color.g, color.b, alpha).endVertex();
+                builder.vertex(x + .8d, y, z + .8d).uv(0d, d2).color(color.r, color.g, color.b, alpha).endVertex();
+                builder.vertex(x + .8d, y + d1, z + .8d).uv(0d, d3).color(color.r, color.g, color.b, alpha).endVertex();
+                builder.vertex(x + .2d, y + d1, z + .8d).uv(1d, d3).color(color.r, color.g, color.b, alpha).endVertex();
+                builder.vertex(x + .2d, y, z + .8d).uv(1d, d2).color(color.r, color.g, color.b, alpha).endVertex();
+                builder.vertex(x + .2d, y, z + .2d).uv(0d, d2).color(color.r, color.g, color.b, alpha).endVertex();
+                builder.vertex(x + .2d, y + d1, z + .2d).uv(0d, d3).color(color.r, color.g, color.b, alpha).endVertex();
             }
             tessellator.end();
 
             // resetting
             color(1f, 1f, 1f, 1f);
-            _disableBlend();
-            _enableCull();
+            disableBlend();
+            enableCull();
         }
         popAttrib();
     }

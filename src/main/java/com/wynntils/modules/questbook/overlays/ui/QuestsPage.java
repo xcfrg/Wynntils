@@ -4,6 +4,7 @@
 
 package com.wynntils.modules.questbook.overlays.ui;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.wynntils.McIf;
 import com.wynntils.core.framework.enums.wynntils.WynntilsSound;
 import com.wynntils.core.framework.rendering.ScreenRenderer;
@@ -27,7 +28,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SimpleSound;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.MainWindow;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.wynntils.transition.GlStateManager;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.text.TextFormatting;
@@ -52,8 +53,8 @@ public class QuestsPage extends QuestBookPage {
     }
 
     @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        super.drawScreen(mouseX, mouseY, partialTicks);
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
+        super.render(matrix, mouseX, mouseY, partialTicks);
 
         int x = width / 2;
         int y = height / 2;
@@ -138,7 +139,7 @@ public class QuestsPage extends QuestBookPage {
 
                         overQuest = selected;
                         hoveredText = lore;
-                        GlStateManager._disableLighting();
+                        GlStateManager.disableLighting();
                     } else {
                         if (this.selected == i) {
                             animationCompleted = false;
@@ -220,7 +221,7 @@ public class QuestsPage extends QuestBookPage {
                 }
             } else {
                 String textToDisplay;
-                if (QuestManager.getCurrentQuests().size() == 0 || textField.getText().equals("") ||
+                if (QuestManager.getCurrentQuests().size() == 0 || textField.getValue().equals("") ||
                     (showingMiniQuests && QuestManager.getCurrentQuests().stream().noneMatch(QuestInfo::isMiniQuest))) {
                     textToDisplay = String.format("Loading %s...\nIf nothing appears soon, try pressing the reload button.", showingMiniQuests ? "Mini-Quests" : "Quests");
                 } else {
@@ -255,7 +256,7 @@ public class QuestsPage extends QuestBookPage {
     }
 
     @Override
-    public void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
         MainWindow res = new MainWindow(McIf.mc());
         int posX = ((res.getGuiScaledWidth() / 2) - mouseX);
         int posY = ((res.getGuiScaledHeight() / 2) - mouseY);
@@ -264,16 +265,16 @@ public class QuestsPage extends QuestBookPage {
         if (overQuest != null) {
             if (mouseButton == 0) { // left click
                 if (overQuest.getStatus() == QuestStatus.COMPLETED || overQuest.getStatus() == QuestStatus.CANNOT_START)
-                    return;
+                    return true;
 
                 if (QuestManager.getTrackedQuest() != null && QuestManager.getTrackedQuest().getName().equals(overQuest.getName())) {
                     QuestManager.setTrackedQuest(null);
                     McIf.mc().getSoundManager().play(SimpleSound.forUI(SoundEvents.ENTITY_IRONGOLEM_HURT, 1f));
-                    return;
+                    return true;
                 }
                 McIf.mc().getSoundManager().play(SimpleSound.forUI(SoundEvents.BLOCK_ANVIL_PLACE, 1f));
                 QuestManager.setTrackedQuest(overQuest);
-                return;
+                return true;
             } else if (mouseButton == 1) { // right click
                 McIf.mc().getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1f));
 
@@ -299,13 +300,13 @@ public class QuestsPage extends QuestBookPage {
                         return true;
                     }), true);
                 }
-                return;
+                return true;
             } else if (mouseButton == 2) { // middle click
-                if (!overQuest.hasTargetLocation()) return;
+                if (!overQuest.hasTargetLocation()) return false;
 
                 Location loc = overQuest.getTargetLocation();
-                Utils.displayGuiScreen(new MainWorldMapUI((float) loc.x, (float) loc.z));
-                return;
+                Utils.setScreen(new MainWorldMapUI((float) loc.x, (float) loc.z));
+                return true;
             }
         }
 
@@ -315,26 +316,26 @@ public class QuestsPage extends QuestBookPage {
         if (posX >= 71 && posX <= 87 && posY >= 84 && posY <= 100) { // Mini-Quest Switcher
             McIf.mc().getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1f));
             showingMiniQuests = !showingMiniQuests;
-            textField.setText("");
+            textField.setValue("");
             updateSearch();
-            return;
+            return true;
         } else if (posX >= -157 && posX <= -147 && posY >= 89 && posY <= 99) { // Update Data
             McIf.mc().getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1f));
             QuestManager.updateAllAnalyses(true);
-            return;
+            return true;
         } else if (-11 <= posX && posX <= -1 && 89 <= posY && posY <= 99 && (mouseButton == 0 || mouseButton == 1)) { // Change Sort Method
             McIf.mc().getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1f));
             sort = SortMethod.values()[(sort.ordinal() + (mouseButton == 0 ? 1 : SortMethod.values().length - 1)) % SortMethod.values().length];
             updateSearch();
-            return;
+            return true;
         }
-        super.mouseClicked(mouseX, mouseY, mouseButton);
+        return super.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
     @Override
-    public void keyTyped(char typedChar, int keyCode) throws IOException {
+    public boolean keyPressed(int typedChar, int keyCode, int j) {
         overQuest = null;
-        super.keyTyped(typedChar, keyCode);
+        return super.keyPressed(typedChar, keyCode, j);
     }
 
     @Override

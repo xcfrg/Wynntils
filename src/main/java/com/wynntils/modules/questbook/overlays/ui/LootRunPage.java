@@ -1,5 +1,6 @@
 package com.wynntils.modules.questbook.overlays.ui;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.wynntils.McIf;
 import com.wynntils.Reference;
 import com.wynntils.core.framework.rendering.ScreenRenderer;
@@ -35,7 +36,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import static com.mojang.blaze3d.platform.GlStateManager.*;
+import static com.wynntils.transition.GlStateManager.*;
 
 public class LootRunPage extends QuestBookPage {
 
@@ -55,8 +56,8 @@ public class LootRunPage extends QuestBookPage {
     }
 
     @Override
-    public void initGui() {
-        super.initGui();
+    public void init() {
+        super.init();
         initBasicSearch();
 
         names = LootRunManager.getStoredLootruns();
@@ -64,7 +65,7 @@ public class LootRunPage extends QuestBookPage {
     }
 
     private void initBasicSearch() {
-        textField.setMaxStringLength(50);
+        textField.setMaxLength(50);
         initDefaultSearchBar();
     }
 
@@ -75,8 +76,8 @@ public class LootRunPage extends QuestBookPage {
     }
 
     @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        super.drawScreen(mouseX, mouseY, partialTicks);
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
+        super.render(matrix, mouseX, mouseY, partialTicks);
         int x = width / 2;
         int y = height / 2;
         int posX = (x - mouseX);
@@ -135,17 +136,17 @@ public class LootRunPage extends QuestBookPage {
 
                         glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
 
-                        _enableBlend();
+                        enableBlend();
                         enableTexture2D();
                         Tessellator tessellator = Tessellator.getInstance();
                         BufferBuilder bufferbuilder = tessellator.getBuilder();
                         {
                             bufferbuilder.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION_TEX);
 
-                            bufferbuilder.vertex(mapX, mapY + mapHeight, 0).tex(minX, maxZ).endVertex();
-                            bufferbuilder.vertex(mapX + mapWidth, mapY + mapHeight, 0).tex(maxX, maxZ).endVertex();
-                            bufferbuilder.vertex(mapX + mapWidth, mapY, 0).tex(maxX, minZ).endVertex();
-                            bufferbuilder.vertex(mapX, mapY, 0).tex(minX, minZ).endVertex();
+                            bufferbuilder.vertex(mapX, mapY + mapHeight, 0).uv(minX, maxZ).endVertex();
+                            bufferbuilder.vertex(mapX + mapWidth, mapY + mapHeight, 0).uv(maxX, maxZ).endVertex();
+                            bufferbuilder.vertex(mapX + mapWidth, mapY, 0).uv(maxX, minZ).endVertex();
+                            bufferbuilder.vertex(mapX, mapY, 0).uv(minX, minZ).endVertex();
 
                             tessellator.end();
                         }
@@ -167,7 +168,7 @@ public class LootRunPage extends QuestBookPage {
 
                     //reset settings
                     disableAlpha();
-                    _disableBlend();
+                    disableBlend();
                     ScreenRenderer.disableScissorTest();
                     ScreenRenderer.clearMask();
                 }
@@ -233,7 +234,7 @@ public class LootRunPage extends QuestBookPage {
                             render.drawRectF(background_2, x + 9, y - 96 + currentY, x + 146, y - 87 + currentY);
                         }
 
-                        _disableLighting();
+                        disableLighting();
 
                         if (LootRunManager.getActivePathName() != null && LootRunManager.getActivePathName().equals(currentName)) {
                             hoveredText = Arrays.asList(TextFormatting.BOLD + names.get(i), TextFormatting.YELLOW + "Loaded", TextFormatting.GOLD + "Middle click to open lootrun in folder",  TextFormatting.GREEN + "Left click to unload this lootrun");
@@ -337,7 +338,7 @@ public class LootRunPage extends QuestBookPage {
     }
 
     @Override
-    public void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
         MainWindow res = new MainWindow(McIf.mc());
         int posX = ((res.getGuiScaledWidth() / 2) - mouseX);
         int posY = ((res.getGuiScaledHeight() / 2) - mouseY);
@@ -375,7 +376,7 @@ public class LootRunPage extends QuestBookPage {
                     }
                 }
 
-                return;
+                return true;
             } else if (mouseButton == 1 && isShiftKeyDown() && !isTracked) { //shift right click means delete
                 boolean result = LootRunManager.delete(selectedName);
                 if (result) {
@@ -384,12 +385,12 @@ public class LootRunPage extends QuestBookPage {
                     McIf.mc().getSoundManager().play(SimpleSound.forUI(SoundEvents.ENTITY_IRONGOLEM_HURT, 1f));
                 }
 
-                return;
+                return true;
             } else if (mouseButton == 2) { //middle click means open up folder
                 File lootrunPath = new File(LootRunManager.STORAGE_FOLDER, selectedName + ".json");
                 String uri = lootrunPath.toURI().toString();
                 Utils.openUrl(uri);
-                return;
+                return true;
             }
         }
 
@@ -404,11 +405,11 @@ public class LootRunPage extends QuestBookPage {
                     WebManager.tryReloadApiUrls(true);
                 } else {
                     Location start = LootRunManager.getActivePath().getPoints().get(0);
-                    Utils.displayGuiScreen(new MainWorldMapUI((int) start.x, (int) start.z));
+                    Utils.setScreen(new MainWorldMapUI((int) start.x, (int) start.z));
                 }
             }
         }
 
-        super.mouseClicked(mouseX, mouseY, mouseButton);
+        return super.mouseClicked(mouseX, mouseY, mouseButton);
     }
 }

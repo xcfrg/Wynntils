@@ -8,6 +8,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.wynntils.McIf;
 import com.wynntils.Reference;
 import com.wynntils.core.framework.enums.ClassType;
@@ -28,13 +29,13 @@ import com.wynntils.webapi.profiles.item.objects.IdentificationContainer;
 import com.wynntils.webapi.profiles.item.objects.ItemRequirementsContainer;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.gui.screen.inventory.InventoryScreen;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.wynntils.transition.GlStateManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Items;
 import net.minecraft.inventory.container.ClickType;
-import net.minecraft.inventory.InventoryBasic;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagInt;
@@ -53,10 +54,10 @@ public class GearViewerUI extends FakeGuiContainer {
 
     private static final ResourceLocation INVENTORY_GUI_TEXTURE = new ResourceLocation("textures/gui/container/inventory.png");
 
-    private InventoryBasic inventory;
+    private Inventory inventory;
     private PlayerEntity player;
 
-    public GearViewerUI(InventoryBasic inventory, PlayerEntity player) {
+    public GearViewerUI(Inventory inventory, PlayerEntity player) {
         super(new ContainerGearViewer(inventory, McIf.player()));
         this.inventory = inventory;
 
@@ -69,8 +70,8 @@ public class GearViewerUI extends FakeGuiContainer {
     }
 
     @Override
-    public void initGui() {
-        super.initGui();
+    public void init() {
+        super.init();
 
         // create item lore for armor pieces
         for (int i = 0; i < 4; i++) {
@@ -92,25 +93,27 @@ public class GearViewerUI extends FakeGuiContainer {
     }
 
     @Override
-    protected void handleMouseClick(Slot slotIn, int slotId, int mouseButton, ClickType type) { } // ignore all mouse clicks
+    protected void slotClicked(Slot slotIn, int slotId, int mouseButton, ClickType type) { } // ignore all mouse clicks
 
     @Override
-    protected void keyTyped(char typedChar, int keyCode) throws IOException {
-        super.keyTyped(typedChar, keyCode);
+    public boolean keyPressed(int typedChar, int keyCode, int j) {
+        boolean result = super.keyPressed(typedChar, keyCode);
 
         // allow item screenshotting in gear viewer
-        if (keyCode == KeyManager.getItemScreenshotKey().getKeyBinding().getKeyCode())
+        if (keyCode == KeyManager.getItemScreenshotKey().getKeyBinding().getKey().getValue())
             ItemScreenshotManager.takeScreenshot();
+
+        return result;
     }
 
     @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
         this.drawDefaultBackground();
-        super.drawScreen(mouseX, mouseY, partialTicks);
+        super.render(matrix, mouseX, mouseY, partialTicks);
         this.renderHoveredToolTip(mouseX, mouseY);
 
         // replace lore with advanced ids if enabled
-        if (this.getSlotUnderMouse() != null && this.getSlotUnderMouse().getHasStack())
+        if (this.getSlotUnderMouse() != null && this.getSlotUnderMouse().hasItem())
             ItemIdentificationOverlay.replaceLore(this.getSlotUnderMouse().getItem());
     }
 
@@ -337,7 +340,7 @@ public class GearViewerUI extends FakeGuiContainer {
         stack.setStackDisplayName(item.getTier().getTextColor() + item.getDisplayName());
     }
 
-    private void copyInventory(InventoryPlayer destination, InventoryPlayer source) {
+    private void copyInventory(PlayerInventory destination, PlayerInventory source) {
         // create deep copy of inventory
         for (int i = 0; i < source.getContainerSize(); i++) {
             destination.setInventorySlotContents(i, source.getItem(i).copy());
@@ -353,7 +356,7 @@ public class GearViewerUI extends FakeGuiContainer {
         PlayerEntity ep = (PlayerEntity) e;
         if (ep.getTeam() == null) return; // player model npc
 
-        McIf.mc().displayGuiScreen(new GearViewerUI(new InventoryBasic("", false, 5), ep));
+        McIf.mc().setScreen(new GearViewerUI(new Inventory("", false, 5), ep));
     }
 
 }

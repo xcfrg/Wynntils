@@ -473,7 +473,7 @@ public class ChatManager {
 
     private static void sendTranslation(Matcher m) {
         // We only want to translate the actual message, not formatting, sender, etc.
-        String message = TextFormatting.getTextWithoutFormattingCodes(m.group(2));
+        String message = McIf.getTextWithoutFormattingCodes(m.group(2));
         String prefix = m.group(1);
         String suffix = m.group(3);
         TranslationManager.getTranslator().translate(message, TranslationConfig.INSTANCE.languageName, translatedMsg -> {
@@ -885,7 +885,7 @@ public class ChatManager {
 
         @Override
         public void run() {
-            McIf.player().sendMessage(chapterText, null);
+            McIf.sendMessage(chapterText, null);
         }
 
     }

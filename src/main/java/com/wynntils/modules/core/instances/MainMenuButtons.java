@@ -16,11 +16,11 @@ import com.wynntils.webapi.WebManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SimpleSound;
 import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.client.gui.GuiMainMenu;
+import net.minecraft.client.gui.screen.MainMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ServerList;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.wynntils.transition.GlStateManager;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.client.FMLClientHandler;
@@ -36,7 +36,7 @@ public class MainMenuButtons {
 
     private static boolean alreadyLoaded = false;
 
-    public static void addButtons(GuiMainMenu to, List<Button> buttonList, boolean resize) {
+    public static void addButtons(MainMenuScreen to, List<Button> buttons, boolean resize) {
         if (!CoreDBConfig.INSTANCE.addMainMenuButton) return;
 
         if (lastButton == null || !resize) {
@@ -47,21 +47,21 @@ public class MainMenuButtons {
             WebManager.checkForUpdates();
             UpdateOverlay.reset();
 
-            buttonList.add(lastButton);
+            buttons.add(lastButton);
 
             // little pling when finished loading
             if (!alreadyLoaded) {
-                McIf.mc().getSoundManager().play(SimpleSound.forUI(SoundEvents.BLOCK_NOTE_PLING, 1f));
+                McIf.mc().getSoundManager().play(SimpleSound.forUI(SoundEvents.NOTE_BLOCK_PLING, 1f));
                 alreadyLoaded = true;
             }
             return;
         }
 
         lastButton.x = to.width / 2 + 104; lastButton.y = to.height / 4 + 48 + 24;
-        buttonList.add(lastButton);
+        buttons.add(lastButton);
     }
 
-    public static void actionPerformed(GuiMainMenu on, Button button, List<Button> buttonList) {
+    public static void actionPerformed(MainMenuScreen on, Button button, List<Button> buttons) {
         if (button.id == WYNNCRAFT_BUTTON_ID) {
             clickedWynncraftButton(((WynncraftButton) button).serverIcon.getServer(), on);
         }
@@ -69,7 +69,7 @@ public class MainMenuButtons {
 
     private static void clickedWynncraftButton(ServerData server, Screen backGui) {
         if (hasUpdate()) {
-            McIf.mc().displayGuiScreen(new UpdateAvailableScreen(server));
+            McIf.mc().setScreen(new UpdateAvailableScreen(server));
         } else {
             WebManager.skipJoinUpdate();
             ServerUtils.connect(backGui, server);
@@ -92,14 +92,14 @@ public class MainMenuButtons {
             super(buttonId, x, y, 20, 20, "");
 
             serverIcon = new ServerIcon(server, true);
-            serverIcon.onDone(r -> serverList.saveServerList());
+            serverIcon.onDone(r -> serverList.save());
         }
 
         @Override
-        public void drawButton(Minecraft minecraft, int mouseX, int mouseY, float partialTicks) {
+        public void renderButton(Minecraft minecraft, int mouseX, int mouseY, float partialTicks) {
             if (!visible) return;
 
-            super.drawButton(minecraft, mouseX, mouseY, partialTicks);
+            super.renderButton(minecraft, mouseX, mouseY, partialTicks);
 
             ServerIcon.ping();
             ResourceLocation icon = serverIcon.getServerIcon();
@@ -108,17 +108,17 @@ public class MainMenuButtons {
 
             boolean hasUpdate = hasUpdate();
 
-            GlStateManager._pushMatrix();
+            GlStateManager.pushMatrix();
 
             GlStateManager.translate(x + 2, y + 2, 0);
             GlStateManager.scale(0.5f, 0.5f, 0);
-            GlStateManager._enableBlend();
+            GlStateManager.enableBlend();
             drawModalRectWithCustomSizedTexture(0, 0, 0.0F, 0.0F, 32, 32, 32.0F, 32.0F);
             if (!hasUpdate) {
-                GlStateManager._disableBlend();
+                GlStateManager.disableBlend();
             }
 
-            GlStateManager._popMatrix();
+            GlStateManager.popMatrix();
 
             if (hasUpdate) {
                 Textures.UIs.main_menu.bind();
@@ -126,7 +126,7 @@ public class MainMenuButtons {
                 drawTexturedModalRect(x, y, 0, 0, 20, 20);
             }
 
-            GlStateManager._disableBlend();
+            GlStateManager.disableBlend();
         }
 
     }
@@ -137,7 +137,7 @@ public class MainMenuButtons {
         }
 
         @Override
-        public void initGui() {
+        public void init() {
             doAction();
         }
 

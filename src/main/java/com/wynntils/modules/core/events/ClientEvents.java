@@ -34,9 +34,9 @@ import com.wynntils.modules.utilities.UtilitiesModule;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.gui.screen.IngameMenuScreen;
-import net.minecraft.client.gui.GuiMainMenu;
+import net.minecraft.client.gui.screen.MainMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.inventory.GuiChest;
+import net.minecraft.client.gui.screen.inventory.ChestScreen;
 import net.minecraft.client.gui.screen.inventory.InventoryScreen;
 import net.minecraft.client.gui.screen.inventory.HorseInventoryScreen;
 import net.minecraft.entity.Entity;
@@ -53,7 +53,7 @@ import net.minecraft.network.play.server.*;
 import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.util.text.ChatType;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.client.event.GuiOpenEvent;
@@ -80,7 +80,7 @@ public class ClientEvents implements Listener {
      * This replace these GUIS into a "provided" format to make it more modular
      *
      * InventoryScreen -> InventoryReplacer
-     * GuiChest -> ChestReplacer
+     * ChestScreen -> ChestReplacer
      * HorseInventoryScreen -> HorseReplacer
      * IngameMenuScreen -> IngameMenuReplacer
      *
@@ -104,7 +104,7 @@ public class ClientEvents implements Listener {
             e.setGui(new InventoryReplacer(McIf.player()));
             return;
         }
-        if (e.getGui() instanceof GuiChest) {
+        if (e.getGui() instanceof ChestScreen) {
             if (e.getGui() instanceof ChestReplacer) return;
 
             e.setGui(new ChestReplacer(McIf.player().inventory, ReflectionFields.GuiChest_lowerChestInventory.getValue(e.getGui())));
@@ -211,7 +211,7 @@ public class ClientEvents implements Listener {
         Entity i = event.getEntity();
 
         if (value.contains("Combat") || value.contains("Guild")) return;
-        value = TextFormatting.getTextWithoutFormattingCodes(value);
+        value = McIf.getTextWithoutFormattingCodes(value);
 
         Matcher m = GATHERING_STATUS.matcher(value);
         if (m.matches()) { // first, gathering status
@@ -238,8 +238,8 @@ public class ClientEvents implements Listener {
         // it ALWAYS have 4 blocks at it sides that we use to detect it
         if (bakeStatus.getType() == ProfessionType.WOODCUTTING) {
             Iterable<BlockPos> positions = BlockPos.getAllInBox(
-                    i.getPosition().subtract(new Vec3i(-5, -3, -5)),
-                    i.getPosition().subtract(new Vec3i(+5, +3, +5)));
+                    i.getPosition().subtract(new Vector3i(-5, -3, -5)),
+                    i.getPosition().subtract(new Vector3i(+5, +3, +5)));
 
             for (BlockPos position : positions) {
                 if (Utils.isAirBlock(i.level, position)) continue;
@@ -269,7 +269,7 @@ public class ClientEvents implements Listener {
 
     @SubscribeEvent
     public void checkDamageLabelFound(LocationEvent.LabelFoundEvent event) {
-        String value = TextFormatting.getTextWithoutFormattingCodes(event.getLabel());
+        String value = McIf.getTextWithoutFormattingCodes(event.getLabel());
         Entity i = event.getEntity();
         Map<DamageType, Integer> damageList = new HashMap<>();
 
@@ -335,9 +335,9 @@ public class ClientEvents implements Listener {
     public void addMainMenuButtons(GuiScreenEvent.InitGuiEvent.Post e) {
         Screen gui = e.getGui();
 
-        if (gui instanceof GuiMainMenu) {
-            boolean resize = lastScreen != null && lastScreen instanceof GuiMainMenu;
-            MainMenuButtons.addButtons((GuiMainMenu) gui, e.getButtonList(), resize);
+        if (gui instanceof MainMenuScreen) {
+            boolean resize = lastScreen != null && lastScreen instanceof MainMenuScreen;
+            MainMenuButtons.addButtons((MainMenuScreen) gui, e.getButtonList(), resize);
         }
 
         lastScreen = gui;
@@ -349,9 +349,9 @@ public class ClientEvents implements Listener {
     @SubscribeEvent
     public void mainMenuActionPerformed(GuiScreenEvent.ActionPerformedEvent.Post e) {
         Screen gui = e.getGui();
-        if (gui != McIf.mc().screen || !(gui instanceof GuiMainMenu)) return;
+        if (gui != McIf.mc().screen || !(gui instanceof MainMenuScreen)) return;
 
-        MainMenuButtons.actionPerformed((GuiMainMenu) gui, e.getButton(), e.getButtonList());
+        MainMenuButtons.actionPerformed((MainMenuScreen) gui, e.getButton(), e.getButtonList());
     }
 
     @SubscribeEvent
@@ -372,16 +372,16 @@ public class ClientEvents implements Listener {
      */
     @SubscribeEvent
     public void changeClass(GuiOverlapEvent.ChestOverlap.HandleMouseClick e) {
-        if (!e.getGui().getLowerInv().getName().contains("Select a Class")) return;
+        if (!McIf.toText(e.getGui().getTitle()).contains("Select a Class")) return;
 
         if (e.getMouseButton() != 0
             || e.getSlotIn() == null
-            || !e.getSlotIn().getHasStack()
+            || !e.getSlotIn().hasItem()
             || !e.getSlotIn().getItem().hasCustomHoverName()
-            || !e.getSlotIn().getItem().getDisplayName().contains("[>] Select")) return;
+            || !McIf.toText(e.getSlotIn().getItem().getDisplayName()).contains("[>] Select")) return;
 
 
-        get(CharacterData.class).setClassId(e.getSlot());
+        get(CharacterData.class).setClassId(e.getSlotId());
 
         String classLore = ItemUtils.getLore(e.getSlotIn().getItem()).get(1);
         String className = classLore.substring(classLore.indexOf(TextFormatting.WHITE.toString()) + 2);

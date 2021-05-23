@@ -64,7 +64,7 @@ public class ClientEvents implements Listener {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void openCharacterSelection(GuiOverlapEvent.ChestOverlap.InitGui e) {
-        if (!MusicConfig.INSTANCE.classSelectionMusic || !e.getGui().getLowerInv().getName().contains("Select a Class")) return;
+        if (!MusicConfig.INSTANCE.classSelectionMusic || !McIf.toText(e.getGui().getTitle()).contains("Select a Class")) return;
 
         SoundTrackManager.findTrack(WebManager.getMusicLocations().getEntryTrack("characterSelector"), true, MusicConfig.INSTANCE.characterSelectorQuiet);
     }
@@ -74,7 +74,7 @@ public class ClientEvents implements Listener {
     public void dungeonTracks(PacketEvent<STitlePacket> e) {
         if (!MusicConfig.INSTANCE.replaceJukebox || e.getPacket().getType() != STitlePacket.Type.TITLE) return;
 
-        String title = TextFormatting.getTextWithoutFormattingCodes(McIf.getFormattedText(e.getPacket().getMessage()));
+        String title = McIf.getTextWithoutFormattingCodes(McIf.getFormattedText(e.getPacket().getMessage()));
         String songName = WebManager.getMusicLocations().getDungeonTrack(title);
         if (songName == null) return;
 
@@ -107,16 +107,16 @@ public class ClientEvents implements Listener {
         if (!(McIf.mc().screen instanceof ChestReplacer)) return;
 
         ChestReplacer chest = (ChestReplacer) McIf.mc().screen;
-        if (!chest.getLowerInv().getName().contains("Loot Chest") &&
-                !chest.getLowerInv().getName().contains("Daily Rewards") &&
-                !chest.getLowerInv().getName().contains("Objective Rewards")) return;
+        if (!McIf.toText(chest.getTitle()).contains("Loot Chest") &&
+                !McIf.toText(chest.getTitle()).contains("Daily Rewards") &&
+                !McIf.toText(chest.getTitle()).contains("Objective Rewards")) return;
 
         int size = Math.min(chest.getLowerInv().getContainerSize(), e.getPacket().getItems().size());
         for (int i = 0; i < size; i++) {
             ItemStack stack = e.getPacket().getItems().get(i);
             if (stack.isEmpty() || !stack.hasCustomHoverName()) continue;
-            if (!stack.getDisplayName().contains(TextFormatting.DARK_PURPLE.toString())) continue;
-            if (!stack.getDisplayName().contains("Unidentified")) continue;
+            if (!McIf.toText(stack.getDisplayName()).contains(TextFormatting.DARK_PURPLE.toString())) continue;
+            if (!McIf.toText(stack.getDisplayName()).contains("Unidentified")) continue;
 
             SoundTrackManager.findTrack(WebManager.getMusicLocations().getEntryTrack("mythicFound"),
                     true, false, false, false, true, false);

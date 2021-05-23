@@ -25,10 +25,10 @@ import com.wynntils.Reference;
 
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.client.renderer.BufferBuilder;
-import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.client.renderer.RenderHelper;
+import com.wynntils.transition.GlStateManager;
+import com.wynntils.transition.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -46,10 +46,10 @@ public class ItemScreenshotManager {
     public static void takeScreenshot() {
         if (!Reference.onWorld) return;
         Screen gui = McIf.mc().screen;
-        if (!(gui instanceof GuiContainer)) return;
+        if (!(gui instanceof ContainerScreen)) return;
 
-        Slot slot = ((GuiContainer) gui).getSlotUnderMouse();
-        if (slot == null || !slot.getHasStack()) return;
+        Slot slot = ((ContainerScreen) gui).getSlotUnderMouse();
+        if (slot == null || !slot.hasItem()) return;
         ItemStack stack = slot.getItem();
         if (!stack.hasCustomHoverName()) return;
 
@@ -91,19 +91,19 @@ public class ItemScreenshotManager {
         float scalew = (float) gui.width/width;
 
         // draw tooltip to framebuffer, create image from it
-        GlStateManager._pushMatrix();
+        GlStateManager.pushMatrix();
         Framebuffer fb = new Framebuffer((int) (gui.width*(1/scalew)*2), (int) (gui.height*(1/scaleh)*2), true);
         fb.bindFramebuffer(false);
         GlStateManager.scale(scalew, scaleh, 1);
         drawTooltip(tooltip, gui.width/2, fr);
         BufferedImage bi = createScreenshot(width*2, height*2);
         fb.unbindFramebuffer();
-        GlStateManager._popMatrix();
+        GlStateManager.popMatrix();
         // copy to clipboard
         ClipboardImage ci = new ClipboardImage(bi);
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ci, null);
 
-        McIf.player().sendMessage(new StringTextComponent(TextFormatting.GREEN + "Copied " + stack.getDisplayName() + TextFormatting.GREEN + " to the clipboard!"));
+        McIf.sendMessage(new StringTextComponent(TextFormatting.GREEN + "Copied " + stack.getDisplayName() + TextFormatting.GREEN + " to the clipboard!"));
     }
 
     private static void removeItemLore(List<String> tooltip) {
@@ -112,7 +112,7 @@ public class ItemScreenshotManager {
         boolean lore = false;
         for (String s : tooltip) {
             // only remove text after the item type indicator
-            Matcher m = ITEM_PATTERN.matcher(TextFormatting.getTextWithoutFormattingCodes(s));
+            Matcher m = ITEM_PATTERN.matcher(McIf.getTextWithoutFormattingCodes(s));
             if (!lore && m.matches()) lore = true;
 
             if (lore && s.contains("" + TextFormatting.DARK_GRAY)) temp.add(s);
@@ -123,7 +123,7 @@ public class ItemScreenshotManager {
     private static void drawTooltip(List<String> textLines, int maxTextWidth, FontRenderer font) {
         GlStateManager.disableRescaleNormal();
         RenderHelper.disableStandardItemLighting();
-        GlStateManager._disableLighting();
+        GlStateManager.disableLighting();
         GlStateManager.disableDepth();
         GlStateManager.color(1f, 1f, 1f, 1f);
         int tooltipTextWidth = 0;
@@ -179,15 +179,15 @@ public class ItemScreenshotManager {
         int backgroundColor = 0xF0100010;
         int borderColorStart = 0x505000FF;
         int borderColorEnd = (borderColorStart & 0xFEFEFE) >> 1 | borderColorStart & 0xFF000000;
-        drawGradientRect(zLevel, tooltipX - 3, tooltipY - 4, tooltipX + tooltipTextWidth + 3, tooltipY - 3, backgroundColor, backgroundColor);
-        drawGradientRect(zLevel, tooltipX - 3, tooltipY + tooltipHeight + 3, tooltipX + tooltipTextWidth + 3, tooltipY + tooltipHeight + 4, backgroundColor, backgroundColor);
-        drawGradientRect(zLevel, tooltipX - 3, tooltipY - 3, tooltipX + tooltipTextWidth + 3, tooltipY + tooltipHeight + 3, backgroundColor, backgroundColor);
-        drawGradientRect(zLevel, tooltipX - 4, tooltipY - 3, tooltipX - 3, tooltipY + tooltipHeight + 3, backgroundColor, backgroundColor);
-        drawGradientRect(zLevel, tooltipX + tooltipTextWidth + 3, tooltipY - 3, tooltipX + tooltipTextWidth + 4, tooltipY + tooltipHeight + 3, backgroundColor, backgroundColor);
-        drawGradientRect(zLevel, tooltipX - 3, tooltipY - 3 + 1, tooltipX - 3 + 1, tooltipY + tooltipHeight + 3 - 1, borderColorStart, borderColorEnd);
-        drawGradientRect(zLevel, tooltipX + tooltipTextWidth + 2, tooltipY - 3 + 1, tooltipX + tooltipTextWidth + 3, tooltipY + tooltipHeight + 3 - 1, borderColorStart, borderColorEnd);
-        drawGradientRect(zLevel, tooltipX - 3, tooltipY - 3, tooltipX + tooltipTextWidth + 3, tooltipY - 3 + 1, borderColorStart, borderColorStart);
-        drawGradientRect(zLevel, tooltipX - 3, tooltipY + tooltipHeight + 2, tooltipX + tooltipTextWidth + 3, tooltipY + tooltipHeight + 3, borderColorEnd, borderColorEnd);
+        fillGradient(zLevel, tooltipX - 3, tooltipY - 4, tooltipX + tooltipTextWidth + 3, tooltipY - 3, backgroundColor, backgroundColor);
+        fillGradient(zLevel, tooltipX - 3, tooltipY + tooltipHeight + 3, tooltipX + tooltipTextWidth + 3, tooltipY + tooltipHeight + 4, backgroundColor, backgroundColor);
+        fillGradient(zLevel, tooltipX - 3, tooltipY - 3, tooltipX + tooltipTextWidth + 3, tooltipY + tooltipHeight + 3, backgroundColor, backgroundColor);
+        fillGradient(zLevel, tooltipX - 4, tooltipY - 3, tooltipX - 3, tooltipY + tooltipHeight + 3, backgroundColor, backgroundColor);
+        fillGradient(zLevel, tooltipX + tooltipTextWidth + 3, tooltipY - 3, tooltipX + tooltipTextWidth + 4, tooltipY + tooltipHeight + 3, backgroundColor, backgroundColor);
+        fillGradient(zLevel, tooltipX - 3, tooltipY - 3 + 1, tooltipX - 3 + 1, tooltipY + tooltipHeight + 3 - 1, borderColorStart, borderColorEnd);
+        fillGradient(zLevel, tooltipX + tooltipTextWidth + 2, tooltipY - 3 + 1, tooltipX + tooltipTextWidth + 3, tooltipY + tooltipHeight + 3 - 1, borderColorStart, borderColorEnd);
+        fillGradient(zLevel, tooltipX - 3, tooltipY - 3, tooltipX + tooltipTextWidth + 3, tooltipY - 3 + 1, borderColorStart, borderColorStart);
+        fillGradient(zLevel, tooltipX - 3, tooltipY + tooltipHeight + 2, tooltipX + tooltipTextWidth + 3, tooltipY + tooltipHeight + 3, borderColorEnd, borderColorEnd);
 
         for (int lineNumber = 0; lineNumber < textLines.size(); lineNumber++) {
             String line = textLines.get(lineNumber);
@@ -199,13 +199,13 @@ public class ItemScreenshotManager {
             tooltipY += 10;
         }
 
-        GlStateManager._enableLighting();
+        GlStateManager.enableLighting();
         GlStateManager.enableDepth();
         RenderHelper.enableStandardItemLighting();
         GlStateManager.enableRescaleNormal();
     }
 
-    private static void drawGradientRect(int zLevel, int left, int top, int right, int bottom, int startColor, int endColor) {
+    private static void fillGradient(int zLevel, int left, int top, int right, int bottom, int startColor, int endColor) {
         float startAlpha = (float)(startColor >> 24 & 255) / 255.0F;
         float startRed   = (float)(startColor >> 16 & 255) / 255.0F;
         float startGreen = (float)(startColor >>  8 & 255) / 255.0F;
@@ -216,7 +216,7 @@ public class ItemScreenshotManager {
         float endBlue    = (float)(endColor         & 255) / 255.0F;
 
         GlStateManager.disableTexture2D();
-        GlStateManager._enableBlend();
+        GlStateManager.enableBlend();
         GlStateManager.disableAlpha();
         GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
         GlStateManager.shadeModel(GL11.GL_SMOOTH);
@@ -231,7 +231,7 @@ public class ItemScreenshotManager {
         tessellator.end();
 
         GlStateManager.shadeModel(GL11.GL_FLAT);
-        GlStateManager._disableBlend();
+        GlStateManager.disableBlend();
         GlStateManager.enableAlpha();
         GlStateManager.enableTexture2D();
     }

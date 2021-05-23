@@ -4,6 +4,7 @@
 
 package com.wynntils.modules.questbook.instances;
 
+import com.wynntils.McIf;
 import com.wynntils.core.framework.instances.PlayerInfo;
 import com.wynntils.core.framework.instances.data.CharacterData;
 import com.wynntils.core.utils.ItemUtils;
@@ -16,8 +17,6 @@ import net.minecraft.util.text.TextFormatting;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static net.minecraft.util.text.TextFormatting.getTextWithoutFormattingCodes;
 
 public class DiscoveryInfo {
 
@@ -67,7 +66,7 @@ public class DiscoveryInfo {
 
         // Guild territory profile
         if (type == DiscoveryType.TERRITORY || type == DiscoveryType.WORLD) {
-            String apiName = TextFormatting.getTextWithoutFormattingCodes(name);
+            String apiName = McIf.getTextWithoutFormattingCodes(name);
             guildTerritory = WebManager.getTerritories().get(apiName);
             if (guildTerritory == null) {
                 guildTerritory = WebManager.getTerritories().get(apiName.replace('\'', '’'));
@@ -97,7 +96,7 @@ public class DiscoveryInfo {
 
         // Guild territory profile
         if (type == DiscoveryType.TERRITORY || type == DiscoveryType.WORLD) {
-            String apiName = TextFormatting.getTextWithoutFormattingCodes(name);
+            String apiName = McIf.getTextWithoutFormattingCodes(name);
             guildTerritory = WebManager.getTerritories().get(apiName);
             if (guildTerritory == null) {
                 guildTerritory = WebManager.getTerritories().get(apiName.replace('\'', '’'));

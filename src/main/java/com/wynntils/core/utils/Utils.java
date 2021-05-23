@@ -8,11 +8,11 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.wynntils.McIf;
 import com.wynntils.core.utils.reflections.ReflectionFields;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.MainWindow;
-import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -146,8 +146,8 @@ public class Utils {
      * Return true if the Screen is the character information page (selected from the compass)
      */
     public static boolean isCharacterInfoPage(Screen gui) {
-        if (!(gui instanceof GuiContainer)) return false;
-        Matcher m = CHAR_INFO_PAGE_TITLE.matcher(((GuiContainer)gui).inventorySlots.getSlot(0).inventory.getName());
+        if (!(gui instanceof ContainerScreen)) return false;
+        Matcher m = CHAR_INFO_PAGE_TITLE.matcher(((ContainerScreen)gui).getMenu().getSlot(0).container.getName());
         return m.find();
     }
 
@@ -155,8 +155,8 @@ public class Utils {
      * @return true if the Screen is the server selection, false otherwise
      */
     public static boolean isServerSelector(Screen gui) {
-        if (!(gui instanceof GuiContainer)) return false;
-        Matcher m = SERVER_SELECTOR_TITLE.matcher(((GuiContainer) gui).inventorySlots.getSlot(0).inventory.getName());
+        if (!(gui instanceof ContainerScreen)) return false;
+        Matcher m = SERVER_SELECTOR_TITLE.matcher(((ContainerScreen) gui).getMenu().getSlot(0).container.getName());
         return m.find();
     }
 
@@ -169,12 +169,12 @@ public class Utils {
      */
     public static ScorePlayerTeam createFakeScoreboard(String name, Team.CollisionRule rule) {
         Scoreboard scoreboard = McIf.world().getScoreboard();
-        if (scoreboard.getTeam(name) != null) return scoreboard.getTeam(name);
+        if (scoreboard.getPlayerTeam(name) != null) return scoreboard.getPlayerTeam(name);
 
-        String player = McIf.player().getName();
+        String player = McIf.toText(McIf.player().getName());
         if (scoreboard.getPlayersTeam(player) != null) previousTeam = scoreboard.getPlayersTeam(player).getName();
 
-        ScorePlayerTeam team = scoreboard.createTeam(name);
+        ScorePlayerTeam team = scoreboard.addPlayerTeam(name);
         team.setCollisionRule(rule);
 
         scoreboard.addPlayerToTeam(player, name);
@@ -188,9 +188,9 @@ public class Utils {
      */
     public static void removeFakeScoreboard(String name) {
         Scoreboard scoreboard = McIf.world().getScoreboard();
-        if (scoreboard.getTeam(name) == null) return;
+        if (scoreboard.getPlayerTeam(name) == null) return;
 
-        scoreboard.removeTeam(scoreboard.getTeam(name));
+        scoreboard.removeTeam(scoreboard.getPlayerTeam(name));
         if (previousTeam != null) scoreboard.addPlayerToTeam(McIf.player().getName(), previousTeam);
     }
 
@@ -199,7 +199,7 @@ public class Utils {
      *
      * @param screen the provided screen
      */
-    public static void displayGuiScreen(Screen screen) {
+    public static void setScreen(Screen screen) {
         Screen oldScreen = McIf.mc().screen;
 
         GuiOpenEvent event = new GuiOpenEvent(screen);
@@ -208,7 +208,7 @@ public class Utils {
 
         if (oldScreen == screen) return;
         if (oldScreen != null) {
-            oldScreen.onGuiClosed();
+            oldScreen.onClose();
         }
 
         McIf.mc().screen = screen;
@@ -269,7 +269,7 @@ public class Utils {
         final Pattern INGREDIENT_PATTERN = Pattern.compile(" +\\[✫+\\]");
 
         String name = stack.getDisplayName();
-        name = TextFormatting.getTextWithoutFormattingCodes(name);
+        name = McIf.getTextWithoutFormattingCodes(name);
         name = PERCENTAGE_PATTERN.matcher(name).replaceAll("");
         name = INGREDIENT_PATTERN.matcher(name).replaceAll("");
         if (name.startsWith("Perfect ")) {
@@ -321,7 +321,7 @@ public class Utils {
         urlComponent.getStyle().setUnderlined(true);
         text.appendSibling(urlComponent);
 
-        McIf.player().sendMessage(text);
+        McIf.sendMessage(text);
     }
 
     public static String encodeUrl(String url) {
@@ -360,7 +360,7 @@ public class Utils {
         }
     }
 
-    public static void tab(int amount, GuiTextField... tabList) {
+    public static void tab(int amount, TextFieldWidget... tabList) {
         tab(amount, Arrays.asList(tabList));
     }
 
@@ -369,10 +369,10 @@ public class Utils {
      * next one (or previous one if amount is -1), wrapping around.
      * Focuses the first one if there is no focused field.
      */
-    public static void tab(int amount, List<GuiTextField> tabList) {
+    public static void tab(int amount, List<TextFieldWidget> tabList) {
         int focusIndex = -1;
         for (int i = 0; i < tabList.size(); ++i) {
-            GuiTextField field = tabList.get(i);
+            TextFieldWidget field = tabList.get(i);
             if (field.isFocused()) {
                 focusIndex = i;
                 field.setCursorPosition(0);
@@ -382,10 +382,10 @@ public class Utils {
             }
         }
         focusIndex = focusIndex == -1 ? 0 : Math.floorMod(focusIndex + amount, tabList.size());
-        GuiTextField selected = tabList.get(focusIndex);
+        TextFieldWidget selected = tabList.get(focusIndex);
         selected.setFocused(true);
         selected.setCursorPosition(0);
-        selected.setSelectionPos(selected.getText().length());
+        selected.setSelectionPos(selected.getValue().length());
     }
 
     public static String getNameFromMetadata(List <EntityDataManager.DataEntry<?>> dataManagerEntries) {
@@ -427,7 +427,7 @@ public class Utils {
 
 
     public static boolean isKeyDown(int keycode) {
-        int state = GLFW.glfwGetKey(ModCore.mc().getWindow().getWindow(), keycode) == GLFW.GLFW_PRESS
+        int state = GLFW.glfwGetKey(McIf.mc().getWindow().getWindow(), keycode);
         return (state == GLFW.GLFW_PRESS);
     }
 

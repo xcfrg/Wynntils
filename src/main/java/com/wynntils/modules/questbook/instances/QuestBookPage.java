@@ -4,6 +4,7 @@
 
 package com.wynntils.modules.questbook.instances;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.wynntils.McIf;
 import com.wynntils.Reference;
 import com.wynntils.core.framework.enums.wynntils.WynntilsSound;
@@ -19,10 +20,10 @@ import com.wynntils.modules.core.enums.UpdateStream;
 import com.wynntils.modules.questbook.configs.QuestBookConfig;
 import com.wynntils.modules.questbook.enums.QuestBookPages;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiPageButtonList;
+import net.minecraft.client.gui.widget.button.ChangePageButton;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.GuiTextField;
-import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.client.gui.widget.TextFieldWidget;
+import com.wynntils.transition.GlStateManager;
 import net.minecraft.util.text.TextFormatting;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.input.Mouse;
@@ -49,7 +50,7 @@ public class QuestBookPage extends Screen {
     protected boolean acceptNext, acceptBack;
     protected int pages = 1;
     protected int selected;
-    protected GuiTextField textField = null;
+    protected TextFieldWidget textField = null;
 
     // Animation
     protected long lastTick;
@@ -83,7 +84,7 @@ public class QuestBookPage extends Screen {
      * Resets all basic information needed for various features on all pages
      */
     @Override
-    public void initGui() {
+    public void init() {
         if (open) {
             if (!showSearchBar) return;
 
@@ -101,12 +102,12 @@ public class QuestBookPage extends Screen {
         lastTick = McIf.getSystemTime();
 
         if (showSearchBar) {
-            textField = new GuiTextField(0, McIf.mc().font, width / 2 + 32, height / 2 - 97, 113, 23);
+            textField = new TextFieldWidget(0, McIf.mc().font, width / 2 + 32, height / 2 - 97, 113, 23);
             textField.setFocused(!QuestBookConfig.INSTANCE.searchBoxClickRequired);
-            textField.setMaxStringLength(50);
+            textField.setMaxLength(50);
             textField.setEnableBackgroundDrawing(false);
             textField.setCanLoseFocus(QuestBookConfig.INSTANCE.searchBoxClickRequired);
-            textField.setGuiResponder(new GuiPageButtonList.GuiResponder() {
+            textField.setGuiResponder(new ChangePageButton.GuiResponder() {
 
                 @Override
                 public void setEntryValue(int id, String value) {
@@ -125,13 +126,13 @@ public class QuestBookPage extends Screen {
     }
 
     @Override
-    public void onGuiClosed() {
+    public void onClose() {
         Keyboard.enableRepeatEvents(false);
     }
 
     @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        super.drawScreen(mouseX, mouseY, partialTicks);
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
+        super.render(matrix, mouseX, mouseY, partialTicks);
 
         int x = width / 2;
         int y = height / 2;
@@ -184,17 +185,18 @@ public class QuestBookPage extends Screen {
     }
 
     @Override
-    public void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-        if (!showSearchBar) return;
+    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+        if (!showSearchBar) return false;
 
         textField.mouseClicked(mouseX, mouseY, mouseButton);
 
-        if (mouseButton != 1) return;
+        if (mouseButton != 1) return false;
         if (mouseX < textField.x || mouseX >= textField.x + textField.width) return;
         if (mouseY < textField.y || mouseY >= textField.y + textField.height) return;
 
-        textField.setText("");
+        textField.setValue("");
         searchUpdate("");
+        return true;
     }
 
     @Override
@@ -216,19 +218,19 @@ public class QuestBookPage extends Screen {
     }
 
     @Override
-    public void keyTyped(char typedChar, int keyCode) throws IOException {
-        if (keyCode == GLFW.GLFW_KEY_LEFT_SHIFT || keyCode == GLFW.GLFW_KEY_RIGHT_SHIFT || keyCode == GLFW.GLFW_KEY_LCONTROL || keyCode == GLFW.GLFW_KEY_RCONTROL) return;
+    public boolean keyPressed(int typedChar, int keyCode, int j) {
+        if (keyCode == GLFW.GLFW_KEY_LEFT_SHIFT || keyCode == GLFW.GLFW_KEY_RIGHT_SHIFT || keyCode == GLFW.GLFW_KEY_LEFT_CONTROL || keyCode == GLFW.GLFW_KEY_RIGHT_CONTROL) return false;
         if (showSearchBar) {
             textField.textboxKeyTyped(typedChar, keyCode);
             currentPage = 1;
             refreshAccepts();
             updateSearch();
         }
-        super.keyTyped(typedChar, keyCode);
+        return super.keyPressed(typedChar, keyCode, j);
     }
 
     @Override
-    public void updateScreen() {
+    public void tick() {
         if (showSearchBar) {
             textField.updateCursorCounter();
         }
@@ -237,7 +239,7 @@ public class QuestBookPage extends Screen {
     protected void renderHoveredText(int mouseX, int mouseY) {
         ScreenRenderer.beginGL(0, 0);
         {
-            GlStateManager._disableLighting();
+            GlStateManager.disableLighting();
             if (hoveredText != null) drawHoveringText(hoveredText, mouseX, mouseY);
         }
         ScreenRenderer.endGL();
@@ -274,12 +276,12 @@ public class QuestBookPage extends Screen {
         this.showAnimation = showAnimation;
 
         if (showAnimation) WynntilsSound.QUESTBOOK_OPENING.play(); // sfx
-        McIf.mc().displayGuiScreen(this);
+        McIf.mc().setScreen(this);
     }
 
     public void updateSearch() {
         if (showSearchBar && textField != null) {
-            searchUpdate(textField.getText());
+            searchUpdate(textField.getValue());
         }
     }
 

@@ -4,6 +4,7 @@
 
 package com.wynntils.modules.map.overlays.ui;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.wynntils.McIf;
 import com.wynntils.Reference;
 import com.wynntils.core.framework.rendering.ScreenRenderer;
@@ -17,7 +18,7 @@ import com.wynntils.modules.map.overlays.enums.MapButtonType;
 import com.wynntils.modules.map.overlays.objects.MapTerritory;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.wynntils.transition.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.math.MathHelper;
@@ -48,8 +49,8 @@ public class GuildWorldMapUI extends WorldMapUI {
     }
 
     @Override
-    public void initGui() {
-        super.initGui();
+    public void init() {
+        super.init();
 
         this.mapButtons.clear();
 
@@ -80,13 +81,13 @@ public class GuildWorldMapUI extends WorldMapUI {
     }
 
     @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
         // HeyZeer0: This detects if the user is holding the map key;
         if (!holdingMapKey && (System.currentTimeMillis() - creationTime >= 150) && isHoldingMapKey()) holdingMapKey = true;
 
         // HeyZeer0: This close the map if the user was pressing the map key and after a moment dropped it
         if (holdingMapKey && !isHoldingMapKey()) {
-            McIf.mc().displayGuiScreen(null);
+            McIf.mc().setScreen(null);
             return;
         }
 
@@ -104,7 +105,7 @@ public class GuildWorldMapUI extends WorldMapUI {
 
         ScreenRenderer.endGL();
 
-        super.drawScreen(mouseX, mouseY, partialTicks);
+        super.render(matrix, mouseX, mouseY, partialTicks);
     }
 
     protected void drawIcons(int mouseX, int mouseY, float partialTicks) {
@@ -126,9 +127,9 @@ public class GuildWorldMapUI extends WorldMapUI {
 
             Point drawingOrigin = ScreenRenderer.drawingOrigin();
 
-            GlStateManager._pushMatrix();
+            GlStateManager.pushMatrix();
             GlStateManager.translate(drawingOrigin.x + playerPositionX, drawingOrigin.y + playerPositionZ, 0);
-            GlStateManager.rotate(180 + MathHelper.fastFloor(McIf.player().rotationYaw), 0, 0, 1);
+            GlStateManager.rotate(180 + MathHelper.fastFloor(McIf.player().yRot), 0, 0, 1);
             GlStateManager.translate(-drawingOrigin.x - playerPositionX, -drawingOrigin.y - playerPositionZ, 0);
 
             MapConfig.PointerType type = MapConfig.Textures.INSTANCE.pointerStyle;
@@ -138,11 +139,11 @@ public class GuildWorldMapUI extends WorldMapUI {
             renderer.drawRectF(Textures.Map.map_pointers, playerPositionX - type.dWidth * 1.5f, playerPositionZ - type.dHeight * 1.5f, playerPositionX + type.dWidth * 1.5f, playerPositionZ + type.dHeight * 1.5f, 0, type.yStart, type.width, type.yStart + type.height);
             GlStateManager.color(1, 1, 1, 1);
 
-            GlStateManager._popMatrix();
+            GlStateManager.popMatrix();
         }
 
         if (showTradeRoutes) generateTradeRoutes();
-        territories.values().forEach(c -> c.drawScreen(mouseX, mouseY, partialTicks, showTerritory, resourceColors, !showOwners, showOwners));
+        territories.values().forEach(c -> c.render(mouseX, mouseY, partialTicks, showTerritory, resourceColors, !showOwners, showOwners));
         territories.values().forEach(c -> c.postDraw(mouseX, mouseY, partialTicks, width, height));
 
         clearMask();
@@ -168,7 +169,7 @@ public class GuildWorldMapUI extends WorldMapUI {
     }
 
     protected void drawTradeRoute(MapTerritory origin, MapTerritory destination) {
-        GlStateManager._pushMatrix();
+        GlStateManager.pushMatrix();
         {
             GlStateManager.disableTexture2D();
             GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
@@ -196,7 +197,7 @@ public class GuildWorldMapUI extends WorldMapUI {
 
             GlStateManager.enableTexture2D();
         }
-        GlStateManager._popMatrix();
+        GlStateManager.popMatrix();
     }
 
     private static boolean isHoldingMapKey() {
@@ -211,13 +212,13 @@ public class GuildWorldMapUI extends WorldMapUI {
     }
 
     @Override
-    protected void keyTyped(char typedChar, int keyCode) throws IOException {
-        if (!holdingMapKey && keyCode == MapModule.getModule().getGuildMapKey().getKeyBinding().getKeyCode()) {
-            McIf.mc().displayGuiScreen(null);
-            return;
+    public boolean keyPressed(int typedChar, int keyCode, int j) {
+        if (!holdingMapKey && keyCode == MapModule.getModule().getGuildMapKey().getKeyBinding().getKey().getValue()) {
+            McIf.mc().setScreen(null);
+            return true;
         }
 
-        super.keyTyped(typedChar, keyCode);
+        return super.keyPressed(typedChar, keyCode, j);
     }
 
 }

@@ -17,7 +17,7 @@ import net.minecraft.scoreboard.ScoreObjective;
 import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraftforge.client.GuiIngameForge;
+import net.minecraftforge.client.IngameGuiForge;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 
 public class ScoreboardOverlay extends Overlay {
@@ -60,13 +60,13 @@ public class ScoreboardOverlay extends Overlay {
             width = Math.max(width, font.width(line));
         }
 
-        int height = scores.size() * font.FONT_HEIGHT;
+        int height = scores.size() * font.lineHeight;
         int yOffset = height/3;
         int xOffset = -3 - width;
 
         // Background box
         if (OverlayConfig.Scoreboard.INSTANCE.opacity > 0) {
-            int titleOffset = OverlayConfig.Scoreboard.INSTANCE.showTitle ? font.FONT_HEIGHT + 1 : 1;
+            int titleOffset = OverlayConfig.Scoreboard.INSTANCE.showTitle ? font.lineHeight + 1 : 1;
             drawRect(OverlayConfig.Scoreboard.INSTANCE.backgroundColor, xOffset - 2, yOffset, -1, yOffset - height - titleOffset);
         }
 
@@ -78,23 +78,23 @@ public class ScoreboardOverlay extends Overlay {
             String score = TextFormatting.RED + "" + s.getScorePoints();
 
             // draw line, including score if enabled
-            int y = yOffset - (lineCount * font.FONT_HEIGHT);
+            int y = yOffset - (lineCount * font.lineHeight);
             font.drawString(name, drawingOrigin().x + xOffset, drawingOrigin().y + y, CommonColors.WHITE.toInt());
             if (OverlayConfig.Scoreboard.INSTANCE.showNumbers) font.drawString(score, drawingOrigin().x - 1 - font.width(score), drawingOrigin().y + y, CommonColors.WHITE.toInt());
 
             lineCount++;
             if (lineCount > scores.size() && OverlayConfig.Scoreboard.INSTANCE.showTitle) { // end of scores, draw title if enabled
                 String title = objective.getDisplayName();
-                font.drawString(title, drawingOrigin().x + xOffset + width/2 - font.width(title)/2, drawingOrigin().y + y - font.FONT_HEIGHT, CommonColors.WHITE.toInt());
+                font.drawString(title, drawingOrigin().x + xOffset + width/2 - font.width(title)/2, drawingOrigin().y + y - font.lineHeight, CommonColors.WHITE.toInt());
             }
         }
 
     }
 
     private void removeObjectiveLines(List<Score> scores) {
-        scores.removeIf(s -> TextFormatting.getTextWithoutFormattingCodes(s.getPlayerName()).matches(ObjectivesOverlay.OBJECTIVE_PATTERN.pattern()));
-        scores.removeIf(s -> TextFormatting.getTextWithoutFormattingCodes(s.getPlayerName()).matches("- All done"));
-        scores.removeIf(s -> TextFormatting.getTextWithoutFormattingCodes(s.getPlayerName()).matches("(Daily )?Objectives?:"));
+        scores.removeIf(s -> McIf.getTextWithoutFormattingCodes(s.getPlayerName()).matches(ObjectivesOverlay.OBJECTIVE_PATTERN.pattern()));
+        scores.removeIf(s -> McIf.getTextWithoutFormattingCodes(s.getPlayerName()).matches("- All done"));
+        scores.removeIf(s -> McIf.getTextWithoutFormattingCodes(s.getPlayerName()).matches("(Daily )?Objectives?:"));
     }
 
     private void removeCompassLines(List<Score> scores) {
@@ -105,20 +105,20 @@ public class ScoreboardOverlay extends Overlay {
         List<Score> toRemove = new ArrayList<>();
         for (int i = scores.size()-1; i >= 0; i--) {
             Score score = scores.get(i);
-            if (!TextFormatting.getTextWithoutFormattingCodes(score.getPlayerName()).isEmpty()) continue;
-            if (i == 0 || TextFormatting.getTextWithoutFormattingCodes(scores.get(i-1).getPlayerName()).isEmpty())
+            if (!McIf.getTextWithoutFormattingCodes(score.getPlayerName()).isEmpty()) continue;
+            if (i == 0 || McIf.getTextWithoutFormattingCodes(scores.get(i-1).getPlayerName()).isEmpty())
                 toRemove.add(score);
         }
 
         scores.removeAll(toRemove);
 
         // remove title spacer if title is disabled
-        if (!OverlayConfig.Scoreboard.INSTANCE.showTitle && !scores.isEmpty() && TextFormatting.getTextWithoutFormattingCodes(scores.get(scores.size()-1).getPlayerName()).isEmpty())
+        if (!OverlayConfig.Scoreboard.INSTANCE.showTitle && !scores.isEmpty() && McIf.getTextWithoutFormattingCodes(scores.get(scores.size()-1).getPlayerName()).isEmpty())
             scores.remove(scores.size()-1);
     }
 
     public static void enableCustomScoreboard(boolean enabled) {
-        GuiIngameForge.renderObjective = !enabled;
+        IngameGuiForge.renderObjective = !enabled;
     }
 
 }

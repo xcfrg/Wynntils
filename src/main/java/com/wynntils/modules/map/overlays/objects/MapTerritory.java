@@ -4,6 +4,7 @@
 
 package com.wynntils.modules.map.overlays.objects;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.wynntils.core.framework.rendering.ScreenRenderer;
 import com.wynntils.core.framework.rendering.SmartFontRenderer;
 import com.wynntils.core.framework.rendering.colors.CommonColors;
@@ -16,7 +17,7 @@ import com.wynntils.modules.map.instances.MapProfile;
 import com.wynntils.modules.map.managers.GuildResourceManager;
 import com.wynntils.modules.map.overlays.renderer.TerritoryInfoUI;
 import com.wynntils.webapi.profiles.TerritoryProfile;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.wynntils.transition.GlStateManager;
 
 public class MapTerritory {
 
@@ -80,7 +81,7 @@ public class MapTerritory {
         return territory;
     }
 
-    public void drawScreen(int mouseX, int mouseY, float partialTicks, boolean territoryArea, boolean resourceColor, boolean showHeadquarters, boolean showNames) {
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks, boolean territoryArea, boolean resourceColor, boolean showHeadquarters, boolean showNames) {
         if (!shouldRender || renderer == null) return;
 
         CustomColor color;

@@ -4,6 +4,7 @@
 
 package com.wynntils.modules.visual.overlays;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.wynntils.McIf;
 import com.wynntils.core.events.custom.GuiOverlapEvent;
 import com.wynntils.core.framework.interfaces.Listener;
@@ -21,7 +22,7 @@ public class OverlayEvents implements Listener {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void initClassMenu(GuiOverlapEvent.ChestOverlap.InitGui e) {
         if (!VisualConfig.CharacterSelector.INSTANCE.enabled) return;
-        if (!e.getGui().getLowerInv().getName().contains("Select a Class")) return;
+        if (!McIf.toText(e.getGui().getTitle()).contains("Select a Class")) return;
 
         WindowedResolution res = new WindowedResolution(480, 254);
         fakeCharacterSelector = new CharacterSelectorUI(null, e.getGui(), res.getScaleFactor());
@@ -30,7 +31,7 @@ public class OverlayEvents implements Listener {
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void closeCharacterMenu(GuiOverlapEvent.ChestOverlap.GuiClosed e) {
-        if (!e.getGui().getLowerInv().getName().contains("Select a Class")) return;
+        if (!McIf.toText(e.getGui().getTitle()).contains("Select a Class")) return;
 
         fakeCharacterSelector = null;
     }
@@ -39,7 +40,7 @@ public class OverlayEvents implements Listener {
     public void replaceCharacterMenuDraw(GuiOverlapEvent.ChestOverlap.DrawScreen.Pre e) {
         if (fakeCharacterSelector == null) return;
 
-        fakeCharacterSelector.drawScreen(e.getMouseX(), e.getMouseY(), e.getPartialTicks());
+        fakeCharacterSelector.render(new MatrixStack(), e.getMouseX(), e.getMouseY(), e.getPartialTicks());
         e.setCanceled(true);
     }
 
@@ -55,7 +56,7 @@ public class OverlayEvents implements Listener {
     public void replaceMouseClickMove(GuiOverlapEvent.ChestOverlap.MouseClickMove e) {
         if (fakeCharacterSelector == null) return;
 
-        fakeCharacterSelector.mouseClickMove(e.getMouseX(), e.getMouseY(), e.getClickedMouseButton(), e.getTimeSinceLastClick());
+        fakeCharacterSelector.mouseDragged(e.getMouseX(), e.getMouseY(), e.getClickedMouseButton(), e.getTimeSinceLastClick(), 0);
         e.setCanceled(true);
     }
 
@@ -70,7 +71,7 @@ public class OverlayEvents implements Listener {
     public void replaceKeyTyped(GuiOverlapEvent.ChestOverlap.KeyTyped e) {
         if (fakeCharacterSelector == null) return;
 
-        fakeCharacterSelector.keyTyped(e.getTypedChar(), e.getKeyCode());
+        fakeCharacterSelector.keyPressed(e.getTypedChar(), e.getKeyCode(), 0);
         e.setCanceled(true);
     }
 

@@ -4,6 +4,7 @@
 
 package com.wynntils.core.utils;
 
+import com.wynntils.McIf;
 import com.wynntils.core.utils.objects.IntRange;
 import com.wynntils.core.utils.reference.EmeraldSymbols;
 import com.wynntils.webapi.WebManager;
@@ -97,7 +98,7 @@ public class ItemUtils {
         if (loreTag == null) return lore;
 
         for (int i = 0; i < loreTag.size(); ++i) {
-            lore.add(TextFormatting.getTextWithoutFormattingCodes(loreTag.getString(i)));
+            lore.add(McIf.getTextWithoutFormattingCodes(loreTag.getString(i)));
         }
 
         return lore;

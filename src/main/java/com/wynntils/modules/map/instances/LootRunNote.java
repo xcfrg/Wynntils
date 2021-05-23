@@ -9,9 +9,9 @@ import com.wynntils.core.utils.objects.Location;
 
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.renderer.entity.EntityRendererManager;
 
-import static com.mojang.blaze3d.platform.GlStateManager.*;
+import static com.wynntils.transition.GlStateManager.*;
 
 public class LootRunNote {
 
@@ -42,23 +42,23 @@ public class LootRunNote {
     }
 
     public void drawNote(CustomColor color) {
-        RenderManager render = McIf.mc().getRenderManager();
-        FontRenderer fr = render.getFontRenderer();
+        EntityRendererManager render = McIf.mc().getEntityRenderDispatcher();
+        FontRenderer fr = render.getFont();
 
         if (McIf.player().getDistanceSq(location.x, location.y, location.z) > 4096f)
             return; // only draw nametag when close
 
         String[] lines = StringUtils.wrapTextBySize(note, 200);
-        int offsetY = -(fr.FONT_HEIGHT * lines.length) / 2;
+        int offsetY = -(fr.lineHeight * lines.length) / 2;
 
         for (String line : lines) {
             drawNametag(line, color, (float) (location.x - render.viewerPosX), (float) (location.y - render.viewerPosY + 2), (float) (location.z - render.viewerPosZ), offsetY, render.playerViewY, render.playerViewX, render.options.thirdPersonView == 2);
-            offsetY += fr.FONT_HEIGHT;
+            offsetY += fr.lineHeight;
         }
     }
 
     private static void drawNametag(String input, CustomColor color, float x, float y, float z, int verticalShift, float viewerYaw, float viewerPitch, boolean isThirdPersonFrontal) {
-        _pushMatrix();
+        pushMatrix();
         {
             ScreenRenderer.beginGL(0, 0); // we set to 0 because we don't want the ScreenRender to handle this thing
             {
@@ -68,7 +68,7 @@ public class LootRunNote {
                 rotate(-viewerYaw, 0.0F, 1.0F, 0.0F);
                 rotate((float) (isThirdPersonFrontal ? -1 : 1) * viewerPitch, 1.0F, 0.0F, 0.0F);
                 scale(-0.025F, -0.025F, 0.025F);
-                _disableLighting();
+                disableLighting();
 
                 int middlePos = (int) renderer.width(input) / 2;
 
@@ -81,13 +81,13 @@ public class LootRunNote {
 
                 // returns back to normal
                 enableDepth();
-                _enableLighting();
-                _disableBlend();
+                enableLighting();
+                disableBlend();
                 color(1.0f, 1.0f, 1.0f, 1.0f);
             }
             ScreenRenderer.endGL();
         }
-        _popMatrix();
+        popMatrix();
     }
 
 }

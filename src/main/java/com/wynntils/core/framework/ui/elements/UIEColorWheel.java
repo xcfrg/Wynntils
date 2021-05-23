@@ -14,11 +14,13 @@ import com.wynntils.core.framework.ui.UI;
 import com.wynntils.modules.core.config.CoreDBConfig;
 import net.minecraft.client.audio.SimpleSound;
 import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.client.gui.GuiPageButtonList;
+import net.minecraft.client.gui.widget.button.ChangePageButton;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.GuiSlider;
-import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.client.gui.widget.OptionSlider;
+import com.wynntils.transition.GlStateManager;
 import net.minecraft.util.SoundEvents;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextComponent;
 import net.minecraft.util.text.TextFormatting;
 import org.apache.commons.lang3.text.WordUtils;
 import org.lwjgl.input.Mouse;
@@ -48,7 +50,7 @@ public class UIEColorWheel extends UIEClickZone {
         this.onAccept = onAccept;
 
         textBox = new UIETextBox(0, 0, 0, 16, 120, true, formatColourName(color), false, (ui, t) -> {
-            String text = textBox.getText().trim();
+            String text = textBox.getValue().trim();
             Matcher m;
             if (hexChecker.matcher(text).matches()) {
                 color = CustomColor.fromString(text.replace("#", ""), 1);
@@ -90,7 +92,7 @@ public class UIEColorWheel extends UIEClickZone {
     public void setColor(CustomColor color) {
         this.color = color;
 
-        textBox.setText(formatColourName(color));
+        textBox.setValue(formatColourName(color));
     }
 
     private String formatColourName(CustomColor color) {
@@ -111,11 +113,11 @@ public class UIEColorWheel extends UIEClickZone {
     public void click(int mouseX, int mouseY, MouseButton button, UI ui) {
         textBox.click(mouseX, mouseY, button, ui);
 
-        if (hovering) McIf.mc().displayGuiScreen(new ColorPickerGUI());
+        if (hovering) McIf.mc().setScreen(new ColorPickerGUI());
     }
 
-    public void keyTyped(char c, int i, UI ui) {
-        textBox.keyTyped(c, i, ui);
+    public boolean keyPressed(int c, int i, int j, UI ui) {
+        return textBox.keyPressed(c, i, j, ui);
     }
 
     @Override
@@ -136,8 +138,8 @@ public class UIEColorWheel extends UIEClickZone {
 
         Button applyButton;
         Button cancelButton;
-        GuiSlider valueSlider;
-        GuiSlider alphaSlider;
+        OptionSlider valueSlider;
+        OptionSlider alphaSlider;
 
         int clickedPosX, clickedPosY = 0;
 
@@ -148,6 +150,7 @@ public class UIEColorWheel extends UIEClickZone {
         boolean wheelSelected = false;
 
         public ColorPickerGUI() {
+            super(StringTextComponent.EMPTY);
             toChange = new CustomColor(color);
         }
 
@@ -156,25 +159,25 @@ public class UIEColorWheel extends UIEClickZone {
             if (button == applyButton) {
                 color = toChange;
 
-                McIf.mc().displayGuiScreen(backGui);
+                McIf.mc().setScreen(backGui);
                 McIf.mc().getSoundManager().play(SimpleSound.forUI(clickSound, 1f));
                 onAccept.accept(color);
                 if (colorText == null) {
-                    textBox.setText(formatColourName(color));
+                    textBox.setValue(formatColourName(color));
                 } else {
-                    textBox.setText(colorText);
+                    textBox.setValue(colorText);
                 }
             } else if (button == cancelButton) {
-                McIf.mc().displayGuiScreen(backGui);
+                McIf.mc().setScreen(backGui);
                 McIf.mc().getSoundManager().play(SimpleSound.forUI(clickSound, 1f));
             }
         }
 
         @Override
-        public void initGui() {
-            buttonList.add(applyButton = new Button(0, width/2 - 65, height/2 + 95, 50, 20, TextFormatting.GREEN + "Apply"));
-            buttonList.add(cancelButton = new Button(1, (width/2) + 15, height/2 + 95, 50, 20, TextFormatting.RED + "Cancel"));
-            buttonList.add(valueSlider = new GuiSlider(new GuiPageButtonList.GuiResponder() {
+        public void init() {
+            buttons.add(applyButton = new Button(0, width/2 - 65, height/2 + 95, 50, 20, TextFormatting.GREEN + "Apply"));
+            buttons.add(cancelButton = new Button(1, (width/2) + 15, height/2 + 95, 50, 20, TextFormatting.RED + "Cancel"));
+            buttons.add(valueSlider = new OptionSlider(new ChangePageButton.GuiResponder() {
                 @Override public void setEntryValue(int id, boolean value) {}
                 @Override public void setEntryValue(int id, String value) {}
                 @Override public void setEntryValue(int id, float value) {
@@ -184,7 +187,7 @@ public class UIEColorWheel extends UIEClickZone {
                 }
             }, 2, this.width/2 - (allowAlpha ? 155 : 75), this.height/2+71, "Brightness", 0, 1, toChange.toHSV()[2], (id, name, value) -> String.format("Brightness: %d%%", (int) (value * 100))));
             if (allowAlpha) {
-                buttonList.add(alphaSlider = new GuiSlider(new GuiPageButtonList.GuiResponder() {
+                buttons.add(alphaSlider = new OptionSlider(new ChangePageButton.GuiResponder() {
                     @Override public void setEntryValue(int id, boolean value) {}
                     @Override public void setEntryValue(int id, String value) {}
                     @Override public void setEntryValue(int id, float value) {
@@ -195,7 +198,7 @@ public class UIEColorWheel extends UIEClickZone {
             }
             setColor(toChange);
 
-            super.initGui();
+            super.init();
         }
 
         private void setColor(CustomColor c) {
@@ -208,9 +211,9 @@ public class UIEColorWheel extends UIEClickZone {
             double r = s * (double) circleRadius;
             clickedPosX = width/2 + (int) Math.round(r * Math.cos(theta));
             clickedPosY = height/2 - 13 - (int) Math.round(r * Math.sin(theta));
-            valueSlider.setSliderValue(v, false);
+            valueSlider.setValue(v, false);
             if (allowAlpha) {
-                alphaSlider.setSliderValue(c.a, false);
+                alphaSlider.setValue(c.a, false);
             }
         }
 
@@ -278,15 +281,16 @@ public class UIEColorWheel extends UIEClickZone {
         }
 
         @Override
-        protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-            if (mouseButton == 0 && changeColor(mouseX, mouseY, false)) return;
-            super.mouseClicked(mouseX, mouseY, mouseButton);
+        public boolean mouseClicked(int mouseX, int mouseY, int mouseButton) {
+            if (mouseButton == 0 && changeColor((int) mouseX, (int) mouseY, false)) return true;
+            return super.mouseClicked(mouseX, mouseY, mouseButton);
         }
 
         @Override
-        protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick) {
-            if (clickedMouseButton == 0 && changeColor(mouseX, mouseY, true)) return;
-            super.mouseClickMove(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
+        public boolean mouseDragged(int mouseX, int mouseY, int mouseButton, double d1, double d2) {
+            if (mouseButton == 0 && changeColor((int) mouseX, (int) mouseY, true)) return true;
+            super.mouseDragged(mouseX, mouseY, mouseButton, d1, d2);
+            return true;
         }
 
         @Override
@@ -301,16 +305,16 @@ public class UIEColorWheel extends UIEClickZone {
         public void handleMouseInput() throws IOException {
             int mDWheel = Mouse.getEventDWheel() * CoreDBConfig.INSTANCE.scrollDirection.getScrollDirection();
             if (mDWheel > 0) {
-                valueSlider.setSliderValue(Math.min(valueSlider.getSliderValue() + 0.1f, 1), true);
+                valueSlider.setValue(Math.min(valueSlider.getSliderValue() + 0.1f, 1), true);
             } else if (mDWheel < 0) {
-                valueSlider.setSliderValue(Math.max(valueSlider.getSliderValue() - 0.1f, 0), true);
+                valueSlider.setValue(Math.max(valueSlider.getSliderValue() - 0.1f, 0), true);
             }
 
             super.handleMouseInput();
         }
 
         @Override
-        public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
             drawDefaultBackground();
 
             beginGL(0, 0);
@@ -346,7 +350,7 @@ public class UIEColorWheel extends UIEClickZone {
                 drawRect(x + 3, y + 3, x + 17, y + 17, MinecraftChatColors.set.fromCode(i).toInt());
             }
 
-            super.drawScreen(mouseX, mouseY, partialTicks);
+            super.render(matrix, mouseX, mouseY, partialTicks);
         }
 
         private float getAlpha() {

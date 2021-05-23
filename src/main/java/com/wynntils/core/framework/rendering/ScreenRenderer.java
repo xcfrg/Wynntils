@@ -9,10 +9,12 @@ import com.wynntils.core.framework.rendering.colors.CustomColor;
 import com.wynntils.core.framework.rendering.textures.Texture;
 import com.wynntils.core.utils.StringUtils;
 import com.wynntils.modules.core.config.CoreDBConfig;
+import net.minecraft.client.AbstractOption;
 import net.minecraft.client.MainWindow;
-import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.client.renderer.RenderHelper;
+import com.wynntils.transition.GlStateManager;
+import com.wynntils.transition.RenderHelper;
 import net.minecraft.client.renderer.ItemRenderer;
+import net.minecraft.client.renderer.VirtualScreen;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.event.TickEvent;
 
@@ -29,6 +31,7 @@ import static org.lwjgl.opengl.GL11.*;
  */
 public class ScreenRenderer {
 
+    private static VirtualScreen virtualScreen;
     public static SmartFontRenderer font = null;
     public static MainWindow screen = null;
     private static boolean rendering = false;
@@ -54,12 +57,19 @@ public class ScreenRenderer {
      * except {@link com.wynntils.core.events.ClientEvents#onTick(TickEvent.ClientTickEvent)} !
      */
     public static void refresh() {
-        screen = new MainWindow(McIf.mc());
+        // FIXME: Probably wrong, possibly screen is not needed
+        if (virtualScreen == null) {
+            virtualScreen = new VirtualScreen(McIf.mc());
+        }
+        screen = virtualScreen.newWindow(null, McIf.mc().options.fullscreenVideoModeString, "Wynntils Renderer");
+
         if (font == null) {
             font = new SmartFontRenderer();
-            font.onResourceManagerReload(McIf.mc().getResourceManager());
+            // FIXME: is this not needed anymore??
+           // font.onResourceManagerReload(McIf.mc().getResourceManager());
         }
-        font.setUnicodeFlag(CoreDBConfig.INSTANCE.useUnicode);
+        // FIXME: might need better way
+        AbstractOption.FORCE_UNICODE_FONT.set(McIf.mc().options, CoreDBConfig.INSTANCE.useUnicode ? "true" : "false");
         if (itemRenderer == null)
             itemRenderer = McIf.mc().getItemRenderer();
     }
@@ -80,14 +90,14 @@ public class ScreenRenderer {
     public static void beginGL(int x, int y) {
         if (rendering) return;
         rendering = true;
-        GlStateManager._pushMatrix();
+        GlStateManager.pushMatrix();
         drawingOrigin = new Point(x, y);
         transformationOrigin = new Point(0, 0);
         resetScale();
         resetRotation();
         GlStateManager.enableAlpha();
         GlStateManager.color(1, 1, 1);
-        GlStateManager._enableBlend();
+        GlStateManager.enableBlend();
         GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
     }
 
@@ -105,7 +115,7 @@ public class ScreenRenderer {
 
         drawingOrigin = new Point(0, 0);
         transformationOrigin = new Point(0, 0);
-        GlStateManager._popMatrix();
+        GlStateManager.popMatrix();
         GlStateManager.color(1, 1, 1);
         rendering = false;
     }
@@ -189,7 +199,7 @@ public class ScreenRenderer {
         resetScale();
 
         GlStateManager.enableDepth();
-        GlStateManager._colorMask(false, false, false, true);
+        GlStateManager.colorMask(false, false, false, true);
         texture.bind();
         GlStateManager.glBegin(GL_QUADS);
         GlStateManager.glTexCoord2f(0, 0);
@@ -201,9 +211,9 @@ public class ScreenRenderer {
         GlStateManager.glTexCoord2f(1, 0);
         GlStateManager.glVertex3f(x2 + drawingOrigin.x, y1 + drawingOrigin.y, 1000.0F);
         GlStateManager.glEnd();
-        GlStateManager._colorMask(true, true, true, true);
-        GlStateManager._depthMask(false);
-        GlStateManager._depthFunc(GL_GREATER);
+        GlStateManager.colorMask(true, true, true, true);
+        GlStateManager.depthMask(false);
+        GlStateManager.depthFunc(GL_GREATER);
 
         mask = true;
 
@@ -229,7 +239,7 @@ public class ScreenRenderer {
         resetScale();
 
         GlStateManager.enableDepth();
-        GlStateManager._colorMask(false, false, false, true);
+        GlStateManager.colorMask(false, false, false, true);
         color.applyColor();
         GlStateManager.glBegin(GL_QUADS);
         GlStateManager.glVertex3f(x1 + drawingOrigin.x, y1 + drawingOrigin.y, 1000.0F);
@@ -237,9 +247,9 @@ public class ScreenRenderer {
         GlStateManager.glVertex3f(x2 + drawingOrigin.x, y2 + drawingOrigin.y, 1000.0F);
         GlStateManager.glVertex3f(x2 + drawingOrigin.x, y1 + drawingOrigin.y, 1000.0F);
         GlStateManager.glEnd();
-        GlStateManager._colorMask(true, true, true, true);
-        GlStateManager._depthMask(false);
-        GlStateManager._depthFunc(GL_GREATER);
+        GlStateManager.colorMask(true, true, true, true);
+        GlStateManager.depthMask(false);
+        GlStateManager.depthFunc(GL_GREATER);
 
         mask = true;
 
@@ -275,7 +285,7 @@ public class ScreenRenderer {
                 tyMax = ty2 / texture.height;
 
         GlStateManager.enableDepth();
-        GlStateManager._colorMask(false, false, false, true);
+        GlStateManager.colorMask(false, false, false, true);
         texture.bind();
 
         GlStateManager.glBegin(GL_QUADS);
@@ -288,9 +298,9 @@ public class ScreenRenderer {
         GlStateManager.glTexCoord2f(txMax, tyMin);
         GlStateManager.glVertex3f(xMax, yMin, 1000.0F);
         GlStateManager.glEnd();
-        GlStateManager._colorMask(true, true, true, true);
-        GlStateManager._depthMask(false);
-        GlStateManager._depthFunc(GL_GREATER);
+        GlStateManager.colorMask(true, true, true, true);
+        GlStateManager.depthMask(false);
+        GlStateManager.depthFunc(GL_GREATER);
 
         mask = true;
 
@@ -304,10 +314,10 @@ public class ScreenRenderer {
     public static void clearMask() {
         if (!mask || !rendering) return;
 
-        GlStateManager._depthMask(true);
+        GlStateManager.depthMask(true);
         GlStateManager.clear(GL_DEPTH_BUFFER_BIT);
         GlStateManager.enableDepth();
-        GlStateManager._depthFunc(GL_LEQUAL);
+        GlStateManager.depthFunc(GL_LEQUAL);
         GlStateManager.clearColor(1.0F, 1.0F, 1.0F, 1.0F);
         mask = false;
     }
@@ -336,8 +346,8 @@ public class ScreenRenderer {
         enableScissorTest();
 
         // Scissor test is in screen coordinates, so y is inverted and scale needs to be manually applied
-        int scale = screen.getScaleFactor();
-        glScissor((x + drawingOrigin.x) * scale, McIf.mc().displayHeight - (y + drawingOrigin.y + height) * scale, width * scale, height * scale);
+        int scale = (int) screen.getGuiScale();
+        glScissor((x + drawingOrigin.x) * scale, McIf.mc().getWindow().getHeight() - (y + drawingOrigin.y + height) * scale, width * scale, height * scale);
     }
 
     /**
@@ -355,8 +365,8 @@ public class ScreenRenderer {
         if (!rendering) return;
 
         enableScissorTest();
-        int scale = screen.getScaleFactor();
-        glScissor((x + drawingOrigin.x) * scale, 0, width * scale, McIf.mc().displayHeight);
+        int scale = (int) screen.getGuiScale();
+        glScissor((x + drawingOrigin.x) * scale, 0, width * scale, McIf.mc().getWindow().getHeight());
     }
 
     /**
@@ -367,8 +377,8 @@ public class ScreenRenderer {
         if (!rendering) return;
 
         enableScissorTest();
-        int scale = screen.getScaleFactor();
-        glScissor(0, McIf.mc().displayHeight - (y + drawingOrigin.y + height) * scale, McIf.mc().displayWidth, height * scale);
+        int scale = (int) screen.getGuiScale();
+        glScissor(0, McIf.mc().getWindow().getHeight() - (y + drawingOrigin.y + height) * scale, McIf.mc().getWindow().getWidth(), height * scale);
     }
 
     /**
@@ -456,7 +466,8 @@ public class ScreenRenderer {
             }
         }
 
-        return font.getCharWidth(text.charAt(0)) + SmartFontRenderer.CHAR_SPACING + width(text.substring(1));
+        // FIXME: this is perhaps not correct, and definitely not efficient
+        return font.getSplitter().stringWidth(String.valueOf(text.charAt(0))) + SmartFontRenderer.CHAR_SPACING + width(text.substring(1));
     }
 
     /** void drawRect
@@ -565,7 +576,7 @@ public class ScreenRenderer {
     public void drawRectF(Texture texture, float x1, float y1, float x2, float y2, float tx1, float ty1, float tx2, float ty2) {
         if (!rendering || !texture.loaded) return;
         GlStateManager.enableAlpha();
-        GlStateManager._enableBlend();
+        GlStateManager.enableBlend();
         GlStateManager.enableTexture2D();
 
         texture.bind();
@@ -757,11 +768,11 @@ public class ScreenRenderer {
      */
     public void drawProgressBar(Texture texture, int x1, int y1, int x2, int y2, int tx1, int ty1, int tx2, int ty2, float progress, float alpha) {
         int half = (ty1 + ty2) / 2;
-        GlStateManager._enableBlend();
+        GlStateManager.enableBlend();
         GlStateManager.color(1, 1, 1, alpha);
         drawProgressBar(texture, x1, y1, x2, y2, tx1, ty1, tx2, half + 1, progress, true);
         drawProgressBar(texture, x1, y1, x2, y2, tx1, half + 1, tx2, ty2, progress, false);
-        GlStateManager._disableBlend();
+        GlStateManager.disableBlend();
     }
 
     /** drawProgressBar
@@ -832,15 +843,16 @@ public class ScreenRenderer {
     private void drawItemStack(ItemStack is, int x, int y, boolean count, String text, boolean effects) {
         if (!rendering) return;
         RenderHelper.enableGUIStandardItemLighting();
-        itemRenderer.zLevel = 200.0F;
-        net.minecraft.client.gui.FontRenderer font = is.getItem().getFontRenderer(is);
-        if (font == null) font = font;
+        itemRenderer.blitOffset = 200.0F;
+        // FIXME: this is odd, and possibly broken
+   //     net.minecraft.client.gui.FontRenderer font = is.getItem().getFont(is);
+   //     if (font == null) font = font;
         if (effects)
-            itemRenderer.renderItemAndEffectIntoGUI(is, x + drawingOrigin.x, y + drawingOrigin.y);
+            itemRenderer.renderAndDecorateItem(is, x + drawingOrigin.x, y + drawingOrigin.y);
         else
-            itemRenderer.renderItemIntoGUI(is, x + drawingOrigin.x, y + drawingOrigin.y);
-        itemRenderer.renderItemOverlayIntoGUI(font, is, x + drawingOrigin.x, y + drawingOrigin.y, text.isEmpty() ? count ? Integer.toString(is.getCount()) : null : text);
-        itemRenderer.zLevel = 0.0F;
+            itemRenderer.renderGuiItem(is, x + drawingOrigin.x, y + drawingOrigin.y);
+        itemRenderer.renderGuiItemDecorations(font, is, x + drawingOrigin.x, y + drawingOrigin.y, text.isEmpty() ? count ? Integer.toString(is.getCount()) : null : text);
+        itemRenderer.blitOffset = 0.0F;
         RenderHelper.disableStandardItemLighting();
     }
 

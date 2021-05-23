@@ -34,24 +34,24 @@ public class UpdateAvailableScreen extends Screen {
     }
 
     @Override
-    public void initGui() {
-        this.buttonList.add(new Button(0, this.width / 2 - 100, this.height / 4 + 84, 200, 20, "View changelog"));
-        this.buttonList.add(new Button(1, this.width / 2 - 100, this.height / 4 + 108, 98, 20, "Update now"));
-        this.buttonList.add(new Button(2, this.width / 2 + 2, this.height / 4 + 108, 98, 20, "Update at exit"));
-        this.buttonList.add(new Button(3, this.width / 2 - 100, this.height / 4 + 132, 98, 20, "Ignore update"));
-        this.buttonList.add(new Button(4, this.width / 2 + 2, this.height / 4 + 132, 98, 20, "Cancel"));
+    public void init() {
+        this.buttons.add(new Button(0, this.width / 2 - 100, this.height / 4 + 84, 200, 20, "View changelog"));
+        this.buttons.add(new Button(1, this.width / 2 - 100, this.height / 4 + 108, 98, 20, "Update now"));
+        this.buttons.add(new Button(2, this.width / 2 + 2, this.height / 4 + 108, 98, 20, "Update at exit"));
+        this.buttons.add(new Button(3, this.width / 2 - 100, this.height / 4 + 132, 98, 20, "Ignore update"));
+        this.buttons.add(new Button(4, this.width / 2 + 2, this.height / 4 + 132, 98, 20, "Cancel"));
     }
 
     @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
         drawDefaultBackground();
 
-        int yOffset = Math.min(this.height / 2, this.height / 4 + 80 - McIf.mc().font.FONT_HEIGHT * 2);
-        drawCenteredString(McIf.mc().font, text, this.width/2, yOffset - McIf.mc().font.FONT_HEIGHT - 2, 0xFFFFFFFF);
+        int yOffset = Math.min(this.height / 2, this.height / 4 + 80 - McIf.mc().font.lineHeight * 2);
+        drawCenteredString(McIf.mc().font, text, this.width/2, yOffset - McIf.mc().font.lineHeight - 2, 0xFFFFFFFF);
         drawCenteredString(McIf.mc().font, "Update now or when leaving Minecraft?", this.width/2, yOffset, 0xFFFFFFFF);
-        drawCenteredString(McIf.mc().font, "(Updating now will exit Minecraft after downloading update)", this.width/2, yOffset + McIf.mc().font.FONT_HEIGHT + 2, 0xFFFFFFFF);
+        drawCenteredString(McIf.mc().font, "(Updating now will exit Minecraft after downloading update)", this.width/2, yOffset + McIf.mc().font.lineHeight + 2, 0xFFFFFFFF);
 
-        super.drawScreen(mouseX, mouseY, partialTicks);
+        super.render(matrix, mouseX, mouseY, partialTicks);
     }
 
     @Override
@@ -61,14 +61,14 @@ public class UpdateAvailableScreen extends Screen {
             CoreDBConfig.INSTANCE.showChangelogs = true;
             CoreDBConfig.INSTANCE.lastVersion = Reference.VERSION;
             CoreDBConfig.INSTANCE.saveSettings(CoreModule.getModule());
-            McIf.mc().displayGuiScreen(new UpdatingScreen(button.id == 1));
+            McIf.mc().setScreen(new UpdatingScreen(button.id == 1));
         } else if (button.id == 3) {
             // Ignore
             WebManager.skipJoinUpdate();
             ServerUtils.connect(null, server);
         } else if (button.id == 4) {
             // Cancel
-            McIf.mc().displayGuiScreen(null);
+            McIf.mc().setScreen(null);
         } else if (button.id == 0) {
             // View changelog
             boolean major = CoreDBConfig.INSTANCE.updateStream == UpdateStream.STABLE;

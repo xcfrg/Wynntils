@@ -15,10 +15,10 @@ import com.wynntils.core.utils.StringUtils;
 import com.wynntils.core.utils.objects.IntRange;
 import com.wynntils.modules.utilities.configs.UtilitiesConfig;
 import com.wynntils.webapi.profiles.item.enums.ItemTier;
-import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.client.renderer.BufferBuilder;
-import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.client.renderer.RenderHelper;
+import com.wynntils.transition.GlStateManager;
+import com.wynntils.transition.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.item.Items;
@@ -36,8 +36,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.lang.Math.PI;
-import static com.mojang.blaze3d.platform.GlStateManager.color;
-import static com.mojang.blaze3d.platform.GlStateManager.glTexEnvi;
+import static com.wynntils.transition.GlStateManager.color;
+import static com.wynntils.transition.GlStateManager.glTexEnvi;
 import static net.minecraft.util.math.MathHelper.cos;
 import static net.minecraft.util.math.MathHelper.sin;
 import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
@@ -61,9 +61,9 @@ public class RarityColorOverlay implements Listener {
 
     @SubscribeEvent
     public void onPlayerInventory(GuiOverlapEvent.InventoryOverlap.DrawGuiContainerBackgroundLayer e) {
-        GuiContainer guiContainer = e.getGui();
+        ContainerScreen guiContainer = e.getGui();
 
-        for (Slot s : guiContainer.inventorySlots.inventorySlots) {
+        for (Slot s : guiContainer.getMenu().slots) {
             if (!UtilitiesConfig.Items.INSTANCE.accesoryHighlight && s.slotNumber >= 9 && s.slotNumber <= 12)
                 continue;
             if (!UtilitiesConfig.Items.INSTANCE.hotbarHighlight && s.slotNumber >= 36 && s.slotNumber <= 41)
@@ -77,10 +77,10 @@ public class RarityColorOverlay implements Listener {
         }
     }
 
-    public static void drawChest(GuiContainer guiContainer, IInventory lowerInv, IInventory upperInv, boolean emeraldsUpperInv, boolean emeraldsLowerInv) {
+    public static void drawChest(ContainerScreen guiContainer, IInventory lowerInv, IInventory upperInv, boolean emeraldsUpperInv, boolean emeraldsLowerInv) {
         int playerInvSlotNumber = 0;
 
-        for (Slot s : guiContainer.inventorySlots.inventorySlots) {
+        for (Slot s : guiContainer.getMenu().slots) {
             if (s.inventory.getDisplayName().equals(McIf.player().inventory.getDisplayName())) {
                 playerInvSlotNumber++;
                 if (playerInvSlotNumber <= 4 && playerInvSlotNumber >= 1 && !UtilitiesConfig.Items.INSTANCE.accesoryHighlight)
@@ -98,7 +98,7 @@ public class RarityColorOverlay implements Listener {
         }
     }
 
-    private static void drawItemSlot(GuiContainer guiContainer, boolean isChest, Slot s) {
+    private static void drawItemSlot(ContainerScreen guiContainer, boolean isChest, Slot s) {
         ItemStack is = s.getItem();
         String lore = ItemUtils.getStringLore(is);
         String name = StringUtils.normalizeBadString(is.getDisplayName());
@@ -197,18 +197,18 @@ public class RarityColorOverlay implements Listener {
 
     }
 
-    private static void drawDurabilityArc(GuiContainer guiContainer, Slot s, float durability){
+    private static void drawDurabilityArc(ContainerScreen guiContainer, Slot s, float durability){
     	if (!UtilitiesConfig.Items.INSTANCE.craftedDurabilityBars) return;
     	if (durability == -1) return;
 
     	int x = guiContainer.getGuiLeft() + s.xPos;
         int y = guiContainer.getGuiTop() + s.yPos;
 
-        GlStateManager._disableLighting();
+        GlStateManager.disableLighting();
         GlStateManager.disableDepth();
         GlStateManager.disableTexture2D();
         GlStateManager.disableAlpha();
-        GlStateManager._enableBlend();
+        GlStateManager.enableBlend();
         GlStateManager.glLineWidth(4.0f);
 
         Tessellator tessellator = Tessellator.getInstance();
@@ -217,11 +217,11 @@ public class RarityColorOverlay implements Listener {
         int radius = (UtilitiesConfig.Items.INSTANCE.itemLevelArc) ? 7 : 8;
         drawArc(bufferbuilder, x, y, durability, radius, arcColor >> 16 & 255, arcColor >> 8 & 255, arcColor & 255, 160);
 
-        GlStateManager._disableBlend();
+        GlStateManager.disableBlend();
         GlStateManager.enableAlpha();
         GlStateManager.enableTexture2D();
         GlStateManager.enableDepth();
-        GlStateManager._enableLighting();
+        GlStateManager.enableLighting();
     }
 
     private static void drawArc(BufferBuilder renderer, int x, int y, float fill, int radius, int red, int green, int blue, int alpha) {
@@ -234,18 +234,18 @@ public class RarityColorOverlay implements Listener {
         Tessellator.getInstance().draw();
     }
 
-    private static void drawLevelArc(GuiContainer guiContainer, Slot s, IntRange level) {
+    private static void drawLevelArc(ContainerScreen guiContainer, Slot s, IntRange level) {
         if (!UtilitiesConfig.Items.INSTANCE.itemLevelArc) return;
         if (level == null) return;
 
         int x = guiContainer.getGuiLeft() + s.xPos;
         int y = guiContainer.getGuiTop() + s.yPos;
 
-        GlStateManager._disableLighting();
+        GlStateManager.disableLighting();
         GlStateManager.disableDepth();
         GlStateManager.disableTexture2D();
         GlStateManager.disableAlpha();
-        GlStateManager._enableBlend();
+        GlStateManager.enableBlend();
         GlStateManager.glLineWidth(4.0f);
 
         Tessellator tessellator = Tessellator.getInstance();
@@ -253,14 +253,14 @@ public class RarityColorOverlay implements Listener {
         float arcFill = (level.getAverage() / MAX_LEVEL);
         drawArc(bufferbuilder, x, y, arcFill, 8, 0, 0, 0, 120);
 
-        GlStateManager._disableBlend();
+        GlStateManager.disableBlend();
         GlStateManager.enableAlpha();
         GlStateManager.enableTexture2D();
         GlStateManager.enableDepth();
-        GlStateManager._enableLighting();
+        GlStateManager.enableLighting();
     }
 
-    private static void drawHighlightColor(GuiContainer guiContainer, Slot s, CustomColor colour) {
+    private static void drawHighlightColor(ContainerScreen guiContainer, Slot s, CustomColor colour) {
         if (colour == null) return;
 
         ScreenRenderer renderer = new ScreenRenderer();
@@ -280,7 +280,7 @@ public class RarityColorOverlay implements Listener {
 
     private static boolean isPowder(ItemStack is) {
         return (is.getItem() == Items.DYE && is.hasCustomHoverName() && is.getDisplayName().contains("Powder") &&
-                TextFormatting.getTextWithoutFormattingCodes(ItemUtils.getStringLore(is)).contains("Effect on Weapons"));
+                McIf.getTextWithoutFormattingCodes(ItemUtils.getStringLore(is)).contains("Effect on Weapons"));
     }
 
     private static int getPowderTier(ItemStack is) {

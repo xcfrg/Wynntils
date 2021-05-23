@@ -13,13 +13,13 @@ import com.wynntils.core.utils.objects.Location;
 import com.wynntils.modules.visual.configs.VisualConfig;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.WorldRenderer;
-import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.renderer.entity.EntityRendererManager;
 
 import java.util.Map;
 import java.util.Random;
 import java.util.WeakHashMap;
 
-import static com.mojang.blaze3d.platform.GlStateManager.*;
+import static com.wynntils.transition.GlStateManager.*;
 
 public class EntityDamageSplash extends FakeEntity {
 
@@ -70,7 +70,7 @@ public class EntityDamageSplash extends FakeEntity {
     }
 
     @Override
-    public void render(float partialTicks, WorldRenderer context, RenderManager render) {
+    public void render(float partialTicks, WorldRenderer context, EntityRendererManager render) {
         boolean thirdPerson = render.options.thirdPersonView == 2;
         Location loc = getCurrentLocation();
 

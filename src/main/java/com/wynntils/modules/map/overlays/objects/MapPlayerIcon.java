@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static com.mojang.blaze3d.platform.GlStateManager.*;
+import static com.wynntils.transition.GlStateManager.*;
 
 public class MapPlayerIcon extends MapIcon {
 
@@ -85,9 +85,9 @@ public class MapPlayerIcon extends MapIcon {
     @Override
     public void renderAt(ScreenRenderer renderer, float centreX, float centreZ, float sizeMultiplier, float blockScale) {
         enableAlpha();
-        _disableBlend();
+        disableBlend();
 
-        { _pushMatrix();
+        { pushMatrix();
             float sizeX = getSizeX() * sizeMultiplier;
             float sizeZ = getSizeZ() * sizeMultiplier;
 
@@ -121,9 +121,9 @@ public class MapPlayerIcon extends MapIcon {
             if (profile.hasHat())
                 drawScaledCustomSizeModalRect(-sizeX, -sizeZ, 40.0F, 8, 8, 8, sizeX * 2f, sizeZ * 2f, 64.0F, 64.0F);
 
-        } _popMatrix();
+        } popMatrix();
 
-        _enableBlend();
+        enableBlend();
     }
 
     @Override
@@ -142,10 +142,10 @@ public class MapPlayerIcon extends MapIcon {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferbuilder = tessellator.getBuilder();
         bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
-        bufferbuilder.vertex(x, y + height, 0.0D).tex(u * f, (v + vHeight) * f1).endVertex();
-        bufferbuilder.vertex(x + width, y + height, 0.0D).tex((u + uWidth) * f, (v + vHeight) * f1).endVertex();
-        bufferbuilder.vertex(x + width, y, 0.0D).tex((u + uWidth) * f, v * f1).endVertex();
-        bufferbuilder.vertex(x, y, 0.0D).tex(u * f, v * f1).endVertex();
+        bufferbuilder.vertex(x, y + height, 0.0D).uv(u * f, (v + vHeight) * f1).endVertex();
+        bufferbuilder.vertex(x + width, y + height, 0.0D).uv((u + uWidth) * f, (v + vHeight) * f1).endVertex();
+        bufferbuilder.vertex(x + width, y, 0.0D).uv((u + uWidth) * f, v * f1).endVertex();
+        bufferbuilder.vertex(x, y, 0.0D).uv(u * f, v * f1).endVertex();
         tessellator.end();
     }
 

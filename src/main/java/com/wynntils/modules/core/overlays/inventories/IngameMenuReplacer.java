@@ -4,8 +4,10 @@
 
 package com.wynntils.modules.core.overlays.inventories;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.wynntils.core.events.custom.GuiOverlapEvent;
 import com.wynntils.core.framework.FrameworkManager;
+import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.gui.screen.IngameMenuScreen;
 
@@ -15,10 +17,10 @@ import java.util.List;
 public class IngameMenuReplacer extends IngameMenuScreen {
 
     @Override
-    public void initGui() {
-        super.initGui();
+    public void init() {
+        super.init();
 
-        FrameworkManager.getEventBus().post(new GuiOverlapEvent.IngameMenuOverlap.InitGui(this, buttonList));
+        FrameworkManager.getEventBus().post(new GuiOverlapEvent.IngameMenuOverlap.InitGui(this, buttons));
     }
 
     @Override
@@ -29,17 +31,19 @@ public class IngameMenuReplacer extends IngameMenuScreen {
         super.actionPerformed(btn);
     }
 
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        super.drawScreen(mouseX, mouseY, partialTicks);
+    @Override
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
+        super.render(matrix, mouseX, mouseY, partialTicks);
 
         FrameworkManager.getEventBus().post(new GuiOverlapEvent.IngameMenuOverlap.DrawScreen(this, mouseX, mouseY, partialTicks));
     }
 
     @Override
-    public void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
-        super.mouseClicked(mouseX, mouseY, mouseButton);
+    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+        boolean result = super.mouseClicked(mouseX, mouseY, mouseButton);
 
-        FrameworkManager.getEventBus().post(new GuiOverlapEvent.IngameMenuOverlap.MouseClicked(this, mouseX, mouseY, mouseButton));
+        FrameworkManager.getEventBus().post(new GuiOverlapEvent.IngameMenuOverlap.MouseClicked(this, (int) mouseX, (int) mouseY, mouseButton));
+        return result;
     }
 
     @Override
@@ -47,8 +51,8 @@ public class IngameMenuReplacer extends IngameMenuScreen {
         super.drawHoveringText(text, x, y);
     }
 
-    public List<Button> getButtonList() {
-        return buttonList;
+    public List<Widget> getButtonList() {
+        return buttons;
     }
 
 }

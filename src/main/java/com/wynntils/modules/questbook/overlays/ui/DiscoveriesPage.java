@@ -4,6 +4,7 @@
 
 package com.wynntils.modules.questbook.overlays.ui;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.wynntils.McIf;
 import com.wynntils.core.framework.enums.wynntils.WynntilsSound;
 import com.wynntils.core.framework.instances.PlayerInfo;
@@ -32,7 +33,7 @@ import com.wynntils.webapi.request.RequestHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SimpleSound;
 import net.minecraft.client.MainWindow;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.wynntils.transition.GlStateManager;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
@@ -59,8 +60,8 @@ public class DiscoveriesPage extends QuestBookPage {
     }
 
     @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        super.drawScreen(mouseX, mouseY, partialTicks);
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
+        super.render(matrix, mouseX, mouseY, partialTicks);
         int x = width / 2;
         int y = height / 2;
         int posX = (x - mouseX);
@@ -213,7 +214,7 @@ public class DiscoveriesPage extends QuestBookPage {
 
                         overDiscovery = selected;
                         hoveredText = lore;
-                        GlStateManager._disableLighting();
+                        GlStateManager.disableLighting();
                     } else {
                         if (this.selected == i) {
                             animationCompleted = false;
@@ -288,7 +289,7 @@ public class DiscoveriesPage extends QuestBookPage {
                 String textToDisplay;
                 if (!(territory || world || secret || undiscoveredTerritory || undiscoveredWorld || undiscoveredSecret)) {
                     textToDisplay = "No filters enabled!\nTry refining your search.";
-                } else if (QuestManager.getCurrentDiscoveries().size() == 0 || textField.getText().equals("")) {
+                } else if (QuestManager.getCurrentDiscoveries().size() == 0 || textField.getValue().equals("")) {
                     textToDisplay = "Loading Discoveries...\nIf nothing appears soon, try pressing the reload button.";
                 } else {
                     textToDisplay = "No discoveries found!\nTry searching for something else.";
@@ -304,7 +305,7 @@ public class DiscoveriesPage extends QuestBookPage {
     }
 
     @Override
-    public void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
         MainWindow res = new MainWindow(McIf.mc());
         int posX = ((res.getGuiScaledWidth() / 2) - mouseX);
         int posY = ((res.getGuiScaledHeight() / 2) - mouseY);
@@ -312,7 +313,7 @@ public class DiscoveriesPage extends QuestBookPage {
         // Handle discovery click
         if (overDiscovery != null) {
             if (overDiscovery.getType() == DiscoveryType.SECRET) { // Secret discovery actions
-                String name = TextFormatting.getTextWithoutFormattingCodes(overDiscovery.getName());
+                String name = McIf.getTextWithoutFormattingCodes(overDiscovery.getName());
 
                 switch (mouseButton) {
                     case 0: // Left Click
@@ -345,11 +346,11 @@ public class DiscoveriesPage extends QuestBookPage {
                         McIf.mc().getSoundManager().play(SimpleSound.forUI(SoundEvents.BLOCK_ANVIL_PLACE, 1f));
                     break;
                     case 1: // Right Click
-                        Utils.displayGuiScreen(new MainWorldMapUI(x, z));
+                        Utils.setScreen(new MainWorldMapUI(x, z));
                         McIf.mc().getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1f));
                     break;
                     case 2: //Middle Click
-                        Utils.displayGuiScreen(new MainWorldMapUI(x, z));
+                        Utils.setScreen(new MainWorldMapUI(x, z));
                         CompassManager.setCompassLocation(new Location(x, 50, z));
                         McIf.mc().getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1f));
                     break;
@@ -364,44 +365,44 @@ public class DiscoveriesPage extends QuestBookPage {
             McIf.mc().getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1f));
             territory = !territory;
             updateSearch();
-            return;
+            return true;
         } else if (posX >= 100 && posX <= 130 && posY >= -80 && posY <= -50) { // Undiscovered Territory
             McIf.mc().getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1f));
             undiscoveredTerritory = !undiscoveredTerritory;
             updateSearch();
-            return;
+            return true;
         } else if (posX >= 65 && posX <= 95 && posY >= -45 && posY <= -15) { // Discovered World
             McIf.mc().getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1f));
             world = !world;
             updateSearch();
-            return;
+            return true;
         } else if (posX >= 65 && posX <= 95 && posY >= -80 && posY <= -50) { // Undiscovered World
             McIf.mc().getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1f));
             undiscoveredWorld = !undiscoveredWorld;
             updateSearch();
-            return;
+            return true;
         } else if (posX >= 30 && posX <= 60 && posY >= -45 && posY <= -15) { // Discovered Secret
             McIf.mc().getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1f));
             secret = !secret;
             updateSearch();
-            return;
+            return true;
         } else if (posX >= 30 && posX <= 60 && posY >= -80 && posY <= -50) { // Undiscovered Secret
             McIf.mc().getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1f));
             undiscoveredSecret = !undiscoveredSecret;
             updateSearch();
-            return;
+            return true;
         } else if (posX >= -157 && posX <= -147 && posY >= 89 && posY <= 99) { // Update Button
             McIf.mc().getSoundManager().play(SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1f));
             QuestManager.updateAnalysis(EnumSet.of(AnalysePosition.DISCOVERIES, AnalysePosition.SECRET_DISCOVERIES), true, true);
-            return;
+            return true;
         }
-        super.mouseClicked(mouseX, mouseY, mouseButton);
+        return super.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
     @Override
-    public void keyTyped(char typedChar, int keyCode) throws IOException {
+    public void keyPressed(char typedChar, int keyCode) throws IOException {
         overDiscovery = null;
-        super.keyTyped(typedChar, keyCode);
+        super.keyPressed(typedChar, keyCode);
     }
 
     @Override
@@ -443,7 +444,7 @@ public class DiscoveriesPage extends QuestBookPage {
 
                         boolean requirementsMet = true;
                         for (String requirement : c.getRequirements()) {
-                            requirementsMet &= QuestManager.getCurrentDiscoveries().stream().anyMatch(foundDiscovery -> TextFormatting.getTextWithoutFormattingCodes(foundDiscovery.getName()).equals(requirement));
+                            requirementsMet &= QuestManager.getCurrentDiscoveries().stream().anyMatch(foundDiscovery -> McIf.getTextWithoutFormattingCodes(foundDiscovery.getName()).equals(requirement));
                         }
                         if (!requirementsMet) {
                             return false;
@@ -459,7 +460,7 @@ public class DiscoveriesPage extends QuestBookPage {
 
                     // Checks if already in list
                     if (QuestManager.getCurrentDiscoveries().stream().anyMatch(foundDiscovery -> {
-                        boolean nameMatch = TextFormatting.getTextWithoutFormattingCodes(foundDiscovery.getName()).equals(c.getName());
+                        boolean nameMatch = McIf.getTextWithoutFormattingCodes(foundDiscovery.getName()).equals(c.getName());
                         boolean levelMatch = foundDiscovery.getMinLevel() == c.getLevel();
                         boolean typeMatch = foundDiscovery.getType().name().toLowerCase(Locale.ROOT).equals(c.getType());
 
@@ -518,7 +519,7 @@ public class DiscoveriesPage extends QuestBookPage {
 
         handler.addAndDispatch(query.handleJsonObject(jsonOutput -> {
             if (jsonOutput.has("error")) { // Returns error if page does not exist
-                McIf.player().sendMessage(new StringTextComponent(TextFormatting.RED + "Unable to find discovery coordinates. (Wiki page not found)"));
+                McIf.sendMessage(new StringTextComponent(TextFormatting.RED + "Unable to find discovery coordinates. (Wiki page not found)"));
                 return true;
             }
 
@@ -537,12 +538,12 @@ public class DiscoveriesPage extends QuestBookPage {
                 x = Integer.parseInt(xlocation.substring(12, xend));
                 z = Integer.parseInt(zlocation.substring(12, zend));
             } catch (NumberFormatException e) {
-                McIf.player().sendMessage(new StringTextComponent(TextFormatting.RED + "Unable to find discovery coordinates. (Wiki template not located)"));
+                McIf.sendMessage(new StringTextComponent(TextFormatting.RED + "Unable to find discovery coordinates. (Wiki template not located)"));
                 return true;
             }
 
             if (x == 0 && z == 0) {
-                McIf.player().sendMessage(new StringTextComponent(TextFormatting.RED + "Unable to find discovery coordinates. (Wiki coordinates not located)"));
+                McIf.sendMessage(new StringTextComponent(TextFormatting.RED + "Unable to find discovery coordinates. (Wiki coordinates not located)"));
                 return true;
             }
 
@@ -551,10 +552,10 @@ public class DiscoveriesPage extends QuestBookPage {
                     CompassManager.setCompassLocation(new Location(x, 50, z));
                 break;
                 case "map":
-                    Utils.displayGuiScreen(new MainWorldMapUI(x, z));
+                    Utils.setScreen(new MainWorldMapUI(x, z));
                 break;
                 case "both":
-                    Utils.displayGuiScreen(new MainWorldMapUI(x, z));
+                    Utils.setScreen(new MainWorldMapUI(x, z));
                     CompassManager.setCompassLocation(new Location(x, 50, z));
                 break;
             }

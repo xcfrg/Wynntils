@@ -5,6 +5,7 @@
 package com.wynntils.modules.map.overlays.ui;
 
 import com.google.common.collect.Iterables;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.wynntils.McIf;
 import com.wynntils.Reference;
 import com.wynntils.core.framework.instances.GuiMovementScreen;
@@ -13,6 +14,7 @@ import com.wynntils.core.framework.rendering.SmartFontRenderer;
 import com.wynntils.core.framework.rendering.colors.CommonColors;
 import com.wynntils.core.framework.rendering.colors.CustomColor;
 import com.wynntils.core.framework.rendering.textures.Textures;
+import com.wynntils.core.utils.Utils;
 import com.wynntils.modules.core.config.CoreDBConfig;
 import com.wynntils.modules.core.managers.CompassManager;
 import com.wynntils.modules.map.MapModule;
@@ -45,7 +47,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static com.mojang.blaze3d.platform.GlStateManager.*;
+import static com.wynntils.transition.GlStateManager.*;
 
 public class WorldMapUI extends GuiMovementScreen {
 
@@ -105,7 +107,7 @@ public class WorldMapUI extends GuiMovementScreen {
 
         // Opening SFX
         McIf.mc().getSoundManager().play(
-                SimpleSound.forUI(SoundEvents.ITEM_ARMOR_EQUIP_LEATHER, 1f)
+                SimpleSound.forUI(SoundEvents.ARMOR_EQUIP_LEATHER, 1f)
         );
     }
 
@@ -277,10 +279,10 @@ public class WorldMapUI extends GuiMovementScreen {
             {
                 bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
 
-                bufferbuilder.vertex(0, height, 0).tex(minX, maxZ).endVertex();
-                bufferbuilder.vertex(width, height, 0).tex(maxX, maxZ).endVertex();
-                bufferbuilder.vertex(width, 0, 0).tex(maxX, minZ).endVertex();
-                bufferbuilder.vertex(0, 0, 0).tex(minX, minZ).endVertex();
+                bufferbuilder.vertex(0, height, 0).uv(minX, maxZ).endVertex();
+                bufferbuilder.vertex(width, height, 0).uv(maxX, maxZ).endVertex();
+                bufferbuilder.vertex(width, 0, 0).uv(maxX, minZ).endVertex();
+                bufferbuilder.vertex(0, 0, 0).uv(minX, minZ).endVertex();
                 tessellator.end();
             }
 
@@ -300,14 +302,14 @@ public class WorldMapUI extends GuiMovementScreen {
         float scale = getScaleFactor();
         // draw map icons
         boolean[] needToReset = { false };
-        _enableBlend();
+        enableBlend();
         forEachIcon(i -> {
             if (i.getInfo().hasDynamicLocation()) resetIcon(i);
             if (!i.getInfo().isEnabled(false)) {
                 needToReset[0] = true;
                 return;
             }
-            i.drawScreen(mouseX, mouseY, partialTicks, scale, renderer);
+            i.render(new MatrixStack(), mouseX, mouseY, partialTicks, scale, renderer);
         });
 
         if (needToReset[0]) resetAllIcons();
@@ -321,9 +323,9 @@ public class WorldMapUI extends GuiMovementScreen {
 
             Point drawingOrigin = ScreenRenderer.drawingOrigin();
 
-            _pushMatrix();
+            pushMatrix();
             translate(drawingOrigin.x + playerPositionX, drawingOrigin.y + playerPositionZ, 0);
-            rotate(180 + MathHelper.fastFloor(McIf.player().rotationYaw), 0, 0, 1);
+            rotate(180 + MathHelper.fastFloor(McIf.player().yRot), 0, 0, 1);
             translate(-drawingOrigin.x - playerPositionX, -drawingOrigin.y - playerPositionZ, 0);
 
             MapConfig.PointerType type = MapConfig.Textures.INSTANCE.pointerStyle;
@@ -333,11 +335,11 @@ public class WorldMapUI extends GuiMovementScreen {
             renderer.drawRectF(Textures.Map.map_pointers, playerPositionX - type.dWidth * 1.5f, playerPositionZ - type.dHeight * 1.5f, playerPositionX + type.dWidth * 1.5f, playerPositionZ + type.dHeight * 1.5f, 0, type.yStart, type.width, type.yStart + type.height);
             color(1, 1, 1, 1);
 
-            _popMatrix();
+            popMatrix();
         }
 
-        if (MapConfig.WorldMap.INSTANCE.keepTerritoryVisible || Utils.isKeyDown(GLFW.GLFW_KEY_LCONTROL) || Utils.isKeyDown(GLFW.GLFW_KEY_RCONTROL)) {
-            territories.values().forEach(c -> c.drawScreen(mouseX, mouseY, partialTicks,
+        if (MapConfig.WorldMap.INSTANCE.keepTerritoryVisible || Utils.isKeyDown(GLFW.GLFW_KEY_LEFT_CONTROL) || Utils.isKeyDown(GLFW.GLFW_KEY_RIGHT_CONTROL)) {
+            territories.values().forEach(c -> c.render(new MatrixStack(), mouseX, mouseY, partialTicks,
                     MapConfig.WorldMap.INSTANCE.territoryArea, false, false, true));
         }
 
@@ -364,7 +366,7 @@ public class WorldMapUI extends GuiMovementScreen {
         if (mapButtons.isEmpty()) return;
 
         for (MapButton button : mapButtons) {
-            button.drawScreen(mouseX, mouseY, partialTicks);
+            button.render(new MatrixStack(), mouseX, mouseY, partialTicks);
         }
 
         // hover lore
@@ -372,7 +374,7 @@ public class WorldMapUI extends GuiMovementScreen {
             if (button.getType().isIgnoreAction()) continue;
             if (!button.isHovering(mouseX, mouseY)) continue;
 
-            drawHoveringText(button.getHoverLore(), mouseX, mouseY);
+            renderToolTip(button.getHoverLore(), mouseX, mouseY);
             return;
         }
     }
@@ -399,7 +401,7 @@ public class WorldMapUI extends GuiMovementScreen {
         OUTSIDE_MAP_COLOR_1.setA(outsideTextOpacity);
         OUTSIDE_MAP_COLOR_2.setA(outsideTextOpacity);
 
-        _pushMatrix();
+        pushMatrix();
         {
             translate(width / 2, height / 2, 0);
             scale(2, 2, 2);
@@ -411,7 +413,7 @@ public class WorldMapUI extends GuiMovementScreen {
                     SmartFontRenderer.TextAlignment.MIDDLE, SmartFontRenderer.TextShadow.NORMAL
             );
         }
-        _popMatrix();
+        popMatrix();
     }
 
     private void zoomBy(int by) {
@@ -421,15 +423,15 @@ public class WorldMapUI extends GuiMovementScreen {
     }
 
     @Override
-    public void initGui() {
-        super.initGui();
+    public void init() {
+        super.init();
 
         updateCenterPosition(centerPositionX, centerPositionZ);
         Keyboard.enableRepeatEvents(true);
     }
 
     @Override
-    public void onGuiClosed() {
+    public void onClose() {
         Keyboard.enableRepeatEvents(false);
     }
 
@@ -452,36 +454,34 @@ public class WorldMapUI extends GuiMovementScreen {
     }
 
     @Override
-    protected void keyTyped(char typedChar, int keyCode) throws IOException {
-        if (keyCode == KeyManager.getZoomInKey().getKeyBinding().getKeyCode()) {
+    public boolean keyPressed(int typedChar, int keyCode, int j)  {
+        if (keyCode == KeyManager.getZoomInKey().getKeyBinding().getKey().getValue()) {
             zoomBy(+2);
-            return;
+            return true;
         }
 
-        if (keyCode == KeyManager.getZoomOutKey().getKeyBinding().getKeyCode()) {
+        if (keyCode == KeyManager.getZoomOutKey().getKeyBinding().getKey().getValue()) {
             zoomBy(-2);
-            return;
+            return true;
         }
 
-        super.keyTyped(typedChar, keyCode);
+        return super.keyPressed(typedChar, keyCode, j);
     }
 
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
         if (mapButtons.isEmpty()) {
-            super.mouseClicked(mouseX, mouseY, mouseButton);
-            return;
+            return super.mouseClicked(mouseX, mouseY, mouseButton);
         }
 
         for (MapButton button : mapButtons) {
-            if (!button.isHovering(mouseX, mouseY)) continue;
+            if (!button.isHovering((int) mouseX, (int) mouseY)) continue;
             if (button.getType().isIgnoreAction()) continue;
 
-            button.mouseClicked(mouseX, mouseY, mouseButton);
-            return;
+            return button.mouseClicked(mouseX, mouseY, mouseButton);
         }
 
-        super.mouseClicked(mouseX, mouseY, mouseButton);
+        return super.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
 }

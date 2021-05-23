@@ -5,6 +5,7 @@
 package com.wynntils.modules.questbook.overlays.ui;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.wynntils.McIf;
 import com.wynntils.core.framework.enums.SortDirection;
 import com.wynntils.core.framework.enums.wynntils.WynntilsSound;
@@ -29,7 +30,7 @@ import com.wynntils.webapi.profiles.item.enums.ItemType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SimpleSound;
 import net.minecraft.client.MainWindow;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.wynntils.transition.GlStateManager;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.Items;
 import net.minecraft.util.SoundEvents;
@@ -62,13 +63,13 @@ public class ItemPage extends QuestBookPage {
     }
 
     @Override
-    public void initGui() {
+    public void init() {
         ItemSearchState oldSearchState = searchState;
-        super.initGui();
+        super.init();
         if (QuestBookConfig.INSTANCE.advancedItemSearch) {
             initAdvancedSearch();
             if (oldSearchState != null) {
-                textField.setText(oldSearchState.toSearchString());
+                textField.setValue(oldSearchState.toSearchString());
                 updateSearch();
             }
             return;
@@ -77,7 +78,7 @@ public class ItemPage extends QuestBookPage {
     }
 
     private void initBasicSearch() {
-        textField.setMaxStringLength(50);
+        textField.setMaxLength(50);
         initDefaultSearchBar();
     }
 
@@ -88,7 +89,7 @@ public class ItemPage extends QuestBookPage {
     }
 
     private void initAdvancedSearch() {
-        textField.setMaxStringLength(ADV_SEARCH_MAX_LEN);
+        textField.setMaxLength(ADV_SEARCH_MAX_LEN);
         if (QuestBookConfig.INSTANCE.advItemSearchLongBar) {
             textField.x = width / 2 - 146;
             textField.y = height / 2 - 124;
@@ -99,8 +100,8 @@ public class ItemPage extends QuestBookPage {
     }
 
     @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        super.drawScreen(mouseX, mouseY, partialTicks);
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
+        super.render(matrix, mouseX, mouseY, partialTicks);
         int x = width / 2;
         int y = height / 2;
         int posX = (x - mouseX);
@@ -205,7 +206,7 @@ public class ItemPage extends QuestBookPage {
     }
 
     @Override
-    public void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton)  {
         MainWindow res = new MainWindow(McIf.mc());
         int posX = ((res.getGuiScaledWidth() / 2) - mouseX);
         int posY = ((res.getGuiScaledHeight() / 2) - mouseY);
@@ -219,32 +220,32 @@ public class ItemPage extends QuestBookPage {
                 QuestBookConfig.INSTANCE.advancedItemSearch = false;
                 initBasicSearch();
                 String searchText = BasicSearchHandler.INSTANCE.inheritSearchState(searchState);
-                textField.setText(searchText != null ? searchText : "");
+                textField.setValue(searchText != null ? searchText : "");
             } else {
-                textField.setMaxStringLength(ADV_SEARCH_MAX_LEN);
+                textField.setMaxLength(ADV_SEARCH_MAX_LEN);
                 QuestBookConfig.INSTANCE.advancedItemSearch = true;
                 initAdvancedSearch();
-                textField.setText(searchState != null ? searchState.toSearchString() : "");
+                textField.setValue(searchState != null ? searchState.toSearchString() : "");
             }
             QuestBookConfig.INSTANCE.saveSettings(QuestBookModule.getModule());
             updateSearch();
-            return;
+            return true;
         }
-        if (getSearchHandler().handleClick(mouseX, mouseY, mouseButton, selected)) { // delegate rest of click behaviour to search handler
+        if (getSearchHandler().handleClick((int) mouseX, (int) mouseY, mouseButton, selected)) { // delegate rest of click behaviour to search handler
             updateSearch();
-            return;
+            return true;
         }
 
         if (selected < 0) { // an item in the guide is hovered
             if (mouseButton != 1 || !(Utils.isKeyDown(GLFW.GLFW_KEY_LEFT_SHIFT) || Utils.isKeyDown(GLFW.GLFW_KEY_RIGHT_SHIFT))) return;
 
             int selectedIndex = -(selected + 1);
-            if (selectedIndex >= itemSearch.size()) return;
+            if (selectedIndex >= itemSearch.size()) return false;
             Utils.openUrl("https://www.wynndata.tk/i/" + Utils.encodeUrl(itemSearch.get(selectedIndex).getDisplayName()));
-            return;
+            return true;
         }
 
-        super.mouseClicked(mouseX, mouseY, mouseButton);
+        return super.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
     @Override

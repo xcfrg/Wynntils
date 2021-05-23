@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.wynntils.McIf;
 import com.wynntils.Reference;
 import com.wynntils.core.events.custom.GuiOverlapEvent;
 import com.wynntils.core.framework.enums.SkillPoint;
@@ -23,9 +24,9 @@ import com.wynntils.core.utils.StringUtils;
 import com.wynntils.modules.utilities.configs.UtilitiesConfig;
 import com.wynntils.webapi.profiles.item.enums.ItemType;
 
-import net.minecraft.client.gui.inventory.GuiContainer;
-import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.gui.screen.inventory.ContainerScreen;
+import com.wynntils.transition.GlStateManager;
+import com.wynntils.transition.RenderHelper;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -33,15 +34,15 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class ItemSpecificationOverlay implements Listener {
 
-    private void renderOverlay(GuiContainer gui) {
+    private void renderOverlay(ContainerScreen gui) {
         if (!Reference.onWorld) return;
 
-        for (Slot s : gui.inventorySlots.inventorySlots) {
+        for (Slot s : gui.getMenu().slots) {
             ItemStack stack = s.getItem();
             if (stack.isEmpty() || !stack.hasCustomHoverName()) continue; // display name also checks for tag compound
 
             List<String> lore = ItemUtils.getLore(stack);
-            String name = StringUtils.normalizeBadString(stack.getDisplayName());
+            String name = StringUtils.normalizeBadString(McIf.toText(stack.getDisplayName()));
 
             // name and lore fixing
             stack.setStackDisplayName(name);

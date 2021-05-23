@@ -4,6 +4,7 @@
 
 package com.wynntils.modules.map.overlays.objects;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.wynntils.McIf;
 import com.wynntils.core.framework.rendering.ScreenRenderer;
 import com.wynntils.core.framework.rendering.textures.Textures;
@@ -16,7 +17,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import static com.mojang.blaze3d.platform.GlStateManager.*;
+import static com.wynntils.transition.GlStateManager.*;
 
 public class MapButton {
 
@@ -49,8 +50,8 @@ public class MapButton {
         return mouseX >= startX && mouseX <= endX && mouseY >= startY && mouseY <= endY;
     }
 
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        _pushMatrix();
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
+        pushMatrix();
         {
             if (isEnabled.apply(null)) {
                 color(1f, 1f, 1f, 1f);
@@ -62,15 +63,16 @@ public class MapButton {
             renderer.drawRect(Textures.Map.map_buttons, startX, startY, endX, endY,
                     type.getStartX(), type.getStartY(), type.getEndX(), type.getEndY());
         }
-        _popMatrix();
+        popMatrix();
     }
 
-    public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
         McIf.mc().getSoundManager().play(
                 SimpleSound.forUI(SoundEvents.UI_BUTTON_CLICK, 1f)
         );
 
         onClick.accept(this, mouseButton);
+        return true;
     }
 
     public int getStartX() {

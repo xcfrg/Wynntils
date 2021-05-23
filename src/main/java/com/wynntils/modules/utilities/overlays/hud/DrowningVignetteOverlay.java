@@ -12,7 +12,7 @@ import com.wynntils.core.framework.rendering.textures.Textures;
 import com.wynntils.core.utils.Utils;
 import com.wynntils.modules.utilities.configs.OverlayConfig;
 import net.minecraft.client.renderer.BufferBuilder;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.wynntils.transition.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -38,13 +38,13 @@ public class DrowningVignetteOverlay extends Overlay {
 
         float value = Math.abs((animation / 300.0f) - 1.0f);
 
-        GlStateManager._pushMatrix();
+        GlStateManager.pushMatrix();
         {
             ScreenRenderer.transformationOrigin(0, 0);
             GlStateManager.color(0, 0.500f, 1, value);
             GlStateManager.disableDepth();
-            GlStateManager._enableBlend();
-            GlStateManager._depthMask(false);
+            GlStateManager.enableBlend();
+            GlStateManager.depthMask(false);
             GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
             GlStateManager.disableAlpha();
 
@@ -54,19 +54,19 @@ public class DrowningVignetteOverlay extends Overlay {
             BufferBuilder bufferbuilder = tessellator.getBuilder();
             {
                 bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
-                bufferbuilder.vertex(0.0D, ScreenRenderer.screen.getGuiScaledHeight(), -90.0D).tex(0.0D, 1.0D).endVertex();
-                bufferbuilder.vertex(ScreenRenderer.screen.getGuiScaledWidth(), ScreenRenderer.screen.getGuiScaledHeight(), -90.0D).tex(1.0D, 1.0D).endVertex();
-                bufferbuilder.vertex(ScreenRenderer.screen.getGuiScaledWidth(), 0.0D, -90.0D).tex(1.0D, 0.0D).endVertex();
-                bufferbuilder.vertex(0.0D, 0.0D, -90.0D).tex(0.0D, 0.0D).endVertex();
+                bufferbuilder.vertex(0.0D, ScreenRenderer.screen.getGuiScaledHeight(), -90.0D).uv(0.0D, 1.0D).endVertex();
+                bufferbuilder.vertex(ScreenRenderer.screen.getGuiScaledWidth(), ScreenRenderer.screen.getGuiScaledHeight(), -90.0D).uv(1.0D, 1.0D).endVertex();
+                bufferbuilder.vertex(ScreenRenderer.screen.getGuiScaledWidth(), 0.0D, -90.0D).uv(1.0D, 0.0D).endVertex();
+                bufferbuilder.vertex(0.0D, 0.0D, -90.0D).uv(0.0D, 0.0D).endVertex();
             }
             tessellator.end();
 
-            GlStateManager._depthMask(true);
+            GlStateManager.depthMask(true);
             GlStateManager.enableDepth();
             GlStateManager.enableAlpha();
             GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         }
-        GlStateManager._popMatrix();
+        GlStateManager.popMatrix();
     }
 
 }

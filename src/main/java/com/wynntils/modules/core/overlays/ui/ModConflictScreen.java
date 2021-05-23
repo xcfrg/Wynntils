@@ -4,8 +4,9 @@
 
 package com.wynntils.modules.core.overlays.ui;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.GuiErrorScreen;
+import net.minecraft.client.gui.screen.GuiErrorScreen;
 import net.minecraftforge.fml.client.CustomModLoadingErrorDisplayException;
 
 import java.util.Map;
@@ -20,12 +21,12 @@ public class ModConflictScreen extends CustomModLoadingErrorDisplayException {
 
 
     @Override
-    public void initGui(GuiErrorScreen errorScreen, FontRenderer font) {
+    public void init(GuiErrorScreen errorScreen, FontRenderer font) {
 
     }
 
     @Override
-    public void drawScreen(GuiErrorScreen errorScreen, FontRenderer font, int mouseRelX, int mouseRelY, float tickTime) {
+    public void render(MatrixStack matrix, GuiErrorScreen errorScreen, FontRenderer font, int mouseRelX, int mouseRelY, float tickTime) {
         errorScreen.drawDefaultBackground();
 
         int offset = (errorScreen.height/2) - (40 + 10*conflictMods.size());

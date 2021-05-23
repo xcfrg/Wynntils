@@ -131,7 +131,7 @@ public class FakeInventory {
             ItemStack stack = inventory.get(slot);
             if (stack.isEmpty() || !stack.hasCustomHoverName()) continue;
 
-            String displayName = TextFormatting.getTextWithoutFormattingCodes(stack.getDisplayName());
+            String displayName = McIf.getTextWithoutFormattingCodes(stack.getDisplayName());
             if (filterType.test(displayName, name)) {
                 return new Pair<>(slot, stack);
             }
@@ -154,7 +154,7 @@ public class FakeInventory {
             ItemStack stack = inventory.get(slot);
             if (stack.isEmpty() || !stack.hasCustomHoverName()) continue;
 
-            String displayName = TextFormatting.getTextWithoutFormattingCodes(stack.getDisplayName());
+            String displayName = McIf.getTextWithoutFormattingCodes(stack.getDisplayName());
             for (int i = 0; i < names.size(); ++i) {
                 if (result.get(i) != null) continue;
 
@@ -202,7 +202,7 @@ public class FakeInventory {
             return;
         }
 
-        if (!expectedWindowTitle.matcher(TextFormatting.getTextWithoutFormattingCodes(McIf.getUnformattedText(e.getPacket().getWindowTitle()))).matches()) {
+        if (!expectedWindowTitle.matcher(McIf.getTextWithoutFormattingCodes(McIf.getUnformattedText(e.getPacket().getWindowTitle()))).matches()) {
             close(InventoryResult.CLOSED_OVERLAP);
             return;
         }
@@ -211,7 +211,7 @@ public class FakeInventory {
         expectingResponse = false;
         lastAction = McIf.getSystemTime();
 
-        windowId = e.getPacket().getWindowId();
+        windowId = e.getPacket().getContainerId();
         windowTitle = McIf.getUnformattedText(e.getPacket().getWindowTitle());
         inventory = NonNullList.create();
 
@@ -221,7 +221,7 @@ public class FakeInventory {
     // detects item receiving
     @SubscribeEvent
     public void onItemsReceive(PacketEvent<SWindowItemsPacket> e) {
-        if (windowId != e.getPacket().getWindowId()) {
+        if (windowId != e.getPacket().getContainerId()) {
             close(InventoryResult.CLOSED_OVERLAP);
             return;
         }
@@ -240,7 +240,7 @@ public class FakeInventory {
     // confirm all server transactions
     @SubscribeEvent
     public void confirmAllTransactions(PacketEvent.Incoming<SConfirmTransactionPacket> e) {
-        if (windowId != e.getPacket().getWindowId()) {
+        if (windowId != e.getPacket().getContainerId()) {
             close(InventoryResult.CLOSED_OVERLAP);
             return;
         }

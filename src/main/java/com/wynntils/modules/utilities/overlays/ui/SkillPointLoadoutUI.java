@@ -4,6 +4,7 @@
 
 package com.wynntils.modules.utilities.overlays.ui;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.wynntils.McIf;
 import com.wynntils.core.framework.enums.SkillPoint;
 import com.wynntils.core.framework.instances.PlayerInfo;
@@ -16,11 +17,11 @@ import com.wynntils.modules.utilities.instances.SkillPointAllocation;
 import com.wynntils.modules.utilities.overlays.inventories.SkillPointOverlay;
 import net.minecraft.client.audio.SimpleSound;
 import net.minecraft.client.gui.screen.Screen;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.wynntils.transition.GlStateManager;
 import net.minecraft.item.Items;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.inventory.container.ClickType;
-import net.minecraft.inventory.InventoryBasic;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagByte;
@@ -39,10 +40,10 @@ public class SkillPointLoadoutUI extends FakeGuiContainer {
 
     private final SkillPointOverlay parent;
     private final Screen spMenu;
-    private final InventoryBasic inventory;
+    private final Inventory inventory;
     private final int inventoryRows;
 
-    public SkillPointLoadoutUI(SkillPointOverlay parent, Screen spMenu, InventoryBasic inventory) {
+    public SkillPointLoadoutUI(SkillPointOverlay parent, Screen spMenu, Inventory inventory) {
         super(new ContainerBuilds(inventory, McIf.player()));
         this.parent = parent;
         this.spMenu = spMenu;
@@ -52,8 +53,8 @@ public class SkillPointLoadoutUI extends FakeGuiContainer {
     }
 
     @Override
-    public void initGui() {
-        super.initGui();
+    public void init() {
+        super.init();
         inventory.clear();
 
         int i = 0;
@@ -94,11 +95,11 @@ public class SkillPointLoadoutUI extends FakeGuiContainer {
     }
 
     @Override
-    protected void handleMouseClick(Slot slotIn, int slotId, int mouseButton, ClickType type) {
+    protected void slotClicked(Slot slotIn, int slotId, int mouseButton, ClickType type) {
         if (slotIn == null || slotIn.getItem().isEmpty()) return;
         if (slotId >= UtilitiesConfig.INSTANCE.skillPointLoadouts.size()) return;
 
-        String name = TextFormatting.getTextWithoutFormattingCodes(slotIn.getItem().getDisplayName());
+        String name = McIf.getTextWithoutFormattingCodes(slotIn.getItem().getDisplayName());
         if (mouseButton == 0) { // left click <-> load
             SkillPointAllocation aloc = getLoadout(name);
             if (aloc == null) return;
@@ -108,7 +109,7 @@ public class SkillPointLoadoutUI extends FakeGuiContainer {
 
             parent.loadBuild(aloc); // sends the allocated loadout into
 
-            McIf.mc().displayGuiScreen(spMenu);
+            McIf.mc().setScreen(spMenu);
             return;
         }
 
@@ -118,7 +119,7 @@ public class SkillPointLoadoutUI extends FakeGuiContainer {
                 McIf.mc().getSoundManager().play(SimpleSound.forUI(SoundEvents.ENTITY_IRONGOLEM_HURT, 1f));
 
                 removeLoadout(name);
-                this.initGui();
+                this.init();
                 return;
             }
 
@@ -129,16 +130,17 @@ public class SkillPointLoadoutUI extends FakeGuiContainer {
     }
 
     @Override
-    protected void keyTyped(char typedChar, int keyCode) {
-        if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == McIf.mc().options.keyBindInventory.getKeyCode()) {
-            McIf.mc().displayGuiScreen(spMenu);
+    public boolean keyPressed(int typedChar, int keyCode, int j) {
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == McIf.mc().options.keyBindInventory.getKey().getValue()) {
+            McIf.mc().setScreen(spMenu);
+            return true;
         }
     }
 
     @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
         this.drawDefaultBackground();
-        super.drawScreen(mouseX, mouseY, partialTicks);
+        super.render(matrix, mouseX, mouseY, partialTicks);
         this.renderHoveredToolTip(mouseX, mouseY);
     }
 
@@ -159,7 +161,7 @@ public class SkillPointLoadoutUI extends FakeGuiContainer {
 
     private static SkillPointAllocation getLoadout(String name) {
         for (Entry<String, SkillPointAllocation> e : UtilitiesConfig.INSTANCE.skillPointLoadouts.entrySet()) {
-            if (TextFormatting.getTextWithoutFormattingCodes(e.getKey()).equals(name))
+            if (McIf.getTextWithoutFormattingCodes(e.getKey()).equals(name))
                 return e.getValue();
         }
         return null;
@@ -167,7 +169,7 @@ public class SkillPointLoadoutUI extends FakeGuiContainer {
 
     private static void removeLoadout(String name) {
         for (Entry<String, SkillPointAllocation> e : UtilitiesConfig.INSTANCE.skillPointLoadouts.entrySet()) {
-            if (TextFormatting.getTextWithoutFormattingCodes(e.getKey()).equals(name)) {
+            if (McIf.getTextWithoutFormattingCodes(e.getKey()).equals(name)) {
                 UtilitiesConfig.INSTANCE.skillPointLoadouts.remove(e.getKey());
                 UtilitiesConfig.INSTANCE.saveSettings(UtilitiesModule.getModule());
                 return;

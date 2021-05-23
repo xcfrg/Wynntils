@@ -60,8 +60,8 @@ public class ConsumableTimerOverlay extends Overlay {
         if (stack.getItem() != Items.DIAMOND_AXE && stack.getItem() != Items.POTION && stack.getItem() != Items.SPLASH_POTION) return; // foods and scrolls have DIAMOND_AXE as their items
 
         // vanilla potions needs a special verification, they DON'T start with dark aqua
-        if (!stack.getDisplayName().startsWith(DARK_AQUA.toString())) {
-            String displayName = TextFormatting.getTextWithoutFormattingCodes(stack.getDisplayName());
+        if (!McIf.toText(stack.getDisplayName()).startsWith(DARK_AQUA.toString())) {
+            String displayName = McIf.getTextWithoutFormattingCodes(stack.getDisplayName());
             SkillPoint sp = SkillPoint.findSkillPoint(displayName);
 
             ConsumableContainer consumable;
@@ -77,7 +77,7 @@ public class ConsumableTimerOverlay extends Overlay {
 
             List<String> itemLore = ItemUtils.getLore(stack);
             for (String line : itemLore) {
-                line = TextFormatting.getTextWithoutFormattingCodes(line);
+                line = McIf.getTextWithoutFormattingCodes(line);
 
                 // duration | - Duration: <group1> Seconds
                 Matcher m = DURATION_PATTERN.matcher(line);
@@ -132,7 +132,7 @@ public class ConsumableTimerOverlay extends Overlay {
 
         List<String> itemLore = ItemUtils.getLore(stack);
         for (String line : itemLore) {
-            line = TextFormatting.getTextWithoutFormattingCodes(line); // remove colors
+            line = McIf.getTextWithoutFormattingCodes(line); // remove colors
 
             // duration | - Duration: <group1> Seconds
             Matcher m = DURATION_PATTERN.matcher(line);

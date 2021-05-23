@@ -14,7 +14,7 @@ import com.wynntils.core.framework.rendering.colors.CommonColors;
 import com.wynntils.core.utils.Utils;
 import com.wynntils.core.utils.reflections.ReflectionFields;
 import com.wynntils.modules.utilities.configs.OverlayConfig;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.wynntils.transition.GlStateManager;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextFormatting;
@@ -52,11 +52,11 @@ public class ActionBarOverlay extends Overlay {
         int padding = 3;
         int y = 0;
 
-        BlockPos blockPos = new BlockPos(McIf.player());
+        BlockPos blockPos = new BlockPos(McIf.player().position());
         String lCoord = TextFormatting.GRAY.toString() + blockPos.getX();
         String middleCoord;
         if (!OverlayConfig.INSTANCE.replaceDirection) {
-            middleCoord = TextFormatting.GREEN + Utils.getPlayerDirection(McIf.player().rotationYaw);
+            middleCoord = TextFormatting.GREEN + Utils.getPlayerDirection(McIf.player().yRot);
         } else {
             middleCoord = TextFormatting.GRAY.toString() + blockPos.getY();
         }
@@ -79,7 +79,7 @@ public class ActionBarOverlay extends Overlay {
             String[] spaces = lastActionBar.split(" ");
             middle = spaces[5].replace(TextFormatting.UNDERLINE.toString(), "").replace(TextFormatting.RESET.toString(), "");
             preference = true;
-        } else if (TextFormatting.getTextWithoutFormattingCodes(lastActionBar).contains("Sprint") && McIf.player().isSprinting()) {
+        } else if (McIf.getTextWithoutFormattingCodes(lastActionBar).contains("Sprint") && McIf.player().isSprinting()) {
             String[] spaces = lastActionBar.split(" ");
             middle = spaces[5];
         } else if (OverlayConfig.INSTANCE.actionBarCoordinates && !OverlayConfig.INSTANCE.splitCoordinates) {
@@ -101,21 +101,21 @@ public class ActionBarOverlay extends Overlay {
     }
 
     private boolean renderItemName() {
-        int newHighlightTicks = ReflectionFields.GuiIngame_remainingHighlightTicks.getValue(McIf.mc().ingameGUI);
-        ItemStack newHighlightItem = ReflectionFields.GuiIngame_highlightingItemStack.getValue(McIf.mc().ingameGUI);
+        int newHighlightTicks = ReflectionFields.IngameGui_remainingHighlightTicks.getValue(McIf.mc().gui);
+        ItemStack newHighlightItem = ReflectionFields.IngameGui_highlightingItemStack.getValue(McIf.mc().gui);
 
         if (newHighlightTicks > 0) { // update item
             highlightTicks = newHighlightTicks*5; // this method ticks 5 times as fast as the default
             highlightItem = newHighlightItem;
 
-            ReflectionFields.GuiIngame_remainingHighlightTicks.setValue(McIf.mc().ingameGUI, 0);
+            ReflectionFields.IngameGui_remainingHighlightTicks.setValue(McIf.mc().gui, 0);
         } else if (newHighlightItem.isEmpty()) { // clear highlight when player switches to an empty hand
             highlightTicks = 0;
         }
 
         if (highlightTicks > 0 && !highlightItem.isEmpty()) {
 
-            String s = highlightItem.getDisplayName();
+            String s = McIf.toText(highlightItem.getDisplayName());
 
             if (highlightItem.hasCustomHoverName()) {
                 s = TextFormatting.ITALIC + s;
@@ -136,12 +136,12 @@ public class ActionBarOverlay extends Overlay {
             }
 
             if (k > 0) {
-                GlStateManager._pushMatrix();
-                GlStateManager._enableBlend();
+                GlStateManager.pushMatrix();
+                GlStateManager.enableBlend();
                 GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
                 McIf.mc().font.drawStringWithShadow(s, (float) i, (float) j, 16777215 + (k << 24));
-                GlStateManager._disableBlend();
-                GlStateManager._popMatrix();
+                GlStateManager.disableBlend();
+                GlStateManager.popMatrix();
                 return true;
             }
         }

@@ -4,6 +4,7 @@
 
 package com.wynntils.modules.questbook.overlays.ui;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.wynntils.McIf;
 import com.wynntils.core.framework.enums.wynntils.WynntilsSound;
 import com.wynntils.core.framework.instances.PlayerInfo;
@@ -31,15 +32,15 @@ public class MainPage extends QuestBookPage {
     }
 
     @Override
-    public void initGui() {
-        super.initGui();
+    public void init() {
+        super.init();
         pages = (int) Math.ceil(Arrays.stream(QuestBookPages.values()).max(Comparator.comparingInt(QuestBookPages::getSlotNb)).get().getSlotNb() / 4d);
         refreshAccepts();
     }
 
     @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        super.drawScreen(mouseX, mouseY, partialTicks);
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
+        super.render(matrix, mouseX, mouseY, partialTicks);
         int x = width / 2; int y = height / 2;
         int posX = (x - mouseX); int posY = (y - mouseY);
         hoveredText = new ArrayList<>();
@@ -136,14 +137,18 @@ public class MainPage extends QuestBookPage {
     }
 
     @Override
-    public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
         if (selected > 0) {
             WynntilsSound.QUESTBOOK_PAGE.play();
             QuestBookPages.getPageBySlot(selected).open(false);
+            return true;
         } else if (selected == -1) {
             goBack();
+            return true;
         } else if (selected == -2) {
             goForward();
+            return true;
         }
+        return false;
     }
 }

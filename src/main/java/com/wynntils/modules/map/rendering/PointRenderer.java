@@ -17,16 +17,15 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.wynntils.transition.GlStateManager;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.lwjgl.opengl.GL11;
 
@@ -51,8 +50,8 @@ public class PointRenderer {
             }
         }
 
-        GlStateManager._disableCull();
-        GlStateManager._enableBlend();
+        GlStateManager.disableCull();
+        GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
 
         texture.bind();
@@ -128,10 +127,10 @@ public class PointRenderer {
                         end.y -= .24;
 
                         BlockPos startBlockPos = new BlockPos(start.x, start.y, start.z);
-                        Vec3d startVec = new Vec3d(start.x, start.y, start.z);
+                        net.minecraft.util.math.vector.Vector3d startVec = new net.minecraft.util.math.vector.Vector3d(start.x, start.y, start.z);
 
                         BlockPos endBlockPos = new BlockPos(end.x, end.y, end.z);
-                        Vec3d endVec = new Vec3d(end.x, end.y, end.z);
+                        net.minecraft.util.math.vector.Vector3d endVec = new net.minecraft.util.math.vector.Vector3d(end.x, end.y, end.z);
 
                         AxisAlignedBB startCollisionBox = world.getBlockState(startBlockPos).getCollisionBoundingBox(world, startBlockPos);
                         if (startCollisionBox != Block.NULL_AABB) {
@@ -184,14 +183,14 @@ public class PointRenderer {
             }
         }
 
-        GlStateManager._enableCull();
-        GlStateManager._disableBlend();
+        GlStateManager.enableCull();
+        GlStateManager.disableBlend();
         GlStateManager.color(1f, 1f, 1f, 1f);
     }
 
     public static void drawTexturedLine(Texture texture, Point3d start, Point3d end, CommonColors color, float width) {
-        GlStateManager._disableCull();
-        GlStateManager._enableBlend();
+        GlStateManager.disableCull();
+        GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
         color.applyColor();
 
@@ -199,13 +198,13 @@ public class PointRenderer {
 
         drawTexturedLine(start, end, width);
 
-        GlStateManager._enableCull();
-        GlStateManager._disableBlend();
+        GlStateManager.enableCull();
+        GlStateManager.disableBlend();
         GlStateManager.color(1f, 1f, 1f, 1f);
     }
 
     private static void drawTexturedLine(Point3d start, Point3d end, float width) {
-        RenderManager renderManager = McIf.mc().getRenderManager();
+        EntityRendererManager renderManager = McIf.mc().getEntityRenderDispatcher();
 
         Vector3d direction = new Vector3d(start);
         direction.sub(end);
@@ -222,15 +221,15 @@ public class PointRenderer {
         normal.cross(new Vector3d(direction.x, 0, direction.z), normal);
         normal.normalize();
 
-        Vec3d scaled = new Vec3d(normal.x, normal.y, normal.z).scale(width);
+        net.minecraft.util.math.vector.Vector3d scaled = new net.minecraft.util.math.vector.Vector3d(normal.x, normal.y, normal.z).scale(width);
 
         // we need 4 points for rendering
-        Vec3d startVec = new Vec3d(start.x, start.y, start.z);
-        Vec3d endVec = new Vec3d(end.x, end.y, end.z);
-        Vec3d p1 = startVec.add(scaled);
-        Vec3d p2 = startVec.subtract(scaled);
-        Vec3d p3 = endVec.add(scaled);
-        Vec3d p4 = endVec.subtract(scaled);
+        net.minecraft.util.math.vector.Vector3d startVec = new net.minecraft.util.math.vector.Vector3d(start.x, start.y, start.z);
+        net.minecraft.util.math.vector.Vector3d endVec = new net.minecraft.util.math.vector.Vector3d(end.x, end.y, end.z);
+        net.minecraft.util.math.vector.Vector3d p1 = startVec.add(scaled);
+        net.minecraft.util.math.vector.Vector3d p2 = startVec.subtract(scaled);
+        net.minecraft.util.math.vector.Vector3d p3 = endVec.add(scaled);
+        net.minecraft.util.math.vector.Vector3d p4 = endVec.subtract(scaled);
 
         Tessellator tess = Tessellator.getInstance();
         BufferBuilder buffer = tess.getBuilder();
@@ -238,13 +237,13 @@ public class PointRenderer {
         { buffer.begin(GL11.GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION_TEX);
 
             buffer.vertex(p1.x - renderManager.viewerPosX, p1.y - renderManager.viewerPosY, p1.z - renderManager.viewerPosZ)
-                    .tex(0f, 0f).endVertex();
+                    .uv(0f, 0f).endVertex();
             buffer.vertex(p3.x - renderManager.viewerPosX, p3.y - renderManager.viewerPosY, p3.z - renderManager.viewerPosZ)
-                    .tex(1f, 0f).endVertex();
+                    .uv(1f, 0f).endVertex();
             buffer.vertex(p4.x - renderManager.viewerPosX, p4.y - renderManager.viewerPosY, p4.z - renderManager.viewerPosZ)
-                    .tex(1f, 1f).endVertex();
+                    .uv(1f, 1f).endVertex();
             buffer.vertex(p2.x - renderManager.viewerPosX, p2.y - renderManager.viewerPosY, p2.z - renderManager.viewerPosZ)
-                    .tex(0f, 1f).endVertex();
+                    .uv(0f, 1f).endVertex();
 
         } tess.end();
     }
@@ -263,18 +262,18 @@ public class PointRenderer {
             }
         }
 
-        RenderManager renderManager = McIf.mc().getRenderManager();
+        EntityRendererManager renderManager = McIf.mc().getEntityRenderDispatcher();
 
         GlStateManager.glLineWidth(3f);
-        GlStateManager._depthMask(false);
-        GlStateManager._enableBlend();
+        GlStateManager.depthMask(false);
+        GlStateManager.enableBlend();
         GlStateManager.disableTexture2D();
         GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
 
         Tessellator tess = Tessellator.getInstance();
         BufferBuilder buffer = tess.getBuilder();
 
-        GlStateManager._pushMatrix();
+        GlStateManager.pushMatrix();
         GlStateManager.translate(-renderManager.viewerPosX, -renderManager.viewerPosY, -renderManager.viewerPosZ);
 
         {
@@ -368,18 +367,18 @@ public class PointRenderer {
             }
         }
 
-        GlStateManager._popMatrix();
+        GlStateManager.popMatrix();
 
-        GlStateManager._disableBlend();
+        GlStateManager.disableBlend();
         GlStateManager.enableTexture2D();
-        GlStateManager._depthMask(true);
+        GlStateManager.depthMask(true);
         GlStateManager.color(1f, 1f, 1f, 1f);
     }
 
     public static void drawCube(BlockPos point, CustomColor color) {
         if (!McIf.world().isBlockLoaded(point, false)) return;
 
-        RenderManager renderManager = McIf.mc().getRenderManager();
+        EntityRendererManager renderManager = McIf.mc().getEntityRenderDispatcher();
 
         Location c = new Location(
             point.getX() - renderManager.viewerPosX,
@@ -387,21 +386,21 @@ public class PointRenderer {
             point.getZ() - renderManager.viewerPosZ
         );
 
-        GlStateManager._pushMatrix();
+        GlStateManager.pushMatrix();
 
         GlStateManager.glLineWidth(3f);
-        GlStateManager._depthMask(false);
-        GlStateManager._enableBlend();
+        GlStateManager.depthMask(false);
+        GlStateManager.enableBlend();
         GlStateManager.disableTexture2D();
         GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
 
         WorldRenderer.drawBoundingBox(c.x, c.y, c.z, c.x + 1, c.y + 1, c.z + 1, color.r, color.g, color.b, color.a);
 
-        GlStateManager._disableBlend();
+        GlStateManager.disableBlend();
         GlStateManager.enableTexture2D();
-        GlStateManager._depthMask(true);
+        GlStateManager.depthMask(true);
 
-        GlStateManager._popMatrix();
+        GlStateManager.popMatrix();
     }
 
 }

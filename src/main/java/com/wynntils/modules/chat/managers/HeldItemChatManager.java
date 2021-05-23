@@ -81,11 +81,11 @@ public class HeldItemChatManager {
         public void run() {
             Location compass = CompassManager.getCompassLocation();
             if (compass == null) {
-                Utils.displayGuiScreen(new MainWorldMapUI());
+                Utils.setScreen(new MainWorldMapUI());
                 return;
             }
 
-            Utils.displayGuiScreen(new MainWorldMapUI((float) compass.getX(), (float) compass.getZ()));
+            Utils.setScreen(new MainWorldMapUI((float) compass.getX(), (float) compass.getZ()));
         }
     }
 
@@ -193,7 +193,7 @@ public class HeldItemChatManager {
             ChatConfig.INSTANCE.saveSettings(ChatModule.getModule());
 
             ITextComponent message = new StringTextComponent("Enable §bMod options > Chat > Held Item Chat Messages§r to undo (or click this)");
-            McIf.player().sendMessage(TextAction.withStaticEvent(message, OnUnhideClick.class));
+            McIf.sendMessage(TextAction.withStaticEvent(message, OnUnhideClick.class));
         }
     }
 

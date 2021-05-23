@@ -4,6 +4,7 @@
 
 package com.wynntils.modules.core.overlays.ui;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.wynntils.McIf;
 import com.wynntils.Reference;
 import com.wynntils.core.framework.rendering.ScreenRenderer;
@@ -15,8 +16,8 @@ import com.wynntils.core.utils.StringUtils;
 import com.wynntils.modules.core.config.CoreDBConfig;
 import com.wynntils.modules.core.enums.UpdateStream;
 import com.wynntils.webapi.WebManager;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.util.text.StringTextComponent;
 import org.lwjgl.input.Mouse;
 
 import java.io.IOException;
@@ -46,6 +47,7 @@ public class ChangelogUI extends Screen {
     }
 
     public ChangelogUI(Screen previousGui, List<String> changelogContent, boolean major) {
+        super(StringTextComponent.EMPTY);
         this.previousGui = previousGui;
 
         this.major = major;
@@ -78,7 +80,7 @@ public class ChangelogUI extends Screen {
     public static void loadChangelogAndShow(Screen previousGui, boolean major, boolean forceLatest) {
 
         Screen loadingScreen = new ChangelogUI(previousGui, Collections.singletonList("Loading..."), major);
-        McIf.mc().displayGuiScreen(loadingScreen);
+        McIf.mc().setScreen(loadingScreen);
         if (McIf.mc().screen != loadingScreen) {
             // Changed by an event handler
             return;
@@ -99,14 +101,14 @@ public class ChangelogUI extends Screen {
                 }
 
                 ChangelogUI gui = new ChangelogUI(previousGui, changelog, major);
-                McIf.mc().displayGuiScreen(gui);
+                McIf.mc().setScreen(gui);
             });
 
         }, "wynntils-changelog").start();
     }
 
     @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
         drawDefaultBackground();
 
         ScreenRenderer.beginGL(0, 0);
@@ -164,11 +166,13 @@ public class ChangelogUI extends Screen {
     }
 
     @Override
-    protected void keyTyped(char charType, int keyCode) throws IOException {
+    public boolean keyPressed(int charType, int keyCode, int j) {
         if (keyCode == 1) {  // ESC
-            McIf.mc().displayGuiScreen(previousGui);
+            McIf.mc().setScreen(previousGui);
             if (McIf.mc().screen == null) McIf.mc().setIngameFocus();
+            return true;
         }
+        return false;
     }
 
 }

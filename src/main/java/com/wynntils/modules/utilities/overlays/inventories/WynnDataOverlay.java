@@ -33,7 +33,7 @@ import java.util.Map;
 public class WynnDataOverlay implements Listener {
 
     @SubscribeEvent
-    public void initGui(GuiOverlapEvent.ChestOverlap.InitGui e) {
+    public void init(GuiOverlapEvent.ChestOverlap.InitGui e) {
         if (!Reference.onWorld || !Utils.isCharacterInfoPage(e.getGui())) return;
 
         e.getButtonList().add(
@@ -47,7 +47,7 @@ public class WynnDataOverlay implements Listener {
     }
 
     @SubscribeEvent
-    public void drawScreen(GuiOverlapEvent.ChestOverlap.DrawScreen.Post e) {
+    public void render(MatrixStack matrix, GuiOverlapEvent.ChestOverlap.DrawScreen.Post e) {
         e.getButtonList().forEach(gb -> {
             if (gb.id == 12 && gb.isMouseOver()) {
                 e.getGui().drawHoveringText(Arrays.asList("Left click: Open Build on WynnData", "Shift + Right click on item: Open Item on WynnData"), e.getMouseX(), e.getMouseY());
@@ -62,7 +62,7 @@ public class WynnDataOverlay implements Listener {
         if (!(Utils.isKeyDown(GLFW.GLFW_KEY_LSHIFT) || Utils.isKeyDown(GLFW.GLFW_KEY_RSHIFT))) return;
 
         Slot slot = e.getGui().getSlotUnderMouse();
-        if (slot == null || slot.inventory == null || !slot.getHasStack()) return;
+        if (slot == null || slot.inventory == null || !slot.hasItem()) return;
 
         ItemStack stack = slot.getItem();
         Utils.openUrl("https://www.wynndata.tk/i/" + Utils.encodeItemNameForUrl(stack));

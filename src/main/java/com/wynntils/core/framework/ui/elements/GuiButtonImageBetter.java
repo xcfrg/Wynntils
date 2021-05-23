@@ -4,19 +4,20 @@
 
 package com.wynntils.core.framework.ui.elements;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.wynntils.McIf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.client.gui.GuiButtonImage;
-import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.client.gui.widget.button.ImageButton;
+import com.wynntils.transition.GlStateManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 
 /**
- * Fixes net.minecraft.client.gui.GuiButtonImage so that it highlights properly
+ * Fixes net.minecraft.client.gui.widget.button.ImageButton so that it highlights properly
  * and can also be scaled
  */
-public class GuiButtonImageBetter extends GuiButtonImage {
+public class GuiButtonImageBetter extends ImageButton {
     private static final Button highlightFixHovering = new Button(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE, 1, 1, "");
     private static final Button highlightFixNoHovering = new Button(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE, 0, 0, "");
 
@@ -71,18 +72,18 @@ public class GuiButtonImageBetter extends GuiButtonImage {
     }
 
     @Override
-    public void drawButton(Minecraft minecraft, int mouseX, int mouseY, float partialTicks) {
+    public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float partialTicks) {
         setColour(this.highlight && mouseX >= scaledStartX && mouseY >= scaledStartY && mouseX < scaledEndX && mouseY < scaledEndY, this.enabled);
 
         if (scaleFactor != 1f) {
-            GlStateManager._pushMatrix();
+            GlStateManager.pushMatrix();
             GlStateManager.translate(-scaleFromX, -scaleFromY, 0);
             GlStateManager.scale(scaleFactor, scaleFactor, 1);
             GlStateManager.translate(scaleFromX, scaleFromY, 0);
         }
-        super.drawButton(minecraft, mouseX, mouseY, partialTicks);
+        super.renderButton(matrices, mouseX, mouseY, partialTicks);
         if (scaleFactor != 1f) {
-            GlStateManager._popMatrix();
+            GlStateManager.popMatrix();
         }
 
         setColour(false, true);
@@ -91,10 +92,10 @@ public class GuiButtonImageBetter extends GuiButtonImage {
     public static void setColour(boolean hovering, boolean enabled) {
         if (hovering) {
             highlightFixHovering.enabled = enabled;
-            highlightFixHovering.drawButton(McIf.mc(), Integer.MIN_VALUE, Integer.MIN_VALUE, 0);
+            highlightFixHovering.renderButton(new MatrixStack(), Integer.MIN_VALUE, Integer.MIN_VALUE, 0);
         } else {
             highlightFixNoHovering.enabled = enabled;
-            highlightFixNoHovering.drawButton(McIf.mc(), 0, 0, 0);
+            highlightFixNoHovering.renderButton(new MatrixStack(), 0, 0, 0);
         }
     }
 }

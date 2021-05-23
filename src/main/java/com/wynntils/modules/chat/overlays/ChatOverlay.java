@@ -16,7 +16,8 @@ import com.wynntils.modules.chat.managers.TabManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.SimpleSound;
 import net.minecraft.client.gui.*;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.wynntils.transition.GlStateManager;
+import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.MathHelper;
@@ -66,7 +67,7 @@ public class ChatOverlay extends GuiNewChat {
 
             float chatScale = getChatScale();
             int extraY = MathHelper.ceil((float)getChatWidth() / chatScale) + 4;
-            GlStateManager._pushMatrix();
+            GlStateManager.pushMatrix();
             GlStateManager.translate(2.0F, 0.0F, 0.0F);
             GlStateManager.scale(chatScale, chatScale, 1.0F);
             int l = 0;
@@ -98,10 +99,10 @@ public class ChatOverlay extends GuiNewChat {
                                 drawRect(-2, j2 - 9, extraY, j2, l1 / 2 << 24);
                             }
                             String s = McIf.getFormattedText(ChatManager.renderMessage(chatline.getMessage()));
-                            GlStateManager._enableBlend();
+                            GlStateManager.enableBlend();
                             McIf.mc().font.drawStringWithShadow(s, 0.0F, (float)(j2 - 8), 16777215 + (l1 << 24));
                             GlStateManager.disableAlpha();
-                            GlStateManager._disableBlend();
+                            GlStateManager.disableBlend();
                         }
                     }
                 }
@@ -110,7 +111,7 @@ public class ChatOverlay extends GuiNewChat {
             if (flag) {
                 // continuing chat render
                 if (chatSize > 0) {
-                    int k2 = McIf.mc().font.FONT_HEIGHT;
+                    int k2 = McIf.mc().font.lineHeight;
                     GlStateManager.translate(-3.0F, 0.0F, 0.0F);
                     int l2 = chatSize * k2 + chatSize;
                     int i3 = l * k2 + l;
@@ -126,7 +127,7 @@ public class ChatOverlay extends GuiNewChat {
                 }
             }
 
-            GlStateManager._popMatrix();
+            GlStateManager.popMatrix();
         }
     }
 
@@ -139,7 +140,7 @@ public class ChatOverlay extends GuiNewChat {
     }
 
     public void printChatMessageWithOptionalDeletion(ITextComponent chatComponent, int chatLineId) {
-        setChatLine(chatComponent, chatLineId, McIf.mc().ingameGUI.getUpdateCounter(), false, false);
+        setChatLine(chatComponent, chatLineId, McIf.mc().gui.getUpdateCounter(), false, false);
         LOGGER.info("[CHAT] " + McIf.getUnformattedText(chatComponent).replaceAll("\r", "\\\\r").replaceAll("\n", "\\\\n"));
     }
 
@@ -148,7 +149,7 @@ public class ChatOverlay extends GuiNewChat {
     }
 
     public void printUnloggedChatMessage(ITextComponent chatComponent, int chatLineId) {
-        setChatLine(chatComponent, chatLineId, McIf.mc().ingameGUI.getUpdateCounter(), false, true);
+        setChatLine(chatComponent, chatLineId, McIf.mc().gui.getUpdateCounter(), false, true);
     }
 
     private void setChatLine(ITextComponent chatComponent, int chatLineId, int updateCounter, boolean displayOnly, boolean noEvent) {
@@ -328,8 +329,8 @@ public class ChatOverlay extends GuiNewChat {
             if (j >= 0 && k >= 0) {
                 int l = Math.min(getLineCount(), getCurrentTab().getCurrentMessages().size());
 
-                if (j <= MathHelper.floor((float) getChatWidth() / getChatScale()) && k < McIf.mc().font.FONT_HEIGHT * l + l) {
-                    int i1 = k / McIf.mc().font.FONT_HEIGHT + scrollPos;
+                if (j <= MathHelper.floor((float) getChatWidth() / getChatScale()) && k < McIf.mc().font.lineHeight * l + l) {
+                    int i1 = k / McIf.mc().font.lineHeight + scrollPos;
 
                     if (i1 >= 0 && i1 < getCurrentTab().getCurrentMessages().size()) {
                         ChatLine chatline = getCurrentTab().getCurrentMessages().get(i1);
@@ -337,7 +338,7 @@ public class ChatOverlay extends GuiNewChat {
 
                         for (ITextComponent itextcomponent : chatline.getMessage()) {
                             if (itextcomponent instanceof StringTextComponent) {
-                                j1 += McIf.mc().font.width(GuiUtilRenderComponents.removeTextColorsIfConfigured(((StringTextComponent) itextcomponent).getText(), false));
+                                j1 += McIf.mc().font.width(GuiUtilRenderComponents.removeTextColorsIfConfigured(((StringTextComponent) itextcomponent).getValue(), false));
 
                                 if (j1 > j) {
                                     return itextcomponent;
@@ -352,7 +353,7 @@ public class ChatOverlay extends GuiNewChat {
     }
 
     public boolean getChatOpen() {
-        return McIf.mc().screen instanceof GuiChat;
+        return McIf.mc().screen instanceof ChatScreen;
     }
 
     public void deleteChatLine(int id) {

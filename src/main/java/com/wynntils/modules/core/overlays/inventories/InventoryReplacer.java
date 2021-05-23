@@ -4,12 +4,14 @@
 
 package com.wynntils.modules.core.overlays.inventories;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.wynntils.core.events.custom.GuiOverlapEvent;
 import com.wynntils.core.framework.FrameworkManager;
 import com.wynntils.modules.questbook.enums.QuestBookPages;
 import net.minecraft.client.gui.screen.inventory.InventoryScreen;
+import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.gui.widget.button.Button;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.wynntils.transition.GlStateManager;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.container.ClickType;
 import net.minecraft.inventory.container.Slot;
@@ -33,16 +35,16 @@ public class InventoryReplacer extends InventoryScreen {
     }
 
     @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        super.drawScreen(mouseX, mouseY, partialTicks);
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
+        super.render(matrix, mouseX, mouseY, partialTicks);
 
         FrameworkManager.getEventBus().post(new GuiOverlapEvent.InventoryOverlap.DrawScreen(this, mouseX, mouseY, partialTicks));
     }
 
     @Override
-    public void handleMouseClick(Slot slotIn, int slotId, int mouseButton, ClickType type) {
+    public void slotClicked(Slot slotIn, int slotId, int mouseButton, ClickType type) {
         if (!FrameworkManager.getEventBus().post(new GuiOverlapEvent.InventoryOverlap.HandleMouseClick(this, slotIn, slotId, mouseButton, type)))
-            super.handleMouseClick(slotIn, slotId, mouseButton, type);
+            super.slotClicked(slotIn, slotId, mouseButton, type);
     }
 
     @Override
@@ -59,9 +61,10 @@ public class InventoryReplacer extends InventoryScreen {
     }
 
     @Override
-    public void keyTyped(char typedChar, int keyCode) throws IOException {
+    public boolean keyPressed(int typedChar, int keyCode, int j) {
         if (!FrameworkManager.getEventBus().post(new GuiOverlapEvent.InventoryOverlap.KeyTyped(this, typedChar, keyCode)))
-            super.keyTyped(typedChar, keyCode);
+            return super.keyPressed(typedChar, keyCode, j);
+        return false;
     }
 
     @Override
@@ -89,12 +92,12 @@ public class InventoryReplacer extends InventoryScreen {
     }
 
     @Override
-    public void onGuiClosed() {
+    public void onClose() {
         FrameworkManager.getEventBus().post(new GuiOverlapEvent.InventoryOverlap.GuiClosed(this));
-        super.onGuiClosed();
+        super.onClose();
     }
 
-    public List<Button> getButtonList() {
-        return buttonList;
+    public List<Widget> getButtonList() {
+        return buttons;
     }
 }

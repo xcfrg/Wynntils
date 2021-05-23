@@ -4,6 +4,7 @@
 
 package com.wynntils.modules.map.overlays.ui;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.wynntils.McIf;
 import com.wynntils.core.framework.rendering.ScreenRenderer;
 import com.wynntils.core.framework.rendering.colors.CommonColors;
@@ -15,9 +16,10 @@ import com.wynntils.modules.map.configs.MapConfig;
 import com.wynntils.modules.map.configs.MapConfig.IconTexture;
 import com.wynntils.modules.map.overlays.objects.MapApiIcon;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.gui.screen.Screen;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.wynntils.transition.GlStateManager;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
@@ -33,7 +35,7 @@ public class WorldMapSettingsUI extends Screen {
     private Map<String, Boolean> enabledMapIcons, enabledMinimapIcons;
     private int page = 0;
     private int maxPage;
-    private List<Button> settingButtons = Collections.EMPTY_LIST;
+    private List<MapButton> settingButtons = Collections.EMPTY_LIST;
     private Button textureButton, nextPageButton, previousPageButton;
 
     public WorldMapSettingsUI() {
@@ -49,7 +51,7 @@ public class WorldMapSettingsUI extends Screen {
     }
 
     @Override
-    public void initGui() {
+    public void init() {
         int rightAlign = 7 + (this.width-399)/2;
         int yOffset = 35;
         int maxHeight = Math.max(this.height - 90, yOffset + 17);
@@ -73,47 +75,47 @@ public class WorldMapSettingsUI extends Screen {
                 ++maxPage;
             }
             String key = keys.get(i);
-            Button button = new Button(i, x, y, 132, 16, key, key, maxPage, MapConfig.INSTANCE.iconTexture, enabledMapIcons.get(key), enabledMinimapIcons.get(key));
-            this.buttonList.add(button);
+            MapButton button = new MapButton(i, x, y, 132, 16, key, key, maxPage, MapConfig.INSTANCE.iconTexture, enabledMapIcons.get(key), enabledMinimapIcons.get(key));
+            this.buttons.add(button);
             this.settingButtons.add(button);
         }
 
-        this.buttonList.add(textureButton = new Button(99, rightAlign + 120, this.height-65, 55, 18, MapConfig.INSTANCE.iconTexture.name()));
-        this.buttonList.add(new Button(100, this.width/2 - 71, this.height-40, 45, 18, "Cancel"));
-        this.buttonList.add(new Button(101, this.width/2 - 23, this.height-40, 45, 18, "Default"));
-        this.buttonList.add(new Button(102, this.width/2 + 25, this.height-40, 45, 18, "Save"));
-        this.buttonList.add(nextPageButton = new Button(103, this.width/2 + 2, this.height - 90, 20, 20, ">"));
-        this.buttonList.add(previousPageButton = new Button(104, this.width/2 - 22, this.height - 90, 20, 20, "<"));
+        this.buttons.add(textureButton = new Button(99, rightAlign + 120, this.height-65, 55, 18, MapConfig.INSTANCE.iconTexture.name()));
+        this.buttons.add(new Button(100, this.width/2 - 71, this.height-40, 45, 18, "Cancel"));
+        this.buttons.add(new Button(101, this.width/2 - 23, this.height-40, 45, 18, "Default"));
+        this.buttons.add(new Button(102, this.width/2 + 25, this.height-40, 45, 18, "Save"));
+        this.buttons.add(nextPageButton = new Button(103, this.width/2 + 2, this.height - 90, 20, 20, ">"));
+        this.buttons.add(previousPageButton = new Button(104, this.width/2 - 22, this.height - 90, 20, 20, "<"));
         nextPageButton.enabled = maxPage > 0;
         previousPageButton.enabled = false;
     }
 
     @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
         drawDefaultBackground();
-        int topY = this.buttonList.get(0).y;
+        int topY = this.buttons.get(0).y;
         this.font.drawString(TextFormatting.WHITE + "Enable/Disable Map Icons", (this.width - 349) / 2, topY - 15, 0xffFFFFFF);
         this.font.drawString(TextFormatting.WHITE + "Map Icon Textures:", (this.width - 349) / 2, this.height-60, 0xffFFFFFF);
 
         // Draw labels rotated 45 degrees
-        GlStateManager._pushMatrix();
+        GlStateManager.pushMatrix();
         GlStateManager.translate((this.width-399) / 2.0f + 286, 29f, 0f);
         GlStateManager.rotate(-45, 0, 0, 1);
         this.font.drawString("Main map", 0, 0, 0xFFFFFFFF);
-        GlStateManager.translate(11 / MathHelper.SQRT_2, 17 / MathHelper.SQRT_2, 0f);
+        GlStateManager.translate(11 / MathHelper.SQRT_OF_TWO, 17 / MathHelper.SQRT_OF_TWO, 0f);
         this.font.drawString("Minimap", 0, 0, 0xFFFFFFFF);
-        GlStateManager._popMatrix();
+        GlStateManager.popMatrix();
 
         ScreenRenderer.beginGL(0, 0);
-        super.drawScreen(mouseX, mouseY, partialTicks);
+        super.render(matrix, mouseX, mouseY, partialTicks);
         ScreenRenderer.endGL();
 
-        for (Button btn : settingButtons) {
-            if (btn.isMouseOver()) {
+        for (MapButton btn : settingButtons) {
+            if (btn.isMouseOver(mouseX, mouseY)) {
                 String visiblePrefix = TextFormatting.GREEN + "Visible";
                 String invisiblePrefix = TextFormatting.GRAY + "Not visible";
                 drawHoveringText(Arrays.asList(
-                    btn.displayString,
+                    btn.getMessage(),
                     (btn.onMainMap() ? visiblePrefix : invisiblePrefix) + TextFormatting.RESET + " on main map",
                     (btn.onMinimap() ? visiblePrefix : invisiblePrefix) + TextFormatting.RESET + " on minimap"
                 ), mouseX, mouseY, font);
@@ -122,69 +124,69 @@ public class WorldMapSettingsUI extends Screen {
     }
 
     @Override
-    protected void keyTyped(char typedChar, int keyCode) throws IOException {
-        if (keyCode == McIf.mc().options.keyBindInventory.getKeyCode() ||  // DEFAULT: E
-                keyCode == MapModule.getModule().getMapKey().getKeyBinding().getKeyCode()) {  // DEFAULT: M
-            Utils.displayGuiScreen(new MainWorldMapUI());
+    public boolean keyPressed(int typedChar, int keyCode, int j) {
+        if (keyCode == McIf.mc().options.keyBindInventory.getKey().getValue() ||  // DEFAULT: E
+                keyCode == MapModule.getModule().getMapKey().getKeyBinding().getKey().getValue()) {  // DEFAULT: M
+            Utils.setScreen(new MainWorldMapUI());
         }
-        super.keyTyped(typedChar, keyCode);
+        return super.keyPressed(typedChar, keyCode, j);
     }
 
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
+    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton)  {
         if (mouseButton == 0 || mouseButton == 1) {
-            for (Button btn : settingButtons) {
-                if (btn.mousePressed(McIf.mc(), mouseX, mouseY)) {
-                    btn.toggle(mouseX, mouseY, mouseButton == 1);
+            for (MapButton btn : settingButtons) {
+                if (btn.mouseClicked(mouseX, mouseY, mouseButton)) {
+                    btn.toggle((int) mouseX, (int) mouseY, mouseButton == 1);
                     selectedButton = btn;
-                    return;
+                    return true;
                 }
             }
 
-            if (textureButton.mousePressed(McIf.mc(), mouseX, mouseY)) {
+            if (textureButton.mouseClicked(mouseX, mouseY, mouseButton)) {
                 selectedButton = textureButton;
                 int delta = mouseButton == 0 ? 1 : IconTexture.values().length - 1;
-                IconTexture newTexture = IconTexture.values()[(IconTexture.valueOf(textureButton.displayString).ordinal() + delta) % IconTexture.values().length];
-                textureButton.displayString = newTexture.name();
-                for (Button btn : settingButtons) {
+                IconTexture newTexture = IconTexture.values()[(IconTexture.valueOf(McIf.toText(textureButton.getMessage())).ordinal() + delta) % IconTexture.values().length];
+                textureButton.setMessage(newTexture.name());
+                for (MapButton btn : settingButtons) {
                     btn.updateTexture(newTexture);
                 }
-                return;
+                return true;
             }
         }
-        super.mouseClicked(mouseX, mouseY, mouseButton);
+        return super.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
     @Override
     protected void actionPerformed(Button button) {
         if (button.id == 100) {
-            Utils.displayGuiScreen(new MainWorldMapUI());
+            Utils.setScreen(new MainWorldMapUI());
         } else if (button.id == 102) {
             MapConfig.INSTANCE.enabledMapIcons = MapConfig.resetMapIcons(false);
             MapConfig.INSTANCE.enabledMinimapIcons = MapConfig.resetMapIcons(true);
-            for (Button cb : this.buttonList) {
-                if (cb instanceof Button) {
-                    MapConfig.INSTANCE.enabledMapIcons.put(((Button) cb).key, ((Button) cb).onMainMap());
-                    MapConfig.INSTANCE.enabledMinimapIcons.put(((Button) cb).key, ((Button) cb).onMinimap());
+            for (Widget cb : this.buttons) {
+                if (cb instanceof MapButton) {
+                    MapConfig.INSTANCE.enabledMapIcons.put(((MapButton) cb).key, ((MapButton) cb).onMainMap());
+                    MapConfig.INSTANCE.enabledMinimapIcons.put(((MapButton) cb).key, ((MapButton) cb).onMinimap());
                 } else if (cb.id == 99) {
-                    MapConfig.INSTANCE.iconTexture = IconTexture.values()[IconTexture.valueOf(cb.displayString).ordinal()];
+                    MapConfig.INSTANCE.iconTexture = IconTexture.values()[IconTexture.valueOf(McIf.toText(cb.getMessage())).ordinal()];
                 }
             }
             MapConfig.INSTANCE.saveSettings(MapModule.getModule());
-            Utils.displayGuiScreen(new MainWorldMapUI());
+            Utils.setScreen(new MainWorldMapUI());
         } else if (button.id == 101) {
             this.enabledMapIcons = MapConfig.resetMapIcons(false);
             this.enabledMinimapIcons = MapConfig.resetMapIcons(true);
             page = 0;
-            for (Button b : this.buttonList) {
-                if (b instanceof Button) {
-                    Button btn = (Button) b;
+            for (Widget b : this.buttons) {
+                if (b instanceof MapButton) {
+                    MapButton btn = (MapButton) b;
                     btn.updatePage(0);
                     btn.updateTexture(IconTexture.Classic);
                     btn.setOnMainMap(enabledMapIcons.get(btn.key));
                     btn.setOnMinimap(enabledMinimapIcons.get(btn.key));
                 } else if (b.id == 99) {
-                    b.displayString = "Classic";
+                    b.setMessage("Classic");
                 }
             }
         } else if (button == nextPageButton || button == previousPageButton) {
@@ -196,7 +198,7 @@ public class WorldMapSettingsUI extends Screen {
         page = Math.max(Math.min(page + by, maxPage), 0);
         nextPageButton.enabled = page != maxPage;
         previousPageButton.enabled = page != 0;
-        for (Button btn : settingButtons) {
+        for (MapButton btn : settingButtons) {
             btn.updatePage(page);
         }
     }
@@ -213,7 +215,7 @@ public class WorldMapSettingsUI extends Screen {
     private static final int ON_MAINMAP = 0b01;
     private static final int ON_MINIMAP = 0b10;
 
-    private static class Button extends Button {
+    private static class MapButton extends Button {
 
         static final ScreenRenderer renderer = new ScreenRenderer();
 
@@ -225,14 +227,14 @@ public class WorldMapSettingsUI extends Screen {
         float miniScale;
         CustomColor disabledColour = new CustomColor(CommonColors.GRAY).setA(0.5f);
 
-        Button(int id, int xPos, int yPos, int width, int height, String displayString, String key, int page, IconTexture tex, boolean onMainMap, boolean onMiniMap) {
+        MapButton(int id, int xPos, int yPos, int width, int height, String displayString, String key, int page, IconTexture uv, boolean onMainMap, boolean onMiniMap) {
             super(id, xPos, yPos, width, height, displayString);
             this.key = key;
             this.page = page;
             if (onMainMap) selectionState |= ON_MAINMAP;
             if (onMiniMap) selectionState |= ON_MINIMAP;
             updatePage(0);
-            updateTexture(tex);
+            updateTexture(uv);
         }
 
         boolean onMainMap() {
@@ -291,7 +293,7 @@ public class WorldMapSettingsUI extends Screen {
         }
 
         @Override
-        public void drawButton(Minecraft minecraft, int mouseX, int mouseY, float partialTicks) {
+        public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float partialTicks) {
             if (!visible) {
                 this.hovered = false;
                 return;
@@ -308,7 +310,7 @@ public class WorldMapSettingsUI extends Screen {
             icon.renderAt(renderer, x + height + (height * 0.375f), y + (height / 2f), miniScale, 1);
             CommonColors.WHITE.applyColor();
 
-            this.drawString(minecraft.font, displayString, this.x + (int) (height * 1.75f) + 2, this.y + (this.height - minecraft.font.FONT_HEIGHT) / 2, 0xFFFFFFFF);
+            this.drawString(matrices, McIf.mc().font, getMessage(), this.x + (int) (height * 1.75f) + 2, this.y + (this.height - minecraft.font.lineHeight) / 2, 0xFFFFFFFF);
         }
 
     }

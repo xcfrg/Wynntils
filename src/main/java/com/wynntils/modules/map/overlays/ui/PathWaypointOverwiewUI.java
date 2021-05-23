@@ -4,6 +4,7 @@
 
 package com.wynntils.modules.map.overlays.ui;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.wynntils.McIf;
 import com.wynntils.core.framework.rendering.ScreenRenderer;
 import com.wynntils.core.framework.rendering.colors.CommonColors;
@@ -35,23 +36,23 @@ public class PathWaypointOverwiewUI extends Screen {
     private int pageHeight;
 
     @Override
-    public void initGui() {
-        super.initGui();
+    public void init() {
+        super.init();
         paths = MapConfig.Waypoints.INSTANCE.pathWaypoints;
 
         pageHeight = (this.height - 100) / 25;
         setEditButtons();
-        this.buttonList.add(newBtn = new Button(-1, this.width/2 - 20, this.height - 45, 40, 20, "NEW"));
-        this.buttonList.add(nextPageBtn = new Button(0, this.width/2 + 24, this.height - 45, 20, 20, ">"));
-        this.buttonList.add(previousPageBtn = new Button(1, this.width/2 - 44, this.height - 45, 20, 20, "<"));
-        this.buttonList.add(exitBtn = new Button(2, this.width - 40, 20, 20, 20, TextFormatting.RED + "X"));
+        this.buttons.add(newBtn = new Button(-1, this.width/2 - 20, this.height - 45, 40, 20, "NEW"));
+        this.buttons.add(nextPageBtn = new Button(0, this.width/2 + 24, this.height - 45, 20, 20, ">"));
+        this.buttons.add(previousPageBtn = new Button(1, this.width/2 - 44, this.height - 45, 20, 20, "<"));
+        this.buttons.add(exitBtn = new Button(2, this.width - 40, 20, 20, 20, TextFormatting.RED + "X"));
         checkAvailablePages();
     }
 
     @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
         drawDefaultBackground();
-        super.drawScreen(mouseX, mouseY, partialTicks);
+        super.render(matrix, mouseX, mouseY, partialTicks);
         font.drawString(TextFormatting.BOLD + "Icon", this.width/2 - 185, 39, 0xFFFFFF);
         font.drawString(TextFormatting.BOLD + "Name", this.width/2 - 150, 39, 0xFFFFFF);
         drawCenteredString(font, TextFormatting.BOLD + "X", this.width/2 + 20, 39, 0xFFFFFF);
@@ -93,15 +94,15 @@ public class PathWaypointOverwiewUI extends Screen {
             checkAvailablePages();
             setEditButtons();
         } else if (b == exitBtn) {
-            Utils.displayGuiScreen(new MainWorldMapUI());
+            Utils.setScreen(new MainWorldMapUI());
         } else if (b.id % 10 == 3) {
-            McIf.mc().displayGuiScreen(new PathWaypointCreationUI(paths.get(b.id / 10 + page * pageHeight)));
+            McIf.mc().setScreen(new PathWaypointCreationUI(paths.get(b.id / 10 + page * pageHeight)));
         } else if (b.id %10 == 5) {
             MapConfig.Waypoints.INSTANCE.pathWaypoints.remove(paths.get(b.id / 10 + page * pageHeight));
             MapConfig.Waypoints.INSTANCE.saveSettings(MapModule.getModule());
-            McIf.mc().displayGuiScreen(new PathWaypointOverwiewUI());
+            McIf.mc().setScreen(new PathWaypointOverwiewUI());
         } else if (b == newBtn) {
-            McIf.mc().displayGuiScreen(new PathWaypointCreationUI());
+            McIf.mc().setScreen(new PathWaypointCreationUI());
         }
     }
 
@@ -111,13 +112,13 @@ public class PathWaypointOverwiewUI extends Screen {
     }
 
     private void setEditButtons() {
-        this.buttonList.removeAll(editButtons);
+        this.buttons.removeAll(editButtons);
         editButtons.clear();
         for (int i = 0; i < Math.min(pageHeight, paths.size() - pageHeight * page); i++) {
             editButtons.add(new Button(3 + 10 * i, this.width/2 + 85, 50 + 25 * i, 40, 20,"Edit..."));
             editButtons.add(new Button(5 + 10 * i, this.width/2 + 130, 50 + 25 * i, 40, 20, "Delete"));
         }
-        this.buttonList.addAll(editButtons);
+        this.buttons.addAll(editButtons);
     }
 
     @Override

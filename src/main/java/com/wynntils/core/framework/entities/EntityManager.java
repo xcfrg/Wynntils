@@ -10,13 +10,13 @@ import com.wynntils.core.utils.Utils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.renderer.WorldRenderer;
-import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.renderer.entity.EntityRendererManager;
 
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import static com.mojang.blaze3d.platform.GlStateManager.*;
+import static com.wynntils.transition.GlStateManager.*;
 
 public class EntityManager {
 
@@ -56,7 +56,7 @@ public class EntityManager {
                 it.remove();
             }
 
-            RenderManager renderManager = McIf.mc().getRenderManager();
+            EntityRendererManager renderManager = McIf.mc().getEntityRenderDispatcher();
             if (renderManager == null || renderManager.options == null) return;
 
             ClientPlayerEntity player = McIf.player();
@@ -100,7 +100,7 @@ public class EntityManager {
                 it.remove();
             }
 
-            RenderManager renderManager = McIf.mc().getRenderManager();
+            EntityRendererManager renderManager = McIf.mc().getEntityRenderDispatcher();
             if (renderManager == null || renderManager.options == null) return;
 
             ClientPlayerEntity player = McIf.player();
@@ -111,19 +111,19 @@ public class EntityManager {
 
                 McIf.mc().getProfiler().push(next.getName());
                 {
-                    _pushMatrix();
+                    pushMatrix();
                     {
                         next.preRender(partialTicks, context, renderManager);
                         // translates to the correctly entity position
                         // subtracting the viewer position offset
-                        _translated(
+                        translate(
                                 next.currentLocation.x - renderManager.viewerPosX,
                                 next.currentLocation.y - renderManager.viewerPosY,
                                 next.currentLocation.z - renderManager.viewerPosZ
                         );
                         next.render(partialTicks, context, renderManager);
                     }
-                    _popMatrix();
+                    popMatrix();
                 }
                 McIf.mc().getProfiler().pop();
             }

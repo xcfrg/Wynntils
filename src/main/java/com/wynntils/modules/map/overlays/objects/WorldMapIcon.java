@@ -4,11 +4,12 @@
 
 package com.wynntils.modules.map.overlays.objects;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.wynntils.core.framework.rendering.ScreenRenderer;
 import com.wynntils.core.framework.rendering.SmartFontRenderer;
 import com.wynntils.core.framework.rendering.colors.CommonColors;
 import com.wynntils.modules.map.instances.MapProfile;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.wynntils.transition.GlStateManager;
 
 public class WorldMapIcon {
 
@@ -75,7 +76,7 @@ public class WorldMapIcon {
         return mouseX >= (axisX - sizeX) && mouseX <= (axisX + sizeX) && mouseY >= (axisZ - sizeZ) && mouseY <= (axisZ + sizeZ);
     }
 
-    public void drawScreen(int mouseX, int mouseY, float partialTicks, float blockScale, ScreenRenderer renderer) {
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks, float blockScale, ScreenRenderer renderer) {
         if (!shouldRender || renderer == null) return;
 
         GlStateManager.color(1, 1, 1, alpha);
