@@ -301,7 +301,7 @@ public class BankOverlay implements Listener {
                 nameField = null;
                 updateName(e.getGui().getLowerInv());
             } else {
-                nameField.textboxKeyTyped(e.getTypedChar(), e.getKeyCode());
+                nameField.keyPressed(e.getTypedChar(), e.getKeyCode(), 0);
             }
         } else if (searchField != null && searchField.isFocused()) {
             e.setCanceled(true);
@@ -312,7 +312,7 @@ public class BankOverlay implements Listener {
                 destinationPage = page + 1;
                 gotoPage(e.getGui());
             } else {
-                searchField.textboxKeyTyped(e.getTypedChar(), e.getKeyCode());
+                searchField.keyPressed(e.getTypedChar(), e.getKeyCode(), 0);
             }
         } else if (e.getKeyCode() == GLFW.GLFW_KEY_ESCAPE || e.getKeyCode() == McIf.mc().options.keyBindInventory.getKey().getValue()) { // bank was closed by player
             destinationPage = 0;
